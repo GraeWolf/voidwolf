@@ -18,4 +18,7 @@ echo "Enabling and starting BlueTooth."
 sudo ln -s /etc/sv/bluetoothd /var/service/
 
 echo "Enabling time sync."
-sudo ln -s /etc/sv/chronyd /var/service/
+if /var/service/chronyd; then
+  echo "Chronyd already enabled"
+else
+  sudo ln -s /etc/sv/chronyd /var/service/
