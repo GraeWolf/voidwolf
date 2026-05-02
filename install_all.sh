@@ -5,6 +5,7 @@ set -euo pipefail
 ./install/ssh_setup.sh
 ./install/git_setup.sh
 ./install/xdg_user_dirs.sh
+./install/repo_install.sh
 ./install/nvidia.sh
 ./install/xlibre.sh
 ./install/window_manager.sh
