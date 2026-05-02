@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Wait for idle, then lock, then suspend
+idle_time=$(xssstate -i)  # initial value
+while true; do
+    sleep 5
+    idle_time=$(xssstate -i)
+    if [ "$idle_time" -ge 300000 ]; then  # 5 minutes in milliseconds
+        xsecurelock &              # show lock screen FIRST
+        sleep 5                    # give it time to appear
+        xset dpms force off        # turn screen off
+        sleep 300                  # wait another 5 min while locked
+        systemctl suspend
+        break
+    fi
+done

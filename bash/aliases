@@ -1,0 +1,99 @@
+# File system
+if command -v eza &> /dev/null; then
+  alias ls='eza -lh --group-directories-first --icons=auto'
+  alias lsa='ls -a'
+  alias lt='eza --tree --level=2 --long --icons --git'
+  alias lta='lt -a'
+fi
+
+alias ff="fzf --preview 'bat --style=numbers --color=always {}'"
+
+if command -v zoxide &> /dev/null; then
+  alias cd="zd"
+  zd() {
+    if [ $# -eq 0 ]; then
+      builtin cd ~ && return
+    elif [ -d "$1" ]; then
+      builtin cd "$1"
+    else
+      z "$@" && printf "\U000F17A9 " && pwd || echo "Error: Directory not found"
+    fi
+  }
+fi
+
+open() {
+  xdg-open "$@" >/dev/null 2>&1 &
+}
+
+# Directories
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# Git
+alias g='git'
+alias gcm='git commit -m'
+alias gcam='git commit -a -m'
+alias gcad='git commit -a --amend'
+alias gp='git push -u origin master'
+
+# Modified Commands
+alias cp='cp -i'
+alias mv='mv -i'
+alias rm='trash -v'
+alias mkdir='mkdir -p'
+alias vi='nvim'
+alias vim='nvim'
+alias svi='sudo vi'
+alias rmd='/bin/rm --recursive --force --verbose'
+alias cat='bat'
+
+# Alias's for archives
+alias mktar='tar -cvf'
+alias mkbz2='tar -cvjf'
+alias mkgz='tar -cvzf'
+alias untar='tar -xvf'
+alias unbz2='tar -xvjf'
+alias ungz='tar -xvzf'
+
+# Edit nvim config
+alias nvimrc='nvim ~/.config/nvim/'
+
+# Colorize grep output (good for log files)
+alias grep='grep --color=auto'
+alias egrep='egrep --color=auto'
+alias fgrep='fgrep --color=auto'
+
+# get top process eating memory
+alias psmem='ps auxf | sort -nr -k 4 | head -5'
+
+# get top process eating cpu ##
+alias pscpu='ps auxf | sort -nr -k 3 | head -5'
+
+# gpg encryption
+# verify signature for isos
+alias gpg-check="gpg2 --keyserver-options auto-key-retrieve --verify"
+# receive the key of a developer
+alias gpg-retrieve="gpg2 --keyserver-options auto-key-retrieve --receive-keys"
+
+# For when keys break# gpg encryption
+# verify signature for isos
+alias gpg-check="gpg2 --keyserver-options auto-key-retrieve --verify"
+# receive the key of a developer
+alias gpg-retrieve="gpg2 --keyserver-options auto-key-retrieve --receive-keys"
+
+# For when keys break
+alias archlinx-fix-keys="sudo pacman-key --init && sudo pacman-key --populate archlinux && sudo pacman-key --refresh-keys"
+alias archlinx-fix-keys="sudo pacman-key --init && sudo pacman-key --populate archlinux && sudo pacman-key --refresh-keys"
+
+# pacman
+alias pin="sudo pacman -S --color auto"
+alias update="sudo pacman -Syyu"
+alias pss="pacman -Ss"
+
+# c++ compile commands
+alias compile="g++ -std=c++20 -ggdb -Wall -Weffc++ -Wextra -Wsign-conversion -Werror"
+alias compray="g++ -std=c++20 -lraylib -ggdb -Wall -Weffc++ -Wextra -Wsign-conversion -Werror"
+alias compsdl="g++ -std=c++20 -lSDL3 -lSDL3_image -lSDL3_mixer -ggdb -Wall -Weffc++ -Wextra -Wextra -Wsign-conversion -Werror"
+alias clmb="clang++ -std=c++23 -stdlib=libc++ --precompile -o std.pcm /usr/share/libc++/v1/std.cppm"
+alias clm="clang++ -std=c++23 -stdlib=libc++ -fprebuilt-module-path=."
