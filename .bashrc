@@ -5,4 +5,4 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
-source ~/.local/share/graewolf/bash/rc
+source ~/.local/share/voidwolf/bash/rc
