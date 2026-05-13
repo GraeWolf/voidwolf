@@ -14,6 +14,6 @@ elif [ -f /etc/bash_completion ]; then
 	. /etc/bash_completion
 fi
 
-source ~/.local/share/graewolf/bash/init
-source ~/.local/share/graewolf/bash/exports
-source ~/.local/share/graewolf/bash/aliases
+source ~/.local/share/voidwolf/bash/init
+source ~/.local/share/voidwolf/bash/exports
+source ~/.local/share/voidwolf/bash/aliases
