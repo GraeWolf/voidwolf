@@ -9,7 +9,7 @@ while true; do
         sleep 5                    # give it time to appear
         xset dpms force off        # turn screen off
         sleep 300                  # wait another 5 min while locked
-        systemctl suspend
+        zzz
         break
     fi
 done
