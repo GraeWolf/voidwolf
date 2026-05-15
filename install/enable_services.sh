@@ -22,3 +22,4 @@ if /var/service/chronyd; then
   echo "Chronyd already enabled"
 else
   sudo ln -s /etc/sv/chronyd /var/service/
+fi
