@@ -7,7 +7,7 @@ sudo xbps-install -Sy bspwm sxhkd rofi picom polybar fastfetch arandr \
            polkit-gnome gvfs udisks2 udiskie NetworkManager bluez feh \
            network-manager-applet lxappearance unzip eza bat \
 		       Thunar thunar-media-tags-plugin xsettingsd dunst zoxide \
-           trash-cli bash-completion starship
+           trash-cli bash-completion starship psmisc
 
 chmod 755 bspwm/bspwmrc
 chmod 644 sxhkd/sxhkdrc
