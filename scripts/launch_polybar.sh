@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Terminate already running bar instances
-pkill polybar
+killall polybar
 # If all your bars have ipc enabled, you can also use
 # polybar-msg cmd quit
 
