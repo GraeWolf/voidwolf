@@ -4,9 +4,9 @@
 ~/.local/scripts/launch_polybar.sh
 pgrep -x sxhkd > /dev/null || sxhkd &
 picom --config ~/.config/picom/picom.conf &
-feh --bg-fill ~/.local/share/graewolf/backgrounds/Clearnight.jpg &
+feh --bg-fill ~/.local/share/voidwolf/backgrounds/Clearnight.jpg &
 udiskie &
-lxsession &
+# lxsession &
 xsetroot -cursor_name left_ptr
 xset m 0 0
 sleep 2 && xsettingsd &
