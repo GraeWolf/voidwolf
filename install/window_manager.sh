@@ -6,7 +6,8 @@ set -euo pipefail
 sudo xbps-install -Sy bspwm sxhkd rofi picom polybar fastfetch arandr \
            polkit-gnome gvfs udisks2 udiskie NetworkManager bluez feh \
            network-manager-applet lxappearance unzip eza bat \
-		       pcmanfm xsettingsd dunst zoxide trash-cli bash-completion starship
+		       Thunar thunar-media-tags-plugin xsettingsd dunst zoxide \
+           trash-cli bash-completion starship
 
 chmod 755 bspwm/bspwmrc
 chmod 644 sxhkd/sxhkdrc
