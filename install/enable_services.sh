@@ -7,6 +7,7 @@ if [ -L "/var/service/dbus" ]; then
 else
   echo "Enabling dbus."
   sudo ln -s /etc/sv/dbus /var/service/
+fi
 
 if [ -L "/var/service/dhcpcd" ]; then
   sudo rm /var/service/dhcpcd
