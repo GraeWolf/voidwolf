@@ -27,7 +27,7 @@ fi
 
 git clone https://github.com/Fausto-Korpsvart/Tokyonight-GTK-Theme.git
 
-cd Tokyo-Night-GTK-Theme/themes
+cd Tokyonight-GTK-Theme/themes
 ./install.sh -d $HOME/.local/share/themes --tweaks black macos -t purple -c dark -l 
 
 sudo xbps-install -Sy yaru-plus
