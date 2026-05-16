@@ -6,10 +6,10 @@ echo "Enabling dbus."
 sudo ln -s /etc/sv/dbus /var/service/
 
 echo "Enabling and starting NetworkManager."
-if xbps-query -s dhcpcd &>/dev/null; then
+if "var/service/dhcpcd"; then
   sudo rm /var/service/dhcpcd
 fi
-if xbps-query -s wpa_supplicant &>/dev/null; then
+if "/var/service/wpa_supplicant"; then
   sudo rm /var/service/wpa_supplicant
 fi
 sudo ln -s /etc/sv/NetworkManager /var/service/
