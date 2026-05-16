@@ -10,14 +10,6 @@ else
   sudo xbps-install -Sy git
 fi
 
-if xbps-query -s sassc &>/dev/null; then
-  echo "sassc requirement met"
-else
-  echo "sassc not installed"
-  echo "installing sassc"
-  sudo xbps-install -Sy sassc
-fi 
-
 if [ -d "$HOME/.local/share/themes" ]; then
   echo "themes directory exists"
 else
