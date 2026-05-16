@@ -9,6 +9,8 @@ set -euo pipefail
 ./install/nvidia.sh
 ./install/xlibre.sh
 ./install/window_manager.sh
+./install/rofi.sh
+./install/tokyonight_theme.sh
 ./install/fonts.sh
 ./install/ghostty.sh
 ./install/nvim.sh
