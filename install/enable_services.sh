@@ -6,10 +6,10 @@ echo "Enabling dbus."
 sudo ln -s /etc/sv/dbus /var/service/
 
 echo "Enabling and starting NetworkManager."
-if "var/service/dhcpcd"; then
+if [ -L "var/service/dhcpcd" ]; then
   sudo rm /var/service/dhcpcd
 fi
-if "/var/service/wpa_supplicant"; then
+if [ -L "/var/service/wpa_supplicant" ]; then
   sudo rm /var/service/wpa_supplicant
 fi
 sudo ln -s /etc/sv/NetworkManager /var/service/
@@ -18,7 +18,7 @@ echo "Enabling and starting BlueTooth."
 sudo ln -s /etc/sv/bluetoothd /var/service/
 
 echo "Enabling time sync."
-if /var/service/chronyd; then
+if [ -L "/var/service/chronyd" ]; then
   echo "Chronyd already enabled"
 else
   sudo ln -s /etc/sv/chronyd /var/service/
