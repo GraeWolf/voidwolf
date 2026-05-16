@@ -2,11 +2,13 @@
 
 set -euo pipefail
 
-echo "Enabling dbus."
-sudo ln -s /etc/sv/dbus /var/service/
+if [ -L "/var/service/dbus" ]; then
+  echo "dbus already enabled"
+else
+  echo "Enabling dbus."
+  sudo ln -s /etc/sv/dbus /var/service/
 
-echo "Enabling and starting NetworkManager."
-if [ -L "var/service/dhcpcd" ]; then
+if [ -L "/var/service/dhcpcd" ]; then
   sudo rm /var/service/dhcpcd
 fi
 if [ -L "/var/service/wpa_supplicant" ]; then
@@ -15,7 +17,7 @@ fi
 
 if [ -L "/var/service/NetworkManager" ]; then
   echo "NetworkManager already enabled"
-esle
+else
   sudo ln -s /etc/sv/NetworkManager /var/service/
 fi
 
