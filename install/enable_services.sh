@@ -12,10 +12,19 @@ fi
 if [ -L "/var/service/wpa_supplicant" ]; then
   sudo rm /var/service/wpa_supplicant
 fi
-sudo ln -s /etc/sv/NetworkManager /var/service/
 
-echo "Enabling and starting BlueTooth."
-sudo ln -s /etc/sv/bluetoothd /var/service/
+if [ -L "/var/service/NetworkManager" ]; then
+  echo "NetworkManager already enabled"
+esle
+  sudo ln -s /etc/sv/NetworkManager /var/service/
+fi
+
+if [ -L "/var/service/bluetoothd" ]; then
+  echo "bluetoothd already enabled"
+else
+  echo "Enabling and starting BlueTooth."
+  sudo ln -s /etc/sv/bluetoothd /var/service/
+fi
 
 echo "Enabling time sync."
 if [ -L "/var/service/chronyd" ]; then
