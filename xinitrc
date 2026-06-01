@@ -11,10 +11,18 @@ export DESKTOP_SESSION=bspwm
 export XDG_CURRENT_DESKTOP=bspwm
 
 # start polkit agent for GUI privilege prompts
-/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
+/usr/libexec/polkit-gnome-authentication-agent-1 &
+
+# GNOME Keyring
+eval $(gnome-keyring-daemon --start --components=pkcs11,secrets,ssh)
+export SSH_AUTH_SOCK
+export GNOME_KEYRING_CONTROL=$(echo $GNOME_KEYRING_CONTROL)
 
 # start xss-lock with xsecurelock
 xss-lock --transfer-sleep-lock -- xsecurelock &
+
+# Restore display settings after resume
+xrandr --auto &
 
 # finally, exec bspwm
 exec bspwm
