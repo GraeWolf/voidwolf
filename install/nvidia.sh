@@ -18,4 +18,4 @@ sudo xbps-install -Sy void-repo-nonfree void-repo-multilib void-repo-multilib-no
 sudo xbps-install -S
 
 # Installing the Nvidia drivers
-sudo xbps-install -Sy nvidia-dkms
+sudo xbps-install -Sy nvidia580 nvidia580-dkms
