@@ -150,7 +150,7 @@ super + shift + alt b
 	helium-browser
 
 super + shift + f
-	thunar
+	nemo
 
 super + shift + e
 	thunderbird
@@ -160,3 +160,6 @@ super + shift + a
 
 super + shift + alt + a
 	brave-origin-nightly --new-window --app=https://grok.com
+
+super + shift + y
+	brave-origin-nightly --new-window --app=https://youtube.com
