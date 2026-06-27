@@ -46,6 +46,7 @@ bspc rule -a obs desktop='^4'
 #bspc rule -a discord desktop='^9'
 #bspc rule -a spotify desktop='^10'
 bspc rule -a mpv state=floating rectangle=960x540+800+250
+bspc rule -a youtube.com state=floating rectangle=960x540+800+250
 #bspc rule -a Surf state=tiled
 
 ### Inactivity handling ###
