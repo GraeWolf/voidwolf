@@ -13,6 +13,11 @@ export XDG_CURRENT_DESKTOP=bspwm
 # start polkit agent for GUI privilege prompts
 /usr/libexec/polkit-gnome-authentication-agent-1 &
 
+# starting pipewire
+/usr/bin/pipewire &
+#/usr/bin/pipewire-pulse &
+#/usr/bin/wireplumber &
+
 # GNOME Keyring
 eval $(gnome-keyring-daemon --start --components=pkcs11,secrets,ssh)
 export SSH_AUTH_SOCK
