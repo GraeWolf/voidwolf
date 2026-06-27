@@ -35,7 +35,7 @@ alias g='git'
 alias gcm='git commit -m'
 alias gcam='git commit -a -m'
 alias gcad='git commit -a --amend'
-alias gp='git push -u origin master'
+alias gp='git push -u origin main'
 
 # Modified Commands
 alias cp='cp -i'
