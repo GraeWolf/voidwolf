@@ -138,25 +138,25 @@ super + l
 
 # Super + Shift + z suspend now
 super + shift + z
-	xsecurelock & sleep 1; systemctl suspend
+	xsecurelock & sleep 1; loginctl suspend
 
 #
 # Launching Apps
 #
 super + shift + b
-	brave
+	brave-origin-nightly
 
 super + shift + alt b
-	chromium
+	helium-browser
 
 super + shift + f
-	pcmanfm
+	thunar
 
 super + shift + e
-	betterbird
+	thunderbird
 
 super + shift + a
-	brave --new-window --app=https://chatgpt.com
+	brave-origin-nightly --new-window --app=https://chatgpt.com
 
 super + shift + alt + a
-	brave --new-window --app=https://grok.com
+	brave-origin-nightly --new-window --app=https://grok.com
