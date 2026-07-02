@@ -32,7 +32,11 @@ export SSH_AUTH_SOCK
 xss-lock --transfer-sleep-lock -- xsecurelock &
 
 # Restore display settings after resume
-xrandr --auto &
+~/.screenlayout/leftsmallmonitor.sh
 
 # finally, exec bspwm
-exec bspwm
+if [ -z "$DBUS_SESSION_BUS_ADDRESS" ] && command -v dbus-launch >/dev/null; then
+    exec dbus-launch --exit-with-session bspwm
+else
+    exec bspwm
+fi
