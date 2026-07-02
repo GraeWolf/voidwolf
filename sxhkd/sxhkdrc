@@ -159,7 +159,7 @@ super + shift + a
 	brave-origin-nightly --new-window --app=https://chatgpt.com
 
 super + shift + alt + a
-	brave-origin-nightly --new-window --app=https://grok.com
+	brave-origin-nightly --new-window --app=https://grok.com --class=GrokApp --user-data-dir=$HOME/.config/BraveSoftware/GrokApp
 
 super + shift + y
-	brave-origin-nightly --new-window --app=https://youtube.com
+	brave-origin-nightly --new-window --app=https://youtube.com --class=YTApp --user-data-dir=$HOME/.config/BraveSoftware/YTApp
