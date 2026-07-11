@@ -92,8 +92,8 @@ alias update="sudo pacman -Syyu"
 alias pss="pacman -Ss"
 
 # c++ compile commands
-alias compile="g++ -std=c++20 -ggdb -Wall -Weffc++ -Wextra -Wsign-conversion -Werror"
-alias compray="g++ -std=c++20 -lraylib -ggdb -Wall -Weffc++ -Wextra -Wsign-conversion -Werror"
-alias compsdl="g++ -std=c++20 -lSDL3 -lSDL3_image -lSDL3_mixer -ggdb -Wall -Weffc++ -Wextra -Wextra -Wsign-conversion -Werror"
+alias compile="g++ -std=c++23 -ggdb -Wall -Weffc++ -Wextra -Wsign-conversion -Werror"
+alias compray="g++ -std=c++23 -lraylib -ggdb -Wall -Weffc++ -Wextra -Wsign-conversion -Werror"
+alias compsdl="g++ -std=c++23 -lSDL3 -lSDL3_image -lSDL3_mixer -ggdb -Wall -Weffc++ -Wextra -Wextra -Wsign-conversion -Werror"
 alias clmb="clang++ -std=c++23 -stdlib=libc++ --precompile -o std.pcm /usr/share/libc++/v1/std.cppm"
 alias clm="clang++ -std=c++23 -stdlib=libc++ -fprebuilt-module-path=."
