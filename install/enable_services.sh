@@ -45,3 +45,10 @@ if [ -L "/var/service/chronyd" ]; then
 else
   sudo ln -s /etc/sv/chronyd /var/service/
 fi
+
+echo "Enabling elogind."
+if [ -L "/var/service/elogind" ]; then
+    echo "Elogind already enabled"
+else
+    sudo ln -s /etc/sv/elogind /var/service/
+fi
