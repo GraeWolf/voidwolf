@@ -19,6 +19,16 @@ fi
 if [ -L "/var/service/NetworkManager" ]; then
   echo "NetworkManager already enabled"
 else
+  sudo rm -f /etc/resolve.conf
+  sudo ln -s /run/NetworkManager/resolv.conf /etc/resolv.conf
+  sudo mkdir -p /etc/NetworkManager/conf.d
+  cat <<EOF | sudo tee /etc/NetworkManager/conf.d/dns.conf
+    [main]
+    dns=none
+
+    [global-dns]
+    nameservers=1.1.1.1,1.0.0.1
+    EOF
   sudo ln -s /etc/sv/NetworkManager /var/service/
 fi
 
