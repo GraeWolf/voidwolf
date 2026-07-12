@@ -6,7 +6,7 @@ set -euo pipefail
 sudo xbps-install -Sy bspwm sxhkd rofi picom polybar fastfetch arandr \
            polkit-gnome gvfs udisks2 udiskie NetworkManager bluez feh \
            network-manager-applet lxappearance unzip eza bat \
-		   nemo xsettingsd dunst zoxide pavucontrol \
+		   nemo xsettingsd dunst zoxide pavucontrol pipewire \
            trash-cli bash-completion starship psmisc sassc elogind
 
 chmod 755 bspwm/bspwmrc
