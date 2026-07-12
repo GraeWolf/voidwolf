@@ -155,10 +155,13 @@ super + shift + f
 super + shift + e
 	thunderbird
 
-super + shift + a
+super + shift + alt + a
 	brave-origin-nightly --new-window --app=https://chatgpt.com
 
-super + shift + alt + a
+super + shift + ctrl + a
+    brave-origin-nightly --new-window --app=127.0.0.1: --class=http://127.0.0.1:8080 --user-data-dir=$HOME/.config/BraveSoftware/LlamaApp
+
+super + shift + a
 	brave-origin-nightly --new-window --app=https://grok.com --class=GrokApp --user-data-dir=$HOME/.config/BraveSoftware/GrokApp
 
 super + shift + y
