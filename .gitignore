@@ -1,0 +1,55 @@
+# Build artifacts
+*.o
+*.a
+*.so
+*.so.*
+*.xbps
+*.xbps.sig*
+*.xbps.sig2
+
+# Suckless / local installs
+suckless/**/config.h.bak
+suckless/**/colors.h
+!suckless/**/colors.h.in
+suckless/**/dwm
+suckless/**/st
+suckless/**/dmenu
+suckless/**/*.1
+
+# Generated theme state (user machines; not committed)
+.voidwolf-generated/
+**/generated/
+
+# Editor / OS
+*~
+*.swp
+*.swo
+.DS_Store
+.idea/
+.vscode/
+*.code-workspace
+
+# Logs and local bootstrap state
+*.log
+bootstrap/bootstrap.log
+bootstrap/.local-state/
+
+# Python / tooling
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ISO build output
+iso/out/
+iso/work/
+*.iso
+
+# Local XBPS hostrepo workdirs
+packages/*/destdir/
+packages/*/work/
+
+# Secrets / local overrides
+.env
+.env.*
+*.local.conf
