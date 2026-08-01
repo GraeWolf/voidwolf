@@ -1,0 +1,6 @@
+/* voidwolf-generated gtk-4.0 — best-effort accent (PR9a) */
+@define-color accent_bg_color {{ accent }};
+@define-color accent_fg_color {{ bar_selected_fg }};
+@define-color window_bg_color {{ bg }};
+@define-color window_fg_color {{ fg }};
+@define-color error_color {{ urgent }};

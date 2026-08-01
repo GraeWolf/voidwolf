@@ -39,9 +39,10 @@ else
 fi
 
 # set without DISPLAY should still write files
-# Skip dwm rebuild in tests (speed + avoid heavy compile in CI)
+# Skip dwm rebuild + user gtk/dunst install in tests
 export VOIDWOLF_HOME="${TMPDIR:-/tmp}/voidwolf-theme-test-$$"
 export VOIDWOLF_THEME_SKIP_REBUILD=1
+export VOIDWOLF_THEME_SKIP_USER_CONFIG=1
 rm -rf "$VOIDWOLF_HOME"
 mkdir -p "$VOIDWOLF_HOME"
 if "$THEME" set voidwolf-dark; then
@@ -51,7 +52,18 @@ else
 	fail=1
 fi
 
-for f in generated/colors.h generated/theme.Xresources generated/dmenu.env current/name; do
+for f in \
+	generated/colors.h \
+	generated/theme.Xresources \
+	generated/dmenu.env \
+	generated/dunstrc.colors \
+	generated/gtk-3.0.settings.ini \
+	generated/gtk-3.0.css \
+	generated/gtk-4.0.settings.ini \
+	generated/gtk-4.0.css \
+	generated/xcursor.env \
+	current/name
+do
 	if [[ -f "$VOIDWOLF_HOME/$f" ]]; then
 		echo "OK   $f"
 	else
@@ -59,6 +71,28 @@ for f in generated/colors.h generated/theme.Xresources generated/dmenu.env curre
 		fail=1
 	fi
 done
+
+# PR9a content checks
+if rg -q 'urgency_critical' "$VOIDWOLF_HOME/generated/dunstrc.colors" \
+	&& rg -q 'frame_color' "$VOIDWOLF_HOME/generated/dunstrc.colors"; then
+	echo "OK   dunst colors content"
+else
+	echo "FAIL dunst colors incomplete"
+	fail=1
+fi
+if rg -q 'gtk-theme-name=' "$VOIDWOLF_HOME/generated/gtk-3.0.settings.ini" \
+	&& rg -q 'accent_bg_color' "$VOIDWOLF_HOME/generated/gtk-3.0.css"; then
+	echo "OK   gtk adapter content"
+else
+	echo "FAIL gtk adapter incomplete"
+	fail=1
+fi
+if [[ -f "$ROOT/config/dunst/dunstrc" ]] && rg -q 'voidwolf-dunst-v1' "$ROOT/config/dunst/dunstrc"; then
+	echo "OK   config/dunst/dunstrc template"
+else
+	echo "FAIL missing dunst template"
+	fail=1
+fi
 
 cur=$("$THEME" current)
 if [[ "$cur" == "voidwolf-dark" ]]; then

@@ -1,0 +1,22 @@
+# voidwolf dunst — static layout; colors from theme include (PR9a)
+# Managed marker: voidwolf-dunst-v1
+
+[global]
+    font = Fira Code 11
+    frame_width = 2
+    padding = 8
+    horizontal_padding = 8
+    separator_height = 2
+    sort = yes
+    idle_threshold = 120
+    alignment = left
+    word_wrap = yes
+    follow = mouse
+    origin = top-right
+    offset = 12x48
+    transparency = 0
+
+# Theme colors (written by voidwolf-theme set)
+include {
+    path = ~/.config/voidwolf/generated/dunstrc.colors
+}

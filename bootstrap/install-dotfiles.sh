@@ -129,41 +129,14 @@ if [[ "${SKIP_PIPEWIRE}" -eq 0 ]]; then
 	bash "${SCRIPT_DIR}/setup-pipewire.sh" "${pw_args[@]}"
 fi
 
-# --- dunst minimal config if missing ---
-dunst_dir="${TARGET_HOME}/.config/dunst"
-if [[ ! -f "${dunst_dir}/dunstrc" ]]; then
-	voidwolf_log "Install minimal dunst config"
-	if [[ "${DRY_RUN}" -eq 0 ]]; then
-		mkdir -p "$dunst_dir"
-		cat >"${dunst_dir}/dunstrc" <<'EOF'
-[global]
-    font = Fira Code 11
-    frame_width = 2
-    padding = 8
-    horizontal_padding = 8
-    separator_height = 2
-    sort = yes
-    idle_threshold = 120
-    alignment = left
-    word_wrap = yes
-
-[urgency_low]
-    background = "#1d2021"
-    foreground = "#ebdbb2"
-    timeout = 5
-
-[urgency_normal]
-    background = "#1d2021"
-    foreground = "#ebdbb2"
-    frame_color = "#458588"
-    timeout = 10
-
-[urgency_critical]
-    background = "#1d2021"
-    foreground = "#fb4934"
-    frame_color = "#cc241d"
-    timeout = 0
-EOF
+# --- dunst config (includes theme colors from voidwolf-theme PR9a) ---
+dunst_src="${REPO_ROOT}/config/dunst/dunstrc"
+dunst_dest="${TARGET_HOME}/.config/dunst/dunstrc"
+if [[ -f "$dunst_src" ]]; then
+	if [[ ! -f "$dunst_dest" ]] || ! grep -q 'voidwolf-dunst-v1' "$dunst_dest" 2>/dev/null; then
+		install_file "$dunst_src" "$dunst_dest" 0644
+	else
+		voidwolf_log "dunst config already voidwolf-managed"
 	fi
 fi
 

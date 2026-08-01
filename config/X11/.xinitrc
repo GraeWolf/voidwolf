@@ -39,6 +39,12 @@ fi
 [ -f "${HOME}/.config/voidwolf/generated/theme.Xresources" ] \
 	&& xrdb -merge "${HOME}/.config/voidwolf/generated/theme.Xresources"
 
+# Cursor theme from voidwolf-theme (PR9a)
+if [ -f "${HOME}/.config/voidwolf/generated/xcursor.env" ]; then
+	# shellcheck disable=SC1091
+	. "${HOME}/.config/voidwolf/generated/xcursor.env"
+fi
+
 # Keyboard (optional user override)
 [ -f "${HOME}/.config/voidwolf/xkb" ] && . "${HOME}/.config/voidwolf/xkb"
 

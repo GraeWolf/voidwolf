@@ -45,17 +45,40 @@ Default wallpaper: `wallpapers/voidwolf-default.png` (`.jpg` symlink alias).
 ## What `set` does
 
 1. Validate TOML (`schema_version = 1`, palette, color0–15)
-2. Write `$VOIDWOLF_HOME/generated/` (`colors.h`, `theme.Xresources`, `dmenu.env`)
+2. Write `$VOIDWOLF_HOME/generated/`:
+   - `colors.h`, `theme.Xresources`, `dmenu.env` (PR8)
+   - `dunstrc.colors`, `gtk-3.0.*`, `gtk-4.0.*`, `xcursor.env` (**PR9a**)
 3. Atomic update `$VOIDWOLF_HOME/current/name`
 4. Copy `colors.h` → `suckless/dwm/colors.h`
 5. If palette hash changed: `build-suckless.sh --dwm-only` (**no sudo**, `PREFIX=$HOME/.local`)
 6. `kill -HUP dwm` when `DISPLAY` set (restartsig re-exec)
 7. `xrdb -merge` theme Xresources
-8. Set wallpaper via `voidwolf-wallpaper set` when path resolves
+8. Install user configs (unless `VOIDWOLF_THEME_SKIP_USER_CONFIG=1`):
+   - `~/.config/dunst/dunstrc` (template with include) + `dunstrc.d/10-voidwolf-theme.conf`
+   - `~/.config/gtk-3.0/{settings.ini,gtk.css}`
+   - `~/.config/gtk-4.0/{settings.ini,gtk.css}`
+9. Reload dunst (`dunstctl reload` / HUP)
+10. Set wallpaper via `voidwolf-wallpaper set` when path resolves
 
 `VOIDWOLF_HOME` defaults to `~/.config/voidwolf`.
 
-Set `VOIDWOLF_THEME_SKIP_REBUILD=1` to write adapters only (used by tests; still updates `colors.h`).
+| Env | Effect |
+|-----|--------|
+| `VOIDWOLF_THEME_SKIP_REBUILD=1` | Skip dwm rebuild (tests) |
+| `VOIDWOLF_THEME_SKIP_USER_CONFIG=1` | Only write under `VOIDWOLF_HOME/generated` |
+
+## Adapters
+
+| Target | Mechanism |
+|--------|-----------|
+| st | Xresources / xrdb |
+| dwm | `colors.h` + rebuild + HUP |
+| dmenu | `dmenu.env` → voidwolf-dmenu / launcher |
+| dunst | `dunstrc.colors` include + conf.d drop-in |
+| GTK 3/4 | `settings.ini` (theme/icon/cursor) + best-effort `gtk.css` accents |
+| cursor | `xcursor.env` sourced from `.xinitrc` |
+
+GTK recolor is **best-effort**; `meta.gtk_theme` (e.g. Adwaita-dark) is the primary switch.
 
 ## Schema (summary)
 
@@ -72,5 +95,4 @@ Fonts are **not** themed (edit `suckless/*/config.h`).
 
 | PR | Work |
 |----|------|
-| PR9a | dunst / GTK adapters |
 | PR9b | `from-wallpaper` (wallust → matugen → pywal) |

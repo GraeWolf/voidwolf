@@ -1,0 +1,13 @@
+/* voidwolf-generated gtk-3.0 — best-effort accent (PR9a) */
+@define-color accent_bg_color {{ accent }};
+@define-color accent_fg_color {{ bar_selected_fg }};
+@define-color theme_bg_color {{ bg }};
+@define-color theme_fg_color {{ fg }};
+@define-color theme_selected_bg_color {{ accent }};
+@define-color theme_selected_fg_color {{ bar_selected_fg }};
+@define-color error_color {{ urgent }};
+
+/* Mild window chrome hints for Adwaita-class themes */
+window, .background {
+  /* best-effort; many themes ignore these */
+}
