@@ -28,6 +28,8 @@ export PATH="$HOME/.local/bin:$PATH"
 | `voidwolf-status` | (autostart) | dwm bar via xsetroot |
 | `voidwolf-wallpaper` | Super+Ctrl+Space | restore / set / pick |
 | `voidwolf-theme` | Super+Ctrl+Shift+Space | set/list/pick/validate (PR8) |
+| `voidwolf-gpu-check` | (manual) | GPU detect / `--gpu` recommendation (PR10) |
+| `voidwolf-prime` | (manual) | Run app on NVIDIA (PRIME offload) |
 
 ## System menu behavior
 

@@ -27,3 +27,5 @@ Full catalog: [docs/helpers.md](../docs/helpers.md).
 | `voidwolf-status` | Session autostart (bar) |
 | `voidwolf-wallpaper` | Super+Ctrl+Space |
 | `voidwolf-theme` | Super+Ctrl+Shift+Space — set/list/pick/validate (PR8) |
+| `voidwolf-gpu-check` | Recommend `--gpu` / driver package (PR10) |
+| `voidwolf-prime` | PRIME offload wrapper (PR10) |

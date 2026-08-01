@@ -10,7 +10,7 @@ help: ## Show available targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
 	@echo ""
-	@echo "Note: NVIDIA profiles PR10; packaging later."
+	@echo "Note: hardware profiles PR11; packaging later."
 
 # --- Planned (stubs return a clear message until implemented) ---
 
@@ -40,3 +40,4 @@ test: ## Run tests/ checks
 	@./tests/keybind-lint.sh
 	@./tests/helpers-validate.sh
 	@./tests/theme-schema-validate.sh
+	@./tests/nvidia-helpers-validate.sh

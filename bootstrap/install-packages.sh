@@ -92,12 +92,27 @@ if [[ "${GPU}" != "none" ]]; then
 	voidwolf_install_required "${NVIDIA_COMMON[@]}"
 
 	if [[ -z "${NVIDIA_PKG}" ]]; then
-		# Default family pick for PR3; voidwolf-gpu-check (PR10) will refine.
-		case "${GPU}" in
-			nvidia|nvidia-hybrid|nvidia-hybrid-randr)
-				NVIDIA_PKG="nvidia"
-				;;
-		esac
+		# Prefer voidwolf-gpu-check recommendation (PR10)
+		_gc=""
+		if [[ -x "${SCRIPT_DIR}/../bin/voidwolf-gpu-check" ]]; then
+			_gc=$(python3 "${SCRIPT_DIR}/../bin/voidwolf-gpu-check" --print-package 2>/dev/null || true)
+		elif command -v voidwolf-gpu-check >/dev/null 2>&1; then
+			_gc=$(voidwolf-gpu-check --print-package 2>/dev/null || true)
+		fi
+		if [[ -n "${_gc}" ]]; then
+			NVIDIA_PKG="${_gc}"
+			voidwolf_log "voidwolf-gpu-check recommends package: ${NVIDIA_PKG}"
+		else
+			case "${GPU}" in
+				nvidia|nvidia-hybrid|nvidia-hybrid-randr)
+					NVIDIA_PKG="nvidia"
+					;;
+			esac
+		fi
+	fi
+	# Hybrid + nvidia580: warn that PRIME offload may be wrong fit
+	if [[ "${GPU}" == "nvidia-hybrid" && "${NVIDIA_PKG}" == "nvidia580" ]]; then
+		voidwolf_warn "nvidia580 + nvidia-hybrid: consider --gpu nvidia-hybrid-randr (see docs/nvidia.md)"
 	fi
 	voidwolf_log "NVIDIA driver package: ${NVIDIA_PKG} (override with VOIDWOLF_NVIDIA_PKG)"
 	if voidwolf_pkg_available "${NVIDIA_PKG}" || [[ "${DRY_RUN}" -eq 1 ]]; then

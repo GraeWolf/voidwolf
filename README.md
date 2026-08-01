@@ -46,7 +46,7 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 | 0 | Design | **Done** ([docs/design.md](docs/design.md)) |
 | 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | **PR1–7 done** |
 | 2 | Theming engine | **PR8–9b done** |
-| 3 | Opinionated desktop polish | Planned |
+| 3 | Opinionated desktop polish | In progress (PR10 NVIDIA done) |
 | 4 | XBPS meta-packages | Planned |
 | 5 | ISO / installer | After packaging |
 
@@ -84,7 +84,8 @@ make theme-list
 | [docs/bootstrap.md](docs/bootstrap.md) | Bootstrap usage (PR2–5) |
 | [docs/session.md](docs/session.md) | startx / PipeWire / dwm loop |
 | [docs/helpers.md](docs/helpers.md) | User scripts (launcher, lock, capture) |
-| [docs/theming.md](docs/theming.md) | Theme engine (PR8) |
+| [docs/theming.md](docs/theming.md) | Theme engine (PR8–9) |
+| [docs/nvidia.md](docs/nvidia.md) | NVIDIA / PRIME / fallback (PR10) |
 | [docs/keybindings.md](docs/keybindings.md) | Omarchy → dwm map (filled in PR6) |
 | [docs/theming.md](docs/theming.md) | Theme engine usage (PR8+) |
 | [docs/repos.md](docs/repos.md) | XLibre + vw-repo wiring (PR2) |

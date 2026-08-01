@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+"""voidwolf-gpu-check — detect GPUs and recommend voidwolf --gpu / driver package (PR10)."""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from dataclasses import asdict, dataclass, field
+
+
+@dataclass
+class GPU:
+    bus: str
+    desc: str
+    vendor: str  # nvidia | intel | amd | other
+    pci_id: str = ""
+    family: str = ""  # nvidia: turing_plus | maxwell_volta | kepler | fermi | unknown
+    driver_pkg: str = ""
+
+
+@dataclass
+class Report:
+    gpus: list[GPU] = field(default_factory=list)
+    has_nvidia: bool = False
+    has_igpu: bool = False
+    hybrid: bool = False
+    discrete_only: bool = False
+    recommended_profile: str = "none"
+    recommended_package: str = ""
+    prime_offload_ok: bool = False
+    notes: list[str] = field(default_factory=list)
+    nvidia_smi: str = ""
+    glx_renderer: str = ""
+    xlibre_hint: str = ""
+
+
+def run(cmd: list[str]) -> str:
+    try:
+        return subprocess.check_output(cmd, text=True, stderr=subprocess.DEVNULL)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return ""
+
+
+def parse_lspci() -> list[GPU]:
+    out = run(["lspci", "-nn"])
+    gpus: list[GPU] = []
+    for line in out.splitlines():
+        if not re.search(r"\b(VGA compatible controller|3D controller|Display controller)\b", line):
+            continue
+        m = re.match(r"^(\S+)\s+(.+)$", line)
+        if not m:
+            continue
+        bus, rest = m.group(1), m.group(2)
+        pci = ""
+        pm = re.search(r"\[([0-9a-fA-F]{4}):([0-9a-fA-F]{4})\]", rest)
+        if pm:
+            pci = f"{pm.group(1)}:{pm.group(2)}".lower()
+        low = rest.lower()
+        if "nvidia" in low or pci.startswith("10de:"):
+            vendor = "nvidia"
+        elif "intel" in low or pci.startswith("8086:"):
+            vendor = "intel"
+        elif "amd" in low or "ati" in low or pci.startswith("1002:"):
+            vendor = "amd"
+        else:
+            vendor = "other"
+        g = GPU(bus=bus, desc=rest.strip(), vendor=vendor, pci_id=pci)
+        if vendor == "nvidia":
+            g.family, g.driver_pkg = classify_nvidia(rest)
+        gpus.append(g)
+    return gpus
+
+
+def classify_nvidia(desc: str) -> tuple[str, str]:
+    """Map marketing names → Void driver package family."""
+    d = desc.lower()
+    # Turing+ : RTX 20/30/40/50, GTX 16xx, Quadro RTX, etc.
+    if re.search(
+        r"rtx\s*(20|30|40|50)|gtx\s*16|quadro rtx|tesla t|a[0-9]{2,3}|l[0-9]{2,3}|ad10|tu1",
+        d,
+    ):
+        return "turing_plus", "nvidia"
+    # Ampere sometimes without rtx string
+    if re.search(r"\b(ga10|ampere)\b", d):
+        return "turing_plus", "nvidia"
+    # Pascal / Maxwell → nvidia580 on Void (Maxwell–Volta)
+    if re.search(r"gtx\s*10[0-9]{2}|gt\s*10[0-9]{2}|gp10|pascal|gtx\s*9[0-9]{2}|gm10|maxwell|gtx\s*7[5-9][0-9]|gtx\s*860|gtx\s*850", d):
+        return "maxwell_volta", "nvidia580"
+    if re.search(r"\b(volta|gv100|titan v)\b", d):
+        return "maxwell_volta", "nvidia580"
+    # Kepler
+    if re.search(r"gtx\s*[67][0-9]{2}|gt\s*[67][0-9]{2}|gk10|kepler|gtx\s*770|gtx\s*780|gtx\s*690", d):
+        return "kepler", "nvidia470"
+    # Fermi
+    if re.search(r"gtx\s*[45][0-9]{2}|gt\s*[45][0-9]{2}|gf10|fermi", d):
+        return "fermi", "nvidia390"
+    # default modern
+    return "unknown", "nvidia"
+
+
+def build_report() -> Report:
+    r = Report()
+    r.gpus = parse_lspci()
+    nvidia = [g for g in r.gpus if g.vendor == "nvidia"]
+    igpu = [g for g in r.gpus if g.vendor in ("intel", "amd")]
+    r.has_nvidia = bool(nvidia)
+    r.has_igpu = bool(igpu)
+    r.hybrid = r.has_nvidia and r.has_igpu
+    r.discrete_only = r.has_nvidia and not r.has_igpu
+
+    if not r.has_nvidia:
+        r.recommended_profile = "none"
+        r.recommended_package = ""
+        r.notes.append("No NVIDIA GPU detected — use --gpu none")
+    elif r.discrete_only:
+        r.recommended_profile = "nvidia"
+        r.recommended_package = nvidia[0].driver_pkg or "nvidia"
+        r.prime_offload_ok = False
+        r.notes.append("Discrete NVIDIA only — install proprietary driver; X Device Driver \"nvidia\"")
+        r.notes.append("Install order: nonfree → linux-headers/dkms → driver → reboot → startx")
+    else:
+        # hybrid
+        fam = nvidia[0].family
+        pkg = nvidia[0].driver_pkg or "nvidia"
+        r.recommended_package = pkg
+        if fam in ("turing_plus", "kepler") or pkg in ("nvidia", "nvidia470"):
+            r.recommended_profile = "nvidia-hybrid"
+            r.prime_offload_ok = True
+            r.notes.append("Hybrid GPU — prefer PRIME Render Offload (iGPU primary X)")
+            r.notes.append("Reject Bumblebee; use voidwolf-prime / __NV_PRIME_RENDER_OFFLOAD=1")
+        elif fam == "maxwell_volta" or pkg == "nvidia580":
+            r.recommended_profile = "nvidia-hybrid-randr"
+            r.prime_offload_ok = False
+            r.notes.append("Maxwell–Volta hybrid: Void handbook does not list PRIME offload for nvidia580")
+            r.notes.append("Prefer --gpu nvidia-hybrid-randr or test PRIME carefully")
+        elif fam == "fermi" or pkg == "nvidia390":
+            r.recommended_profile = "nvidia-hybrid-randr"
+            r.prime_offload_ok = False
+            r.notes.append("Fermi (nvidia390): no PRIME offload in handbook — RandR 1.4 or nouveau")
+        else:
+            r.recommended_profile = "nvidia-hybrid"
+            r.prime_offload_ok = True
+            r.notes.append("Unknown NVIDIA generation — defaulting to nvidia + hybrid PRIME; verify with handbook")
+
+    r.notes.append("XLibre + proprietary NVIDIA is high risk — validate nvidia-smi, glxinfo, startx")
+    r.notes.append("Do not use Bumblebee")
+
+    # runtime probes
+    smi = run(["nvidia-smi", "--query-gpu=name,driver_version", "--format=csv,noheader"])
+    r.nvidia_smi = smi.strip()
+    if not r.nvidia_smi and shutil.which("nvidia-smi"):
+        r.nvidia_smi = run(["nvidia-smi", "-L"]).strip() or "(nvidia-smi present but no GPU listed)"
+    elif not shutil.which("nvidia-smi"):
+        r.nvidia_smi = "(nvidia-smi not installed)"
+
+    if os.environ.get("DISPLAY") and shutil.which("glxinfo"):
+        gi = run(["glxinfo", "-B"])
+        for line in gi.splitlines():
+            if "OpenGL renderer" in line:
+                r.glx_renderer = line.split(":", 1)[-1].strip()
+                break
+    else:
+        r.glx_renderer = "(no DISPLAY or glxinfo)"
+
+    # xlibre packages hint
+    xq = run(["xbps-query", "-l"])
+    if "xlibre" in xq:
+        r.xlibre_hint = "xlibre packages installed"
+    else:
+        r.xlibre_hint = "xlibre not detected via xbps-query -l (repos/bootstrap may still be needed)"
+
+    return r
+
+
+def print_human(r: Report) -> None:
+    print("voidwolf-gpu-check")
+    print("=" * 60)
+    print("GPUs:")
+    if not r.gpus:
+        print("  (none found via lspci)")
+    for g in r.gpus:
+        extra = ""
+        if g.vendor == "nvidia":
+            extra = f"  family={g.family}  pkg={g.driver_pkg}"
+        print(f"  [{g.bus}] {g.vendor}: {g.desc}{extra}")
+    print()
+    print(f"hybrid:          {r.hybrid}")
+    print(f"discrete_only:   {r.discrete_only}")
+    print(f"recommended:     --gpu {r.recommended_profile}")
+    if r.recommended_package:
+        print(f"driver package:  {r.recommended_package}  (override: VOIDWOLF_NVIDIA_PKG)")
+    print(f"PRIME offload:   {'yes' if r.prime_offload_ok else 'no / unconfirmed'}")
+    print()
+    print(f"nvidia-smi:      {r.nvidia_smi or '(n/a)'}")
+    print(f"GL renderer:     {r.glx_renderer}")
+    print(f"XLibre:          {r.xlibre_hint}")
+    print()
+    print("Notes:")
+    for n in r.notes:
+        print(f"  - {n}")
+    print()
+    print("Next:")
+    print(f"  ./bootstrap/bootstrap.sh --profile desktop|laptop --gpu {r.recommended_profile}")
+    if r.recommended_package and r.recommended_package != "nvidia":
+        print(f"  VOIDWOLF_NVIDIA_PKG={r.recommended_package} ./bootstrap/...")
+    print("  sudo ./bootstrap/nvidia-setup.sh --profile", r.recommended_profile)
+    print("  docs: docs/nvidia.md")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="Detect GPUs and recommend voidwolf NVIDIA profile")
+    ap.add_argument("--json", action="store_true", help="JSON report")
+    ap.add_argument("--print-profile", action="store_true", help="Print recommended --gpu value only")
+    ap.add_argument("--print-package", action="store_true", help="Print recommended nvidia* package only")
+    ap.add_argument("--quiet", action="store_true")
+    args = ap.parse_args()
+    r = build_report()
+    if args.print_profile:
+        print(r.recommended_profile)
+        return 0
+    if args.print_package:
+        print(r.recommended_package)
+        return 0
+    if args.json:
+        print(json.dumps(asdict(r), indent=2))
+        return 0
+    if not args.quiet:
+        print_human(r)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

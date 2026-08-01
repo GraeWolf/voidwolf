@@ -25,6 +25,7 @@ Full docs: [docs/bootstrap.md](../docs/bootstrap.md).
 | `bootstrap.sh` | PR2–3 | Entrypoint |
 | `build-suckless.sh` | PR4 | dwm/st/dmenu → `~/.local` (no sudo) |
 | `setup-pipewire.sh`, `install-dotfiles.sh` | PR5 | session stack, PipeWire conf.d |
+| `nvidia-setup.sh`, `nvidia-fallback-xorg.sh` | PR10 | modprobe/xorg snippets; Xorg recovery |
 
 ## Partial runs
 

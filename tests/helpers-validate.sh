@@ -23,6 +23,8 @@ required=(
 	voidwolf-status
 	voidwolf-wallpaper
 	voidwolf-theme
+	voidwolf-gpu-check
+	voidwolf-prime
 	install-user-bin.sh
 )
 

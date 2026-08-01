@@ -223,7 +223,23 @@ else
 fi
 
 if [[ "${ALLOW_XORG_FALLBACK}" -eq 1 ]]; then
-	log "Note: --allow-xorg-fallback is recorded; recovery procedure is in docs/nvidia.md (PR10). Bootstrap never falls back silently."
+	log "Note: --allow-xorg-fallback is recorded; use bootstrap/nvidia-fallback-xorg.sh --yes for recovery (never automatic)."
+fi
+
+# --- PR10: NVIDIA system conf (modprobe + xorg) when --gpu is set ---
+if [[ "${GPU}" != "none" && "${SKIP_PACKAGES}" -eq 0 ]]; then
+	log "Step: NVIDIA setup snippets (profile=${GPU})"
+	if [[ "${DRY_RUN}" -eq 1 ]]; then
+		log "[dry-run] nvidia-setup.sh --profile ${GPU}"
+	else
+		# May need sudo; non-fatal if user skips
+		if bash "${SCRIPT_DIR}/nvidia-setup.sh" --profile "${GPU}" 2>/dev/null; then
+			log "nvidia-setup.sh completed"
+		else
+			log "nvidia-setup.sh needs root — run: sudo ./bootstrap/nvidia-setup.sh --profile ${GPU}"
+		fi
+	fi
+	log "GPU report: voidwolf-gpu-check (after reboot if modules just built)"
 fi
 
 # --- PR4: suckless (opt-in) ---

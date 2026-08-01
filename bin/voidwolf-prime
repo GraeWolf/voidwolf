@@ -1,0 +1,29 @@
+#!/bin/sh
+# voidwolf-prime — run a command on the NVIDIA GPU (PRIME Render Offload)
+# Usage: voidwolf-prime <command> [args...]
+# Equivalent env (Void / NVIDIA handbook):
+#   __NV_PRIME_RENDER_OFFLOAD=1
+#   __GLX_VENDOR_LIBRARY_NAME=nvidia
+#   __VK_LAYER_NV_optimus=NVIDIA_only   (Vulkan apps)
+
+set -e
+
+if [ "$#" -lt 1 ]; then
+	echo "Usage: voidwolf-prime <command> [args...]" >&2
+	echo "Example: voidwolf-prime glxinfo | grep renderer" >&2
+	echo "         voidwolf-prime brave-origin" >&2
+	exit 1
+fi
+
+# Prefer prime-run if the distro provides it
+if command -v prime-run >/dev/null 2>&1; then
+	exec prime-run "$@"
+fi
+
+export __NV_PRIME_RENDER_OFFLOAD=1
+export __GLX_VENDOR_LIBRARY_NAME=nvidia
+export __VK_LAYER_NV_optimus="${__VK_LAYER_NV_optimus:-NVIDIA_only}"
+# Some stacks also want:
+export __NV_PRIME_RENDER_OFFLOAD_PROVIDER="${__NV_PRIME_RENDER_OFFLOAD_PROVIDER:-}"
+
+exec "$@"
