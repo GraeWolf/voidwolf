@@ -10,13 +10,15 @@ help: ## Show available targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
 	@echo ""
-	@echo "Note: bootstrap / suckless / theme targets land in later PRs."
+	@echo "Note: full package/session/theme targets land in later PRs."
 
 # --- Planned (stubs return a clear message until implemented) ---
 
-bootstrap: ## Run system bootstrap (PR2+)
-	@echo "Not implemented yet (PR2+). See docs/design.md PR Plan."
-	@exit 1
+bootstrap: ## Run repository wiring (repos-only; full bootstrap lands PR3+)
+	@./bootstrap/bootstrap.sh --repos-only
+
+repos-dry-run: ## Dry-run third-party repo wiring (no root)
+	@./bootstrap/repos.sh --dry-run
 
 build-suckless: ## Build and install dwm/st/dmenu to ~/.local (PR4)
 	@echo "Not implemented yet (PR4). See suckless/ and bootstrap/build-suckless.sh."
@@ -30,6 +32,5 @@ theme-list: ## List themes (PR8)
 	@echo "Not implemented yet (PR8). See bin/voidwolf-theme."
 	@exit 1
 
-test: ## Run tests/ checks (later PRs)
-	@echo "No tests yet."
-	@exit 0
+test: ## Run tests/ checks
+	@./tests/repos-pins-validate.sh

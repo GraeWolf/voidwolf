@@ -44,7 +44,7 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 | Phase | Goal | State |
 |-------|------|--------|
 | 0 | Design | **Done** ([docs/design.md](docs/design.md)) |
-| 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | Next |
+| 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | In progress (PR1–2: skeleton + repos) |
 | 2 | Theming engine | Planned |
 | 3 | Opinionated desktop polish | Planned |
 | 4 | XBPS meta-packages | Planned |
@@ -53,14 +53,21 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 ## Development
 
 ```bash
-# After bootstrap exists (PR2+):
+# PR2 — wire repos (on Void; needs sudo for real run)
+./bootstrap/repos.sh --dry-run
+./bootstrap/bootstrap.sh --repos-only
+# make test   # verify key pins
+
+# Later (PR3+):
 # ./bootstrap/bootstrap.sh --profile laptop --gpu nvidia-hybrid
 # startx
 # voidwolf-theme set voidwolf-dark
 ```
 
 ```bash
-make help    # available targets as they land
+make help
+make test
+make repos-dry-run
 ```
 
 ## Documentation
