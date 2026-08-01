@@ -14,11 +14,14 @@ help: ## Show available targets
 
 # --- Planned (stubs return a clear message until implemented) ---
 
-bootstrap: ## Run repository wiring (repos-only; full bootstrap lands PR3+)
-	@./bootstrap/bootstrap.sh --repos-only
+bootstrap: ## Print bootstrap help
+	@./bootstrap/bootstrap.sh --help
 
 repos-dry-run: ## Dry-run third-party repo wiring (no root)
 	@./bootstrap/repos.sh --dry-run
+
+bootstrap-dry-run: ## Dry-run full PR2+PR3 path (profile=desktop gpu=none)
+	@./bootstrap/bootstrap.sh --profile desktop --gpu none --dry-run
 
 build-suckless: ## Build and install dwm/st/dmenu to ~/.local (PR4)
 	@echo "Not implemented yet (PR4). See suckless/ and bootstrap/build-suckless.sh."
@@ -34,3 +37,4 @@ theme-list: ## List themes (PR8)
 
 test: ## Run tests/ checks
 	@./tests/repos-pins-validate.sh
+	@./tests/package-lists-validate.sh

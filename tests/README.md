@@ -2,7 +2,11 @@
 
 | Check | PR |
 |-------|-----|
-| `theme-schema-validate.sh` | PR8 |
+| `repos-pins-validate.sh` | PR2 |
+| `package-lists-validate.sh` | PR3 |
 | `keybind-lint.sh` | PR6 |
+| `theme-schema-validate.sh` | PR8 |
 
-Run via `make test` once implemented.
+```bash
+make test
+```

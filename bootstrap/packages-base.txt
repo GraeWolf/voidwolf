@@ -1,0 +1,9 @@
+# packages-base.txt — core system tools (required)
+# One package per line. Lines starting with # and blanks are ignored.
+
+sudo
+curl
+git
+bash-completion
+ca-certificates
+xbps

@@ -1,0 +1,5 @@
+# packages-laptop.txt — laptop hardware helpers (--profile laptop)
+
+brightnessctl
+tlp
+# acpid optional; elogind handles many lid events

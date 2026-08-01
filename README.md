@@ -44,7 +44,7 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 | Phase | Goal | State |
 |-------|------|--------|
 | 0 | Design | **Done** ([docs/design.md](docs/design.md)) |
-| 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | In progress (PR1–2: skeleton + repos) |
+| 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | In progress (PR1–3: skeleton + repos + packages/services) |
 | 2 | Theming engine | Planned |
 | 3 | Opinionated desktop polish | Planned |
 | 4 | XBPS meta-packages | Planned |
@@ -53,21 +53,19 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 ## Development
 
 ```bash
-# PR2 — wire repos (on Void; needs sudo for real run)
-./bootstrap/repos.sh --dry-run
-./bootstrap/bootstrap.sh --repos-only
-# make test   # verify key pins
+# Dry-run PR2+PR3 (no root)
+./bootstrap/bootstrap.sh --profile laptop --gpu none --dry-run
+make test
 
-# Later (PR3+):
+# On Void (needs sudo):
 # ./bootstrap/bootstrap.sh --profile laptop --gpu nvidia-hybrid
-# startx
-# voidwolf-theme set voidwolf-dark
+# re-login, then later: startx (PR5+)
 ```
 
 ```bash
 make help
 make test
-make repos-dry-run
+make bootstrap-dry-run
 ```
 
 ## Documentation
@@ -75,6 +73,7 @@ make repos-dry-run
 | Doc | Purpose |
 |-----|---------|
 | [docs/design.md](docs/design.md) | Approved architecture & PR plan |
+| [docs/bootstrap.md](docs/bootstrap.md) | Bootstrap usage (PR2–3) |
 | [docs/keybindings.md](docs/keybindings.md) | Omarchy → dwm map (filled in PR6) |
 | [docs/theming.md](docs/theming.md) | Theme engine usage (PR8+) |
 | [docs/repos.md](docs/repos.md) | XLibre + vw-repo wiring (PR2) |

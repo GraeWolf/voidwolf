@@ -1,0 +1,21 @@
+# packages-desktop-optional.txt — best-effort; missing packages are skipped
+# Prefer nicer TUIs when present; helpers fall back to bluetoothctl/nmtui/wpctl.
+
+pulsemixer
+wiremix
+bluetuith
+pavucontrol
+clipmenu
+arandr
+lf
+ImageMagick
+slock
+
+# Theme extractors (PR9b) — install when available
+wallust
+matugen
+python3-pywal
+
+# Omarchy-like names only if packaged on Void (never hard-fail)
+# bluetui
+# impala

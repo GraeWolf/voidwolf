@@ -1,0 +1,7 @@
+# packages-nvidia.txt — common deps for proprietary NVIDIA (all GPU profiles)
+# Driver family package (nvidia / nvidia580 / nvidia470 / nvidia390) is selected
+# by install-packages.sh from --gpu and VOIDWOLF_NVIDIA_PKG override.
+# Full PRIME/xorg config is PR10.
+
+dkms
+linux-headers

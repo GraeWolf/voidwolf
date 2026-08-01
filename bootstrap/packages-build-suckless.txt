@@ -1,0 +1,9 @@
+# packages-build-suckless.txt — required to build vendored dwm/st/dmenu (PR4)
+# base-devel pulls gcc/make/pkg-config and friends on Void.
+
+base-devel
+libX11-devel
+libXft-devel
+libXinerama-devel
+freetype-devel
+fontconfig-devel

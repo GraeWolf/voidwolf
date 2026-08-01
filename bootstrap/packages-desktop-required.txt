@@ -1,0 +1,57 @@
+# packages-desktop-required.txt — required for voidwolf desktop session
+# XLibre meta is chosen by install-packages.sh (xlibre-minimal vs xlibre).
+# Browser (brave-origin*) is installed separately unless --no-brave.
+
+# Session / privilege
+elogind
+dbus
+polkit
+
+# X tools (also pulled by xlibre-minimal; listed explicitly for startx/dwm)
+xauth
+xinit
+xrdb
+xsetroot
+xset
+setxkbmap
+xrandr
+xclip
+xdotool
+maim
+
+# Audio (pipewire-pulse is shipped inside pipewire on Void)
+pipewire
+wireplumber
+wireplumber-elogind
+alsa-pipewire
+libspa-bluetooth
+
+# Network / Bluetooth
+NetworkManager
+bluez
+
+# Desktop helpers
+dunst
+xsecurelock
+feh
+xwallpaper
+
+# Graphics validation / iGPU
+mesa
+mesa-dri
+glxinfo
+
+# Dev daily drivers
+neovim
+ripgrep
+fd
+btop
+
+# Security
+ufw
+
+# Fonts
+dejavu-fonts-ttf
+font-firacode
+noto-fonts-emoji
+fontconfig

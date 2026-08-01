@@ -1,0 +1,5 @@
+# voidwolf — enable sudo for members of group wheel
+# Installed to /etc/sudoers.d/voidwolf-wheel (mode 0440)
+# Validate with: visudo -cf /etc/sudoers.d/voidwolf-wheel
+
+%wheel ALL=(ALL:ALL) ALL

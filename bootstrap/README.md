@@ -2,30 +2,35 @@
 
 Install voidwolf onto an **existing** Void Linux (glibc x86_64) system.
 
-## PR2 (current)
-
-| File | Role |
-|------|------|
-| `repos.sh` | Enable nonfree, optional multilib, XLibre + vw-repo (fail-closed keys) |
-| `bootstrap.sh` | Entrypoint; use `--repos-only` for PR2 scope |
-| `keys/` | Shipped XBPS key plists + `pins.conf` |
+## Quick start
 
 ```bash
-./bootstrap/repos.sh --dry-run
-./bootstrap/bootstrap.sh --repos-only
-./bootstrap/repos.sh --with-32bit          # multilib
-./bootstrap/repos.sh --disable-third-party # rollback XLibre + vw-repo
+./bootstrap/bootstrap.sh --profile laptop --gpu none --dry-run
+./bootstrap/bootstrap.sh --profile laptop --gpu nvidia-hybrid
 ```
 
-Docs: [docs/repos.md](../docs/repos.md).
+Full docs: [docs/bootstrap.md](../docs/bootstrap.md).
 
-## Later PRs
+## Layout
 
-| File | PR |
-|------|-----|
-| `packages-*.txt` | PR3 |
-| `enable-services.sh` | PR3 |
-| `install-dotfiles.sh`, `setup-pipewire.sh` | PR5 |
-| `build-suckless.sh` | PR4 |
+| Path | PR | Role |
+|------|-----|------|
+| `repos.sh` | PR2 | nonfree, XLibre, vw-repo (fail-closed keys) |
+| `keys/` | PR2 | Pinned XBPS key plists |
+| `install-packages.sh` | PR3 | Package lists install |
+| `enable-services.sh` | PR3 | runit, sudoers, ufw, groups |
+| `packages-*.txt` | PR3 | Required / optional package sets |
+| `sudoers.d/voidwolf-wheel` | PR3 | `%wheel` sudo |
+| `lib.sh` | PR3 | Shared helpers |
+| `bootstrap.sh` | PR2–3 | Entrypoint |
+| `build-suckless.sh` | PR4 | (not yet) |
+| `setup-pipewire.sh`, `install-dotfiles.sh` | PR5 | (not yet) |
 
-See [docs/design.md](../docs/design.md) for session, package, and NVIDIA rules.
+## Partial runs
+
+```bash
+./bootstrap/bootstrap.sh --repos-only
+./bootstrap/bootstrap.sh --packages-only --profile desktop --gpu none
+./bootstrap/bootstrap.sh --services-only
+./bootstrap/repos.sh --disable-third-party
+```
