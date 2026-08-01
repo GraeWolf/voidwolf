@@ -11,6 +11,7 @@
 | `nvidia-helpers-validate.sh` | PR10 |
 | `bash-nvim-validate.sh` | PR12 |
 | `displays-tui-validate.sh` | PR13 |
+| `packages-validate.sh` | PR15 |
 
 ```bash
 make test

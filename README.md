@@ -47,7 +47,7 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 | 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | **PR1–7 done** |
 | 2 | Theming engine | **PR8–9b done** |
 | 3 | Opinionated desktop polish | PR10–14 done; packaging PR15+ remaining |
-| 4 | XBPS meta-packages | Planned |
+| 4 | XBPS meta-packages | **PR15 done** (local repo); PR16 suckless pkgs next |
 | 5 | ISO / installer | After packaging |
 
 ## Development
@@ -94,6 +94,7 @@ make theme-list
 | [docs/dogfood.md](docs/dogfood.md) | Live host validation notes |
 | [docs/bash-nvim.md](docs/bash-nvim.md) | Bash + neovim defaults (PR12) |
 | [docs/displays.md](docs/displays.md) | Multi-monitor presets + HiDPI (PR13) |
+| [docs/packaging.md](docs/packaging.md) | Local XBPS meta packages (PR15) |
 
 ## License
 

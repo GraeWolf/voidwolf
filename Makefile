@@ -43,3 +43,7 @@ test: ## Run tests/ checks
 	@./tests/nvidia-helpers-validate.sh
 	@./tests/bash-nvim-validate.sh
 	@./tests/displays-tui-validate.sh
+	@./tests/packages-validate.sh
+
+packages-repo: ## Build local XBPS meta packages into packages/repo
+	@./packages/build-local-repo.sh

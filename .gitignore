@@ -45,9 +45,11 @@ iso/out/
 iso/work/
 *.iso
 
-# Local XBPS hostrepo workdirs
+# Local XBPS hostrepo workdirs / build output (PR15)
 packages/*/destdir/
 packages/*/work/
+packages/.build/
+packages/repo/
 
 # Secrets / local overrides
 .env

@@ -1,0 +1,11 @@
+# voidwolf personal local XBPS repo (PR15)
+# Copy to /etc/xbps.d/ and edit the absolute path to your packages/repo.
+#
+#   sudo cp packages/xbps.d/98-voidwolf-local.conf.example /etc/xbps.d/98-voidwolf-local.conf
+#   sudo $EDITOR /etc/xbps.d/98-voidwolf-local.conf
+#   sudo xbps-install -S
+#
+# Build packages first:
+#   ./packages/build-local-repo.sh
+
+repository=/ABS/PATH/TO/voidwolf/packages/repo

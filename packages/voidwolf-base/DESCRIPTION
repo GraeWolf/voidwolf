@@ -1,0 +1,1 @@
+voidwolf base meta-package — core CLI tools used by bootstrap (sudo, git, curl, bash-completion, ca-certificates, xbps).

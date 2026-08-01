@@ -1,0 +1,1 @@
+voidwolf desktop meta-package — session stack deps (elogind, PipeWire, X tools, fonts, yaru, …). Does not install XLibre/Brave/NVIDIA (third-party or hardware-specific); run bootstrap/repos.sh for those.

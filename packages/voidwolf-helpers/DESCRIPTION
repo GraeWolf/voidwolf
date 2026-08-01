@@ -1,0 +1,1 @@
+voidwolf user-facing helper scripts (voidwolf-theme, menus, lock, …) installed to /usr/bin. Themed dwm rebuilds still prefer ~/.local/bin when present.

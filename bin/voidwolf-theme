@@ -173,7 +173,8 @@ def resolve_wallpaper(rel: str | None) -> Path | None:
         return path
     candidates = [
         repo_root() / rel,
-        Path("/usr/share/voidwolf") / rel,
+        Path("/usr/share/voidwolf") / rel,  # e.g. wallpapers/nord.png under share root
+        Path("/usr/share/voidwolf/wallpapers") / Path(rel).name,
         voidwolf_home() / rel,
     ]
     for c in candidates:
