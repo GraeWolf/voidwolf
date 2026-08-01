@@ -9,7 +9,7 @@ Personal, opinionated **Void Linux** desktop setup inspired by [Omarchy](https:/
 | **Base** | Void Linux (runit, XBPS), glibc x86_64 first |
 | **Display** | XLibre + dwm + st + startx |
 | **Browser** | [brave-origin](https://codeberg.org/Graewolf/vw-repo) via vw-repo |
-| **Status** | Phase 0 design approved; implementation in progress |
+| **Status** | PR1–17 complete; dogfood host READY (see [docs/dogfood.md](docs/dogfood.md)) |
 
 ## Stack (locked)
 
@@ -44,11 +44,14 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 | Phase | Goal | State |
 |-------|------|--------|
 | 0 | Design | **Done** ([docs/design.md](docs/design.md)) |
-| 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | **PR1–7 done** |
-| 2 | Theming engine | **PR8–9b done** |
-| 3 | Opinionated desktop polish | PR10–14 done; packaging PR15+ remaining |
-| 4 | XBPS packages | **PR15–16 done** (meta + suckless local repo) |
-| 5 | ISO / installer | **PR17 scaffolding done** (void-mklive driver; no FDE) |
+| 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | **Done** (PR1–7) |
+| 2 | Theming engine | **Done** (PR8–9b) |
+| 3 | Opinionated desktop polish | **Done** (PR10–14: NVIDIA, profiles, bash/nvim, displays, walls, gaps/scratch/sticky) |
+| 4 | XBPS packages | **Done** (PR15–16: metas + suckless → `packages/repo`) |
+| 5 | ISO / installer | **Scaffolding done** (PR17: void-mklive driver; no FDE; build/boot still optional) |
+| — | Live dogfood (RTX 4060 Ti + XLibre + startx) | **READY** ([docs/dogfood.md](docs/dogfood.md)) |
+
+Optional follow-ups: install from the local XBPS repo on a clean path, build/boot the live ISO, second-machine bootstrap.
 
 ## Development
 

@@ -76,9 +76,37 @@ command -v xbps-rindex >/dev/null 2>&1 || voidwolf_die "xbps-rindex not found (i
 PKGVER_FULL="${VOIDWOLF_PKGVER}_${VOIDWOLF_PKGREVISION}"
 [[ -n "${OUT_REPO}" ]] || voidwolf_die "empty --repo"
 
+# XBPS run_depends require a version pattern (bare "sudo" fails with
+# "can't guess pkgname for dependency"). Prefer "pkg>=0" for soft deps.
+normalize_dep() {
+	local d="$1"
+	# already a pattern: foo>=1.0, foo-1.0_1, foo<2, foo>0, etc.
+	if [[ "$d" == *[\<\>=]* ]] || [[ "$d" =~ -[0-9] ]]; then
+		printf '%s' "$d"
+	else
+		printf '%s>=0' "$d"
+	fi
+}
+
+# Space-separated XBPS dependency patterns from a bootstrap package list.
 deps_from_list() {
-	local listf="$1"
-	voidwolf_read_pkg_list "$listf" | tr '\n' ' ' | sed 's/[[:space:]]*$//'
+	local listf="$1" d
+	local -a out=()
+	while IFS= read -r d; do
+		[[ -n "$d" ]] || continue
+		out+=("$(normalize_dep "$d")")
+	done < <(voidwolf_read_pkg_list "$listf")
+	printf '%s' "${out[*]}"
+}
+
+# Normalize a whitespace-separated dep string (for hardcoded lists).
+normalize_deps_string() {
+	local s="$1" d
+	local -a out=()
+	for d in $s; do
+		out+=("$(normalize_dep "$d")")
+	done
+	printf '%s' "${out[*]}"
 }
 
 stage_doc() {
@@ -115,12 +143,12 @@ build_desktop() {
 	local name="voidwolf-desktop"
 	local dest="${WORK}/${name}"
 	local deps_list deps
-	# Meta depends on voidwolf-base + desktop-required + xlibre-minimal (name only)
+	# Meta depends on voidwolf-base + desktop-required + xlibre-minimal
 	mapfile -t deps_list < <(voidwolf_read_pkg_list "${REPO_ROOT}/bootstrap/packages-desktop-required.txt")
-	deps="voidwolf-base>=${VOIDWOLF_PKGVER} voidwolf-themes>=${VOIDWOLF_PKGVER} xlibre-minimal"
+	deps="voidwolf-base>=${VOIDWOLF_PKGVER} voidwolf-themes>=${VOIDWOLF_PKGVER} $(normalize_dep xlibre-minimal)"
 	local p
 	for p in "${deps_list[@]}"; do
-		deps+=" ${p}"
+		deps+=" $(normalize_dep "$p")"
 	done
 	rm -rf "$dest"
 	mkdir -p "$dest"
@@ -212,7 +240,8 @@ build_helpers() {
 }
 
 # Runtime deps for X11 suckless tools (Void package names; devel only needed at build host)
-SUCKLESS_RUN_DEPS="libX11 libXft libXinerama fontconfig freetype"
+# Must be version patterns — bare names break xbps-install ("can't guess pkgname").
+SUCKLESS_RUN_DEPS="$(normalize_deps_string 'libX11 libXft libXinerama fontconfig freetype')"
 
 # --- PR16: voidwolf-dwm ---
 build_dwm() {

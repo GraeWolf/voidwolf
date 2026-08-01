@@ -55,6 +55,8 @@ Runtime deps: `libX11 libXft libXinerama fontconfig freetype`.
 
 Version: `packages/version.conf` (`VOIDWOLF_PKGVER` / `VOIDWOLF_PKGREVISION`).
 
+**Dependency patterns:** XBPS requires versioned patterns in package metadata (e.g. `sudo>=0`), not bare names. `build-local-repo.sh` appends `>=0` to entries from bootstrap package lists and to suckless runtime libs.
+
 ## Enable repo + install
 
 ```bash

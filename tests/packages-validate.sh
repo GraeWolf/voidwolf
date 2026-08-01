@@ -106,6 +106,28 @@ if command -v xbps-create >/dev/null 2>&1 && command -v xbps-rindex >/dev/null 2
 					fi
 				fi
 			fi
+			# bare deps break install: "can't guess pkgname for dependency 'sudo'"
+			deps=$(xbps-query --repository="$tmp_repo" -p run_depends voidwolf-base 2>/dev/null || true)
+			if printf '%s\n' "$deps" | rg -q 'sudo>='; then
+				echo "OK   voidwolf-base deps are versioned patterns (sudo>=…)"
+			else
+				echo "FAIL voidwolf-base run_depends must use patterns like sudo>=0 (got: ${deps//$'\n'/ })"
+				fail=1
+			fi
+			# dry-run resolve against real repos + local (needs network/repos configured)
+			if xbps-install -n --repository="$tmp_repo" voidwolf-helpers voidwolf-suckless >/tmp/voidwolf-pkg-n.$$.log 2>&1; then
+				echo "OK   xbps-install -n voidwolf-helpers+suckless resolves"
+			else
+				if rg -q "can't guess pkgname" /tmp/voidwolf-pkg-n.$$.log; then
+					echo "FAIL deps still bare (can't guess pkgname)"
+					cat /tmp/voidwolf-pkg-n.$$.log || true
+					fail=1
+				else
+					echo "WARN xbps-install -n failed (repos/network?); not treating as fail"
+					head -5 /tmp/voidwolf-pkg-n.$$.log || true
+				fi
+			fi
+			rm -f /tmp/voidwolf-pkg-n.$$.log
 		fi
 	else
 		echo "FAIL build-local-repo real build"
