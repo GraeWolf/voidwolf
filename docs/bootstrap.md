@@ -45,7 +45,7 @@ After a real run: **re-login** (groups + elogind), then later `startx` (PR5+).
 | `--with-32bit` | Multilib repos + optional 32-bit NVIDIA libs |
 | `--no-brave` | Skip browser |
 | `--xlibre-full` | `xlibre` meta instead of `xlibre-minimal` |
-| `--with-picom` | Install picom (off by default) |
+| `--with-picom` | Historical flag (picom is now in desktop-required) |
 | `--repos-only` / `--packages-only` / `--services-only` | Partial runs |
 | `--skip-repos` / `--skip-packages` / `--skip-services` | Skip stages |
 | `--dry-run` | Print actions only |

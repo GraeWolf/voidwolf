@@ -95,8 +95,14 @@ command -v voidwolf-displays >/dev/null 2>&1 && voidwolf-displays restore
 # Wallpaper (after displays so background covers full virtual screen)
 command -v voidwolf-wallpaper >/dev/null 2>&1 && voidwolf-wallpaper restore &
 
-# Optional compositor (default OFF — design)
-# command -v picom >/dev/null 2>&1 && picom -b
+# Compositor (light config from install-dotfiles → ~/.config/picom/picom.conf)
+if command -v picom >/dev/null 2>&1; then
+	if [ -f "${HOME}/.config/picom/picom.conf" ]; then
+		picom --config "${HOME}/.config/picom/picom.conf" -b
+	else
+		picom -b
+	fi
+fi
 
 # dwm loop:
 #   exit 0  (Super+Shift+Q / clean logout) → break → end X session

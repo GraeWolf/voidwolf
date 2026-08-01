@@ -40,6 +40,9 @@ directory are kept for audit/reproducibility; rebuild does **not** re-apply them
    https://st.suckless.org/patches/xresources/
 2. **scrollback** — `st-scrollback-0.9.2.diff` (`HISTSIZE` 2000, Shift+PgUp/PgDn)  
    https://st.suckless.org/patches/scrollback/
+3. **alpha** — `st-alpha-20240814-a0274bc.diff` (adapted for 0.9.2; default `alpha = 0.85`, CLI `-A`)  
+   https://st.suckless.org/patches/alpha/  
+   Needs **picom** (or another compositor) for transparent backgrounds to show.
 
 ## dmenu
 

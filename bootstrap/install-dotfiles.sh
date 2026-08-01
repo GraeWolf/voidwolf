@@ -78,6 +78,17 @@ install_file() {
 install_file "${REPO_ROOT}/config/X11/.xinitrc" "${TARGET_HOME}/.xinitrc" 0755
 install_file "${REPO_ROOT}/config/X11/.Xresources" "${TARGET_HOME}/.Xresources" 0644
 
+# picom (light defaults; keep user edits if no voidwolf marker)
+picom_src="${REPO_ROOT}/config/picom/picom.conf"
+picom_dest="${TARGET_HOME}/.config/picom/picom.conf"
+if [[ -f "$picom_src" ]]; then
+	if [[ ! -f "$picom_dest" ]] || grep -q 'voidwolf picom' "$picom_dest" 2>/dev/null; then
+		install_file "$picom_src" "$picom_dest" 0644
+	else
+		voidwolf_log "picom.conf present (not voidwolf-marked) — leaving in place"
+	fi
+fi
+
 # XDG user dirs (Desktop, Documents, Pictures/Screenshots, …)
 if [[ "${DRY_RUN}" -eq 0 ]] && command -v xdg-user-dirs-update >/dev/null 2>&1; then
 	voidwolf_log "xdg-user-dirs-update"

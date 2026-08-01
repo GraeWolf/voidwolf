@@ -20,9 +20,9 @@ Full catalog: [docs/helpers.md](../docs/helpers.md).
 | `voidwolf-lock` | Super+Ctrl+L |
 | `voidwolf-screenshot` | Super+Shift+P / Super+Shift+S / Super+Ctrl+C |
 | `voidwolf-float-term` | Floating centered st for TUIs |
-| `voidwolf-cheatsheet` | Super+K |
+| `voidwolf-cheatsheet` | Super+K (fzf / dmenu key list) |
 | `voidwolf-browser` | Super+Shift+B |
-| `voidwolf-filemanager` | Super+Shift+F |
+| `voidwolf-filemanager` | Super+Shift+F (Nemo) |
 | `voidwolf-clipboard` | Super+Ctrl+V |
 | `voidwolf-audio-tui` | Super+Ctrl+A |
 | `voidwolf-bluetooth-tui` | Super+Ctrl+B |

@@ -38,6 +38,9 @@ feh
 xwallpaper
 xdg-user-dirs
 fastfetch
+fzf
+picom
+nemo
 
 # Graphics validation / iGPU
 mesa

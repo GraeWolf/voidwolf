@@ -32,8 +32,8 @@ Omarchy-inspired **Super (Mod4)** map for voidwolf dwm.
 | Super+Escape | System menu | `voidwolf-system-menu` |
 | Super+Ctrl+L | Lock | `voidwolf-lock` |
 | Super+Shift+N | Neovim | `st -e nvim` |
-| Super+Shift+F | File manager | `voidwolf-filemanager` |
-| Super+K | Keybind cheatsheet | `voidwolf-cheatsheet` |
+| Super+Shift+F | File manager (Nemo) | `voidwolf-filemanager` |
+| Super+K | Keybind cheatsheet (searchable) | `voidwolf-cheatsheet` |
 | Super+Ctrl+Shift+Space | Theme pick | `voidwolf-theme pick` |
 | Super+Ctrl+Space | Wallpaper pick | `voidwolf-wallpaper pick` |
 

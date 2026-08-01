@@ -21,9 +21,9 @@ export PATH="$HOME/.local/bin:$PATH"
 | `voidwolf-lock` | Super+Ctrl+L | xsecurelock → slock → i3lock |
 | `voidwolf-screenshot` | Super+Shift+P / Super+Shift+S / Super+Ctrl+C | maim + xclip |
 | `voidwolf-float-term` | (helper) | floating centered st for TUIs |
-| `voidwolf-cheatsheet` | Super+K | Open keybindings.md |
+| `voidwolf-cheatsheet` | Super+K | Searchable key list (fzf float / dmenu) |
 | `voidwolf-browser` | Super+Shift+B | brave-origin* / brave-origin-nightly |
-| `voidwolf-filemanager` | Super+Shift+F | lf / ranger / thunar |
+| `voidwolf-filemanager` | Super+Shift+F | **Nemo** → thunar → lf |
 | `voidwolf-clipboard` | Super+Ctrl+V | clipmenu / xclip |
 | `voidwolf-audio-tui` | Super+Ctrl+A | pulsemixer / wpctl |
 | `voidwolf-bluetooth-tui` | Super+Ctrl+B | bluetuith / bluetoothctl |

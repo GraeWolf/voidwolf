@@ -97,6 +97,22 @@ else
 	fail=1
 fi
 
+# file manager prefers Nemo
+if rg -q 'nemo' "${BIN}/voidwolf-filemanager"; then
+	echo "OK   filemanager prefers nemo"
+else
+	echo "FAIL voidwolf-filemanager should prefer nemo"
+	fail=1
+fi
+
+# cheatsheet searchable (fzf/dmenu) not raw markdown pager only
+if rg -q 'fzf' "${BIN}/voidwolf-cheatsheet" && rg -q 'Super\+Return' "${BIN}/voidwolf-cheatsheet"; then
+	echo "OK   cheatsheet fzf + human key list"
+else
+	echo "FAIL voidwolf-cheatsheet should use fzf and simple key list"
+	fail=1
+fi
+
 # volume / brightness usage strings
 if rg -q 'wpctl' "${BIN}/voidwolf-volume"; then
 	echo "OK   volume uses wpctl"
