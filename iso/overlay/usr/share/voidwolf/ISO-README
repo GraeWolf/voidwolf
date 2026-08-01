@@ -1,0 +1,44 @@
+voidwolf live image
+==================
+
+Identity
+--------
+- Hostname: voidwolf
+- Session: startx → XLibre → dwm (no greeter / display manager)
+- Base: Void Linux glibc x86_64 (first target)
+- FDE: not provided by voidwolf; pre-configure LUKS if you need it
+
+Live session
+------------
+1. Log in (credentials printed at boot / set by mklive user args).
+2. If voidwolf-suckless is installed: `export PATH="$HOME/.local/bin:$PATH"` only needed
+   when you rebuild user-local themed binaries.
+3. `startx`
+4. Super+Return = st, Super+Space = launcher, Super+Shift+B = browser (if installed)
+
+Local packages
+--------------
+If this image embedded packages/repo, xbps may list voidwolf-* packages.
+  xbps-query -Rs voidwolf
+
+Post-install (target disk)
+--------------------------
+1. Install Void base (void-installer or manual).
+2. Clone or copy this repo, or install from your local XBPS repo.
+3. ./bootstrap/repos.sh && ./bootstrap/bootstrap.sh --profile desktop --gpu … --with-suckless
+   OR: xbps-install voidwolf-desktop voidwolf-helpers voidwolf-suckless + install-dotfiles.sh
+4. Enable elogind, re-login, startx.
+
+NVIDIA
+------
+Discrete: --gpu nvidia + nvidia-setup.sh (see docs/nvidia.md).
+Hybrid: --gpu nvidia-hybrid | nvidia-hybrid-randr.
+
+Brave
+-----
+Not on the live image by default. After vw-repo:
+  sudo xbps-install -y brave-origin   # or brave-origin-bin
+
+Building this image
+-------------------
+See docs/iso.md and iso/build-iso.sh.

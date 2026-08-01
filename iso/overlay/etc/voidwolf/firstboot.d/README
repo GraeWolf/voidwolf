@@ -1,0 +1,9 @@
+# firstboot hooks (optional)
+
+Scripts placed here are intended for a future voidwolf firstboot oneshot
+(runit or rc.local equivalent). PR17 scaffolds the directory only.
+
+Ideas (not installed by default):
+- set hostname to voidwolf if overwritten
+- install-dotfiles for the primary user
+- print startx reminder on tty1

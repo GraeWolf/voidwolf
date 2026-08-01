@@ -44,6 +44,11 @@ test: ## Run tests/ checks
 	@./tests/bash-nvim-validate.sh
 	@./tests/displays-tui-validate.sh
 	@./tests/packages-validate.sh
+	@./tests/iso-scaffold-validate.sh
 
 packages-repo: ## Build local XBPS meta packages into packages/repo
 	@./packages/build-local-repo.sh
+
+iso-scaffold: ## Validate ISO scaffolding / dry-run build-iso
+	@./iso/build-iso.sh --dry-run
+	@./tests/iso-scaffold-validate.sh

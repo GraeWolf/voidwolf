@@ -1,0 +1,15 @@
+
+=== voidwolf ===
+Hostname is "voidwolf". Graphical session is startx only (no display manager).
+
+  1. Log in as the live user (see ISO-README).
+  2. Ensure PATH has ~/.local/bin if you rebuild suckless as user.
+  3. startx
+
+After install, run on the target system:
+  - ./bootstrap/repos.sh          # XLibre + vw-repo keys (fail-closed)
+  - voidwolf-theme set voidwolf-dark
+  - docs: /usr/share/voidwolf/ISO-README and https://github.com/GraeWolf/voidwolf
+
+No full-disk encryption story in this installer (design non-goal).
+

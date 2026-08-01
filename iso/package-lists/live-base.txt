@@ -1,0 +1,32 @@
+# Packages for the live ISO rootfs (Void official names).
+# One per line. Comments and blanks ignored.
+# void-mklive already pulls a base; this list is additive / documentation of intent.
+
+# Console + privilege
+bash
+bash-completion
+sudo
+curl
+ca-certificates
+xbps
+
+# Networking (live usability)
+NetworkManager
+dhcpcd
+wpa_supplicant
+iw
+
+# Storage / install helpers (no FDE tooling required — design non-goal)
+gptfdisk
+parted
+dosfstools
+e2fsprogs
+xfsprogs
+btrfs-progs
+xz
+unzip
+
+# Editor for rescue
+neovim
+less
+git

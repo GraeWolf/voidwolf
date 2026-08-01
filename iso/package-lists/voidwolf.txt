@@ -1,0 +1,9 @@
+# voidwolf packages from the personal local repo (PR15–16).
+# Built by: ./packages/build-local-repo.sh
+# Included when VOIDWOLF_ISO_INCLUDE_LOCAL_REPO=1 and packages/repo exists.
+
+voidwolf-base
+voidwolf-themes
+voidwolf-desktop
+voidwolf-helpers
+voidwolf-suckless

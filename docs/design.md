@@ -1057,7 +1057,7 @@ Out of scope.
 | **2** | Theming MVP | `set` / `from-wallpaper` (wallust→matugen→pywal); adapters; warm rebuild targets |
 | **3** | Opinionated desktop | Full keybind map (PR6 + PR6b), menus, lock+suspend, screenshots, neovim, doctor, displays; **vanitygaps + scratchpad + sticky** as default dwm patches |
 | **4** | XBPS templates | local-repo consumable packages (PR15–16) |
-| **5** | ISO scaffolding | Keep on roadmap; **defer void-mklive / user-creation / ISO parameters until after packaging works** (post PR15–16); no FDE |
+| **5** | ISO scaffolding | **PR17:** void-mklive driver + overlay + package lists; hostname voidwolf; startx; no FDE |
 
 ### Risks and mitigations
 
@@ -1083,9 +1083,9 @@ Product and Phase 1–4 technical choices are **closed**. Remaining work is impl
 | Wallpaper extractor order | **Resolved:** wallust → matugen → pywal (automatic) |
 | Phase 3 dwm extras | **Resolved:** vanitygaps + scratchpad + sticky are Phase 3 **defaults** |
 | Lock binary | **Resolved preference:** xsecurelock; bootstrap falls back to slock if unpackaged (operational, not open product) |
-| **Phase 5 ISO details** | **Deferred** to PR17 after PR15–16 packaging works: void-mklive parameters, user creation, hostname injection on image. ISO remains on the roadmap; do not design these until packages exist. |
+| **Phase 5 ISO details** | **Resolved in PR17:** void-mklive external driver (`iso/build-iso.sh`), hostname **voidwolf**, startx-only session, live user name **voidwolf** (password operator-defined), no FDE, optional local `packages/repo` inclusion. See `docs/iso.md`. |
 
-No further Open Questions block Phase 0–4 implementation.
+No further Open Questions block Phase 0–5 implementation scaffolding.
 
 ---
 

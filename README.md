@@ -48,7 +48,7 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 | 2 | Theming engine | **PR8–9b done** |
 | 3 | Opinionated desktop polish | PR10–14 done; packaging PR15+ remaining |
 | 4 | XBPS packages | **PR15–16 done** (meta + suckless local repo) |
-| 5 | ISO / installer | After packaging |
+| 5 | ISO / installer | **PR17 scaffolding done** (void-mklive driver; no FDE) |
 
 ## Development
 
@@ -94,7 +94,8 @@ make theme-list
 | [docs/dogfood.md](docs/dogfood.md) | Live host validation notes |
 | [docs/bash-nvim.md](docs/bash-nvim.md) | Bash + neovim defaults (PR12) |
 | [docs/displays.md](docs/displays.md) | Multi-monitor presets + HiDPI (PR13) |
-| [docs/packaging.md](docs/packaging.md) | Local XBPS meta packages (PR15) |
+| [docs/packaging.md](docs/packaging.md) | Local XBPS meta packages (PR15–16) |
+| [docs/iso.md](docs/iso.md) | Live ISO / void-mklive (PR17) |
 
 ## License
 
