@@ -10,7 +10,7 @@ help: ## Show available targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
 	@echo ""
-	@echo "Note: wallpaper extract PR9b; NVIDIA PR10."
+	@echo "Note: NVIDIA profiles PR10; packaging later."
 
 # --- Planned (stubs return a clear message until implemented) ---
 

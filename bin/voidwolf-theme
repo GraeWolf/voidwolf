@@ -606,15 +606,646 @@ def cmd_reload(_: list[str]) -> int:
     return cmd_build_suckless([])
 
 
-def cmd_from_wallpaper(args: list[str]) -> int:
-    print(
-        "voidwolf-theme: from-wallpaper lands in PR9b "
-        "(wallust → matugen → pywal). For now: voidwolf-theme set <name>",
-        file=sys.stderr,
+# --- PR9b: wallpaper extraction ---------------------------------------------
+
+def _hex_rgb(h: str) -> tuple[int, int, int]:
+    h = h.lstrip("#")
+    return int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+
+
+def _rgb_hex(r: int, g: int, b: int) -> str:
+    return f"#{max(0, min(255, r)):02x}{max(0, min(255, g)):02x}{max(0, min(255, b)):02x}"
+
+
+def _lighten(h: str, t: float = 0.25) -> str:
+    r, g, b = _hex_rgb(h)
+    return _rgb_hex(
+        int(r + (255 - r) * t),
+        int(g + (255 - g) * t),
+        int(b + (255 - b) * t),
     )
-    if args:
-        print(f"  (received path: {args[0]})", file=sys.stderr)
-    return 1
+
+
+def _darken(h: str, t: float = 0.25) -> str:
+    r, g, b = _hex_rgb(h)
+    return _rgb_hex(int(r * (1 - t)), int(g * (1 - t)), int(b * (1 - t)))
+
+
+def _luma(h: str) -> float:
+    r, g, b = _hex_rgb(h)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def _norm_hex(c: str | None) -> str | None:
+    if not c:
+        return None
+    c = str(c).strip()
+    if c.startswith("rgb"):
+        # rgb(1,2,3) or similar
+        m = re.search(r"(\d+)\D+(\d+)\D+(\d+)", c)
+        if m:
+            return _rgb_hex(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+    if not c.startswith("#"):
+        c = "#" + c
+    if re.match(r"^#[0-9A-Fa-f]{6}$", c):
+        return c.lower()
+    if re.match(r"^#[0-9A-Fa-f]{3}$", c):
+        return ("#" + "".join(ch * 2 for ch in c[1:])).lower()
+    return None
+
+
+def ensure_full_palette(raw: dict[str, str]) -> dict[str, str]:
+    """Fill design-required palette fields from partial extraction."""
+    pal: dict[str, str] = {}
+    for k, v in raw.items():
+        hx = _norm_hex(v)
+        if hx:
+            pal[k] = hx
+
+    # ANSI 0-15
+    for i in range(16):
+        key = f"color{i}"
+        if key not in pal:
+            if i >= 8 and f"color{i - 8}" in pal:
+                pal[key] = _lighten(pal[f"color{i - 8}"], 0.35)
+            elif i < 8 and f"color{i + 8}" in pal:
+                pal[key] = _darken(pal[f"color{i + 8}"], 0.25)
+            else:
+                pal[key] = "#808080"
+
+    # bg/fg from specials or color0/7
+    if "bg" not in pal:
+        pal["bg"] = pal.get("background") or pal["color0"]
+    if "fg" not in pal:
+        pal["fg"] = pal.get("foreground") or pal["color7"]
+    pal.setdefault("cursor", pal.get("cursorColor") or pal["fg"])
+
+    # pick accent: prefer color4/5 with mid-high chroma vs bg
+    if "accent" not in pal:
+        candidates = [pal[f"color{i}"] for i in (4, 5, 6, 1, 3, 2, 12, 13)]
+        accent = max(candidates, key=lambda h: abs(_luma(h) - _luma(pal["bg"])))
+        pal["accent"] = accent
+    if "urgent" not in pal:
+        pal["urgent"] = pal.get("color1") or "#f07178"
+
+    pal.setdefault("border_normal", _darken(pal["bg"], 0.15) if _luma(pal["bg"]) > 40 else _lighten(pal["bg"], 0.2))
+    pal.setdefault("border_focused", pal["accent"])
+    pal.setdefault("bar_bg", pal["bg"])
+    pal.setdefault("bar_fg", pal["fg"])
+    pal.setdefault("bar_selected_bg", pal["accent"])
+    pal.setdefault("bar_selected_fg", pal["bg"] if _luma(pal["accent"]) > 128 else pal["fg"])
+
+    # keep only design keys + color0-15
+    keys = [
+        "bg", "fg", "cursor", "accent", "urgent",
+        "border_normal", "border_focused",
+        "bar_bg", "bar_fg", "bar_selected_bg", "bar_selected_fg",
+        *ANSI,
+    ]
+    return {k: pal[k] for k in keys}
+
+
+def slugify_name(stem: str) -> str:
+    s = re.sub(r"[^a-z0-9]+", "-", stem.lower()).strip("-")
+    return (s or "wall")[:48]
+
+
+def dump_theme_toml(data: dict) -> str:
+    """Serialize theme dict to TOML (minimal, no external lib)."""
+    lines = [
+        f"schema_version = {int(data.get('schema_version', 1))}",
+        f'name = "{data["name"]}"',
+        f'display_name = "{data.get("display_name", data["name"])}"',
+        f'author = "{data.get("author", "voidwolf-derived")}"',
+        f'description = "{data.get("description", "").replace(chr(34), "")}"',
+        "",
+        "[palette]",
+    ]
+    for k, v in (data.get("palette") or {}).items():
+        lines.append(f'{k} = "{v}"')
+    meta = data.get("meta") or {}
+    lines.append("")
+    lines.append("[meta]")
+    for k, v in meta.items():
+        if isinstance(v, int):
+            lines.append(f"{k} = {v}")
+        else:
+            lines.append(f'{k} = "{v}"')
+    lines.append("")
+    lines.append("[options]")
+    lines.append("dwm_border_px = 2")
+    lines.append("dwm_showbar = true")
+    return "\n".join(lines) + "\n"
+
+
+def _read_json(path: Path) -> dict | None:
+    if not path.is_file():
+        return None
+    try:
+        import json
+
+        return json.loads(path.read_text())
+    except Exception:
+        return None
+
+
+def extract_wallust(image: Path) -> tuple[dict[str, str], str] | None:
+    if not shutil.which("wallust"):
+        return None
+    # Prefer colorscheme-only if available; fall back to run
+    for cmd in (
+        ["wallust", "cs", str(image)],
+        ["wallust", "run", str(image), "-q"],
+        ["wallust", "run", str(image)],
+    ):
+        try:
+            subprocess.run(cmd, check=True, capture_output=True, timeout=120)
+            break
+        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+            continue
+    else:
+        return None
+
+    cache = Path.home() / ".cache" / "wallust"
+    candidates = [
+        cache / "colors.json",
+        cache / "colors",
+        *sorted(cache.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)[:5],
+    ]
+    raw: dict[str, str] = {}
+    for c in candidates:
+        data = _read_json(c)
+        if not data:
+            # plain text color0=...
+            if c.is_file() and c.suffix != ".json":
+                for line in c.read_text(errors="ignore").splitlines():
+                    if "=" in line:
+                        k, v = line.split("=", 1)
+                        hx = _norm_hex(v.strip())
+                        if hx:
+                            raw[k.strip()] = hx
+            continue
+        # various shapes
+        if "colors" in data and isinstance(data["colors"], dict):
+            cols = data["colors"]
+            for i in range(16):
+                key = f"color{i}"
+                val = cols.get(key) or cols.get(str(i))
+                if isinstance(val, dict):
+                    val = val.get("hex") or val.get("color")
+                hx = _norm_hex(val if isinstance(val, str) else None)
+                if hx:
+                    raw[key] = hx
+        for i in range(16):
+            key = f"color{i}"
+            if key in data:
+                hx = _norm_hex(str(data[key]))
+                if hx:
+                    raw[key] = hx
+        for special in ("background", "foreground", "cursor", "special"):
+            if special in data:
+                val = data[special]
+                if isinstance(val, dict):
+                    val = val.get("background") or val.get("foreground") or val.get("hex")
+                hx = _norm_hex(str(val) if val else None)
+                if hx:
+                    if special == "background":
+                        raw["bg"] = hx
+                    elif special == "foreground":
+                        raw["fg"] = hx
+                    elif special == "cursor":
+                        raw["cursor"] = hx
+        if len([k for k in raw if k.startswith("color")]) >= 8:
+            break
+    if len([k for k in raw if k.startswith("color")]) < 4:
+        return None
+    return ensure_full_palette(raw), "wallust"
+
+
+def extract_matugen(image: Path) -> tuple[dict[str, str], str] | None:
+    import json
+
+    if not shutil.which("matugen"):
+        return None
+    data = None
+    for cmd in (
+        ["matugen", "image", str(image), "--json", "hex", "-m", "dark"],
+        ["matugen", "image", str(image), "--json", "hex"],
+        ["matugen", "image", str(image), "-j", "hex", "-m", "dark"],
+    ):
+        try:
+            proc = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=120)
+            data = json.loads(proc.stdout)
+            break
+        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired, ValueError):
+            continue
+    if data is None:
+        return None
+
+    raw: dict[str, str] = {}
+    # Material You JSON: colors.dark.background etc. or colors.amoled
+    colors = data.get("colors") or data
+    scheme = None
+    if isinstance(colors, dict):
+        for key in ("dark", "tonalspot", "tonal_spot", "scheme-tonal-spot", "amoled", "dark_medium"):
+            if key in colors and isinstance(colors[key], dict):
+                scheme = colors[key]
+                break
+        if scheme is None:
+            # first nested dict with background
+            for v in colors.values():
+                if isinstance(v, dict) and ("background" in v or "primary" in v):
+                    scheme = v
+                    break
+        if scheme is None and "background" in colors:
+            scheme = colors
+    if not isinstance(scheme, dict):
+        return None
+
+    def g(*names: str) -> str | None:
+        for n in names:
+            if n in scheme:
+                return _norm_hex(str(scheme[n]))
+        return None
+
+    bg = g("background", "surface", "surface_dim")
+    fg = g("on_background", "on_surface", "on_surface_variant")
+    primary = g("primary", "primary_container", "secondary")
+    error = g("error", "error_container")
+    if bg:
+        raw["bg"] = bg
+    if fg:
+        raw["fg"] = fg
+    if primary:
+        raw["accent"] = primary
+    if error:
+        raw["urgent"] = error
+    # Map material roles into 16-ish colors
+    roles = [
+        ("color0", bg),
+        ("color1", error or g("error")),
+        ("color2", g("tertiary", "secondary")),
+        ("color3", g("tertiary_container", "secondary_container")),
+        ("color4", primary),
+        ("color5", g("secondary", "primary_fixed")),
+        ("color6", g("tertiary", "primary_container")),
+        ("color7", fg),
+    ]
+    for key, val in roles:
+        if val:
+            raw[key] = val
+    if len(raw) < 4:
+        return None
+    return ensure_full_palette(raw), "matugen"
+
+
+def extract_pywal(image: Path) -> tuple[dict[str, str], str] | None:
+    wal = shutil.which("wal")
+    if not wal:
+        return None
+    # -i image -n no wallpaper -e skip term reload -t skip tty -s skip sequences (varies by version)
+    for cmd in (
+        [wal, "-i", str(image), "-n", "-e", "-t", "-s", "-q"],
+        [wal, "-i", str(image), "-n", "-e", "-t", "-q"],
+        [wal, "-i", str(image), "-n", "-q"],
+    ):
+        try:
+            subprocess.run(cmd, check=True, capture_output=True, timeout=120)
+            break
+        except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+            continue
+    else:
+        return None
+
+    data = _read_json(Path.home() / ".cache" / "wal" / "colors.json")
+    if not data:
+        # colors file plain lines
+        plain = Path.home() / ".cache" / "wal" / "colors"
+        raw = {}
+        if plain.is_file():
+            lines = [ln.strip() for ln in plain.read_text().splitlines() if ln.strip()]
+            for i, ln in enumerate(lines[:16]):
+                hx = _norm_hex(ln)
+                if hx:
+                    raw[f"color{i}"] = hx
+        if len(raw) < 8:
+            return None
+        return ensure_full_palette(raw), "pywal"
+
+    raw: dict[str, str] = {}
+    cols = data.get("colors") or {}
+    for i in range(16):
+        key = f"color{i}"
+        hx = _norm_hex(cols.get(key))
+        if hx:
+            raw[key] = hx
+    special = data.get("special") or {}
+    for src, dst in (("background", "bg"), ("foreground", "fg"), ("cursor", "cursor")):
+        hx = _norm_hex(special.get(src))
+        if hx:
+            raw[dst] = hx
+    if len([k for k in raw if k.startswith("color")]) < 8:
+        return None
+    return ensure_full_palette(raw), "pywal"
+
+
+def _load_png_pixels(path: Path) -> list[tuple[int, int, int]] | None:
+    """Minimal PNG reader (8-bit RGB/RGBA, non-interlaced)."""
+    import struct
+    import zlib
+
+    data = path.read_bytes()
+    if data[:8] != b"\x89PNG\r\n\x1a\n":
+        return None
+    pos = 8
+    width = height = None
+    bit_depth = color_type = None
+    idat = bytearray()
+    while pos + 8 <= len(data):
+        length = struct.unpack(">I", data[pos : pos + 4])[0]
+        tag = data[pos + 4 : pos + 8]
+        chunk = data[pos + 8 : pos + 8 + length]
+        pos += 12 + length
+        if tag == b"IHDR":
+            width, height, bit_depth, color_type = struct.unpack(">IIBB", chunk[:10])
+        elif tag == b"IDAT":
+            idat.extend(chunk)
+        elif tag == b"IEND":
+            break
+    if not width or not height or bit_depth != 8 or color_type not in (2, 6):
+        return None
+    try:
+        raw = zlib.decompress(bytes(idat))
+    except zlib.error:
+        return None
+    bpp = 3 if color_type == 2 else 4
+    stride = width * bpp + 1
+    pixels: list[tuple[int, int, int]] = []
+    prev = bytearray(width * bpp)
+    for y in range(height):
+        row = raw[y * stride : (y + 1) * stride]
+        if len(row) < stride:
+            return None
+        filt, data_row = row[0], bytearray(row[1:])
+        if filt == 1:  # Sub
+            for i in range(len(data_row)):
+                left = data_row[i - bpp] if i >= bpp else 0
+                data_row[i] = (data_row[i] + left) & 255
+        elif filt == 2:  # Up
+            for i in range(len(data_row)):
+                data_row[i] = (data_row[i] + prev[i]) & 255
+        elif filt == 3:  # Average
+            for i in range(len(data_row)):
+                left = data_row[i - bpp] if i >= bpp else 0
+                up = prev[i]
+                data_row[i] = (data_row[i] + ((left + up) // 2)) & 255
+        elif filt == 4:  # Paeth
+            for i in range(len(data_row)):
+                a = data_row[i - bpp] if i >= bpp else 0
+                b = prev[i]
+                c = prev[i - bpp] if i >= bpp else 0
+                p = a + b - c
+                pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
+                pr = a if pa <= pb and pa <= pc else (b if pb <= pc else c)
+                data_row[i] = (data_row[i] + pr) & 255
+        elif filt != 0:
+            return None
+        prev = data_row
+        for x in range(0, width * bpp, bpp):
+            pixels.append((data_row[x], data_row[x + 1], data_row[x + 2]))
+    return pixels
+
+
+def _quantize_colors(pixels: list[tuple[int, int, int]], k: int = 8) -> list[str]:
+    """Simple iterative quantization for dominant colors."""
+    if not pixels:
+        return ["#1d2021"] * k
+    # sample
+    step = max(1, len(pixels) // 4000)
+    sample = pixels[::step]
+    # seed centroids on a grid of brightness
+    sample_sorted = sorted(sample, key=lambda p: 0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2])
+    centroids = [sample_sorted[int(i * (len(sample_sorted) - 1) / max(k - 1, 1))] for i in range(k)]
+    for _ in range(8):
+        buckets: list[list[tuple[int, int, int]]] = [[] for _ in range(k)]
+        for p in sample:
+            bi = min(
+                range(k),
+                key=lambda i: (p[0] - centroids[i][0]) ** 2
+                + (p[1] - centroids[i][1]) ** 2
+                + (p[2] - centroids[i][2]) ** 2,
+            )
+            buckets[bi].append(p)
+        new_c = []
+        for i, bucket in enumerate(buckets):
+            if not bucket:
+                new_c.append(centroids[i])
+            else:
+                n = len(bucket)
+                new_c.append(
+                    (
+                        sum(p[0] for p in bucket) // n,
+                        sum(p[1] for p in bucket) // n,
+                        sum(p[2] for p in bucket) // n,
+                    )
+                )
+        centroids = new_c
+    # sort dark → light
+    centroids = sorted(centroids, key=lambda p: 0.2126 * p[0] + 0.7152 * p[1] + 0.0722 * p[2])
+    return [_rgb_hex(*c) for c in centroids]
+
+
+def extract_builtin(image: Path) -> tuple[dict[str, str], str] | None:
+    """Always-available extractor for PNG (and PPM via convert if needed)."""
+    path = image
+    pixels = None
+    if path.suffix.lower() == ".png":
+        pixels = _load_png_pixels(path)
+    if pixels is None:
+        # try ImageMagick → PPM
+        for conv in ("magick", "convert"):
+            if not shutil.which(conv):
+                continue
+            import tempfile as tf
+
+            with tf.NamedTemporaryFile(suffix=".ppm", delete=False) as tmp:
+                ppm = Path(tmp.name)
+            try:
+                cmd = [conv, str(path), "-resize", "200x200", str(ppm)]
+                if conv == "magick":
+                    cmd = [conv, str(path), "-resize", "200x200", str(ppm)]
+                subprocess.run(cmd, check=True, capture_output=True, timeout=60)
+                text = ppm.read_bytes()
+                # parse binary PPM P6
+                if text.startswith(b"P6"):
+                    parts = text.split(b"\n", 3)
+                    # handle comments
+                    body = text[2:]
+                    tokens = []
+                    i = 0
+                    while len(tokens) < 3 and i < len(body):
+                        while i < len(body) and body[i : i + 1] in b" \t\n\r":
+                            i += 1
+                        if i < len(body) and body[i : i + 1] == b"#":
+                            while i < len(body) and body[i : i + 1] != b"\n":
+                                i += 1
+                            continue
+                        j = i
+                        while j < len(body) and body[j : j + 1] not in b" \t\n\r":
+                            j += 1
+                        tokens.append(body[i:j])
+                        i = j
+                    w, h = int(tokens[0]), int(tokens[1])
+                    # maxval then data
+                    while i < len(body) and body[i : i + 1] in b" \t\n\r":
+                        i += 1
+                    j = i
+                    while j < len(body) and body[j : j + 1] not in b" \t\n\r":
+                        j += 1
+                    i = j + 1  # skip maxval newline
+                    raw = body[i:]
+                    pixels = [
+                        (raw[n], raw[n + 1], raw[n + 2])
+                        for n in range(0, min(len(raw), w * h * 3), 3)
+                    ]
+            except Exception:
+                pixels = None
+            finally:
+                try:
+                    ppm.unlink()
+                except OSError:
+                    pass
+            if pixels:
+                break
+    if not pixels:
+        return None
+    dom = _quantize_colors(pixels, 8)
+    raw = {
+        "bg": dom[0],
+        "color0": dom[0],
+        "color1": dom[min(1, len(dom) - 1)],
+        "color2": dom[min(2, len(dom) - 1)],
+        "color3": dom[min(3, len(dom) - 1)],
+        "color4": dom[min(4, len(dom) - 1)],
+        "color5": dom[min(5, len(dom) - 1)],
+        "color6": dom[min(6, len(dom) - 1)],
+        "color7": dom[-1],
+        "fg": dom[-1],
+        "accent": dom[min(4, len(dom) - 1)],
+        "urgent": dom[min(1, len(dom) - 1)],
+    }
+    return ensure_full_palette(raw), "builtin"
+
+
+def extract_palette(image: Path, prefer: str | None = None) -> tuple[dict[str, str], str]:
+    """Locked order: wallust → matugen → pywal → builtin."""
+    order = [
+        ("wallust", extract_wallust),
+        ("matugen", extract_matugen),
+        ("pywal", extract_pywal),
+        ("builtin", extract_builtin),
+    ]
+    if prefer:
+        order = [o for o in order if o[0] == prefer] + [o for o in order if o[0] != prefer]
+    errors: list[str] = []
+    for name, fn in order:
+        try:
+            result = fn(image)
+            if result:
+                print(f"==> extracted palette with {result[1]}")
+                return result
+            errors.append(f"{name}: no usable palette")
+        except Exception as e:
+            errors.append(f"{name}: {e}")
+    for e in errors:
+        print(f"voidwolf-theme: {e}", file=sys.stderr)
+    raise RuntimeError("all extraction backends failed")
+
+
+def cmd_from_wallpaper(args: list[str]) -> int:
+    """from-wallpaper <path> [--name derived-slug] [--backend wallust|matugen|pywal|builtin] [--no-apply]"""
+    if not args:
+        print(
+            "Usage: voidwolf-theme from-wallpaper <path> [--name NAME] [--backend B] [--no-apply]",
+            file=sys.stderr,
+        )
+        return 1
+
+    image_s = args[0]
+    name: str | None = None
+    backend: str | None = None
+    no_apply = False
+    i = 1
+    while i < len(args):
+        if args[i] == "--name" and i + 1 < len(args):
+            name = args[i + 1]
+            i += 2
+        elif args[i] == "--backend" and i + 1 < len(args):
+            backend = args[i + 1]
+            i += 2
+        elif args[i] == "--no-apply":
+            no_apply = True
+            i += 1
+        else:
+            print(f"voidwolf-theme: unknown arg: {args[i]}", file=sys.stderr)
+            return 1
+
+    image = Path(image_s).expanduser().resolve()
+    if not image.is_file():
+        print(f"voidwolf-theme: image not found: {image}", file=sys.stderr)
+        return 2
+
+    if backend and backend not in ("wallust", "matugen", "pywal", "builtin"):
+        print("voidwolf-theme: --backend must be wallust|matugen|pywal|builtin", file=sys.stderr)
+        return 1
+
+    try:
+        pal, used = extract_palette(image, prefer=backend)
+    except RuntimeError as e:
+        print(f"voidwolf-theme: {e}", file=sys.stderr)
+        return 3
+
+    slug = name or f"derived-{slugify_name(image.stem)}"
+    if not slug.startswith("derived-") and name is None:
+        slug = f"derived-{slug}"
+    # sanitize name
+    slug = re.sub(r"[^a-zA-Z0-9._-]+", "-", slug).strip("-")
+
+    theme = {
+        "schema_version": 1,
+        "name": slug,
+        "display_name": f"Derived ({image.stem}) [{used}]",
+        "author": "voidwolf-derived",
+        "description": f"Extracted from {image} via {used}",
+        "palette": pal,
+        "meta": {
+            "gtk_theme": "Adwaita-dark",
+            "icon_theme": "Adwaita",
+            "cursor_theme": "Adwaita",
+            "cursor_size": 24,
+            "wallpaper": str(image),
+        },
+        "options": {"dwm_border_px": 2, "dwm_showbar": True},
+    }
+
+    errs = validate_theme(theme, strict_ansi=True)
+    if errs:
+        # should not happen after ensure_full_palette
+        for e in errs:
+            print(f"error: {e}", file=sys.stderr)
+        return 4
+
+    out_dir = voidwolf_home() / "themes"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"{slug}.toml"
+    atomic_write(out_path, dump_theme_toml(theme))
+    print(f"==> wrote {out_path}")
+
+    if no_apply:
+        print("==> --no-apply: not applying theme")
+        return 0
+    apply_adapters(theme)
+    return 0
 
 
 def usage() -> None:
@@ -630,7 +1261,10 @@ Usage:
   voidwolf-theme validate [path|name]
   voidwolf-theme build-suckless
   voidwolf-theme reload
-  voidwolf-theme from-wallpaper <path>   # PR9b
+  voidwolf-theme from-wallpaper <path> [--name NAME] [--backend B] [--no-apply]
+
+from-wallpaper backends (auto, locked order):
+  wallust → matugen → pywal → builtin (PNG quantizer)
 
 Exit: 0 ok, 1 usage, 2 not found, 3 adapter failure, 4 schema invalid
 

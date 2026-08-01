@@ -54,12 +54,48 @@ case "$cmd" in
 		set_wall "$path" || { echo "voidwolf-wallpaper: failed to set $path" >&2; exit 1; }
 		;;
 	pick)
-		echo "voidwolf-wallpaper pick: theme/wallpaper UI lands in PR8" >&2
-		command -v notify-send >/dev/null 2>&1 && notify-send "voidwolf" "Wallpaper picker lands in PR8"
-		exit 0
+		# Prefer choosing an image then extracting a theme (PR9b)
+		dir="${VOIDWOLF_WALLPAPER_DIR:-$HOME/Pictures}"
+		if [ ! -d "$dir" ]; then
+			dir="${HOME}"
+		fi
+		if command -v voidwolf-dmenu >/dev/null 2>&1 || command -v dmenu >/dev/null 2>&1; then
+			# list common image files (depth 2)
+			list=$(find "$dir" -maxdepth 2 -type f \( \
+				-iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \
+				\) 2>/dev/null | head -200)
+			# always offer repo default
+			if [ -f "${HOME}/.config/voidwolf/repo-root" ]; then
+				root=$(cat "${HOME}/.config/voidwolf/repo-root")
+				[ -f "${root}/wallpapers/voidwolf-default.png" ] \
+					&& list="${root}/wallpapers/voidwolf-default.png
+${list}"
+			fi
+			if [ -z "$list" ]; then
+				echo "voidwolf-wallpaper: no images under $dir" >&2
+				exit 1
+			fi
+			if command -v voidwolf-dmenu >/dev/null 2>&1; then
+				choice=$(printf '%s\n' "$list" | voidwolf-dmenu -i -l 12 -p "wallpaper:")
+			else
+				choice=$(printf '%s\n' "$list" | dmenu -i -l 12 -p "wallpaper:")
+			fi
+			[ -n "$choice" ] || exit 0
+			if command -v voidwolf-theme >/dev/null 2>&1; then
+				exec voidwolf-theme from-wallpaper "$choice"
+			fi
+			exec voidwolf-wallpaper set "$choice"
+		fi
+		echo "voidwolf-wallpaper pick: need dmenu; or: voidwolf-theme from-wallpaper <path>" >&2
+		exit 1
+		;;
+	from-wallpaper|extract)
+		# alias
+		shift
+		exec voidwolf-theme from-wallpaper "$@"
 		;;
 	*)
-		echo "Usage: voidwolf-wallpaper <restore|set|pick> [path]" >&2
+		echo "Usage: voidwolf-wallpaper <restore|set|pick|from-wallpaper> [path]" >&2
 		exit 2
 		;;
 esac

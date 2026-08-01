@@ -17,7 +17,9 @@ voidwolf-theme show gruvbox
 voidwolf-theme pick                  # dmenu chooser
 voidwolf-theme build-suckless        # re-apply current + rebuild dwm
 voidwolf-theme reload
-# voidwolf-theme from-wallpaper …  → PR9b
+voidwolf-theme from-wallpaper ~/Pictures/wall.png
+voidwolf-theme from-wallpaper ./wallpapers/voidwolf-default.png --backend builtin
+voidwolf-theme from-wallpaper ./img.png --name derived-lake --no-apply
 ```
 
 ### Exit codes
@@ -91,8 +93,21 @@ See [design.md](design.md) for the full field table. Required:
 
 Fonts are **not** themed (edit `suckless/*/config.h`).
 
-## Later
+## from-wallpaper (PR9b)
 
-| PR | Work |
-|----|------|
-| PR9b | `from-wallpaper` (wallust → matugen → pywal) |
+```bash
+voidwolf-theme from-wallpaper <image> [--name derived-slug] [--backend B] [--no-apply]
+```
+
+**Backend order (locked):** `wallust` → `matugen` → `pywal` (`wal`) → **`builtin`** (PNG quantizer; always available).
+
+| Backend | Notes |
+|---------|--------|
+| wallust | `wallust run` / `cs`; reads `~/.cache/wallust` |
+| matugen | `matugen image … --json hex` Material You → ANSI map |
+| pywal | `wal -i …`; reads `~/.cache/wal/colors.json` |
+| builtin | Pure-Python PNG sampling (+ ImageMagick for other formats) |
+
+Writes `$VOIDWOLF_HOME/themes/<name>.toml` then applies (unless `--no-apply`). Full 16 ANSI colors are always filled (lighten/dim if backend is partial).
+
+`voidwolf-wallpaper pick` lists images under `~/Pictures` and runs `from-wallpaper`.

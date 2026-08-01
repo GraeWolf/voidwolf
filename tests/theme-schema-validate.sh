@@ -118,7 +118,52 @@ else
 	fail=1
 fi
 
-rm -rf "$VOIDWOLF_HOME"
+# PR9b: from-wallpaper via builtin (no external deps)
+wall="$ROOT/wallpapers/voidwolf-default.png"
+if [[ -f "$wall" ]]; then
+	export VOIDWOLF_HOME="${TMPDIR:-/tmp}/voidwolf-theme-test-fw-$$"
+	export VOIDWOLF_THEME_SKIP_REBUILD=1
+	export VOIDWOLF_THEME_SKIP_USER_CONFIG=1
+	rm -rf "$VOIDWOLF_HOME"
+	mkdir -p "$VOIDWOLF_HOME"
+	if "$THEME" from-wallpaper "$wall" --backend builtin --name derived-testwall --no-apply; then
+		echo "OK   from-wallpaper --no-apply"
+	else
+		echo "FAIL from-wallpaper --no-apply"
+		fail=1
+	fi
+	if [[ -f "$VOIDWOLF_HOME/themes/derived-testwall.toml" ]]; then
+		echo "OK   derived theme written"
+		if "$THEME" validate "$VOIDWOLF_HOME/themes/derived-testwall.toml"; then
+			echo "OK   derived theme validates"
+		else
+			echo "FAIL derived theme validate"
+			fail=1
+		fi
+	else
+		echo "FAIL missing derived-testwall.toml"
+		fail=1
+	fi
+	# apply path
+	if "$THEME" from-wallpaper "$wall" --backend builtin --name derived-testwall2; then
+		echo "OK   from-wallpaper apply"
+		if [[ -f "$VOIDWOLF_HOME/generated/colors.h" ]] && [[ "$(cat "$VOIDWOLF_HOME/current/name")" == "derived-testwall2" ]]; then
+			echo "OK   derived theme applied as current"
+		else
+			echo "FAIL derived apply state"
+			fail=1
+		fi
+	else
+		echo "FAIL from-wallpaper apply"
+		fail=1
+	fi
+	rm -rf "$VOIDWOLF_HOME"
+else
+	echo "FAIL no default wallpaper for from-wallpaper test"
+	fail=1
+fi
+
+rm -rf "${TMPDIR:-/tmp}/voidwolf-theme-test-$$" 2>/dev/null || true
 
 if [[ "$fail" -ne 0 ]]; then
 	echo "theme-schema-validate: FAILED"
