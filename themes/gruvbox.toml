@@ -37,7 +37,7 @@ color15 = "#ebdbb2"
 gtk_theme = "Adwaita-dark"
 cursor_theme = "Adwaita"
 cursor_size = 24
-wallpaper = "wallpapers/voidwolf-default.png"
+wallpaper = "wallpapers/gruvbox.png"
 
 [options]
 dwm_border_px = 2

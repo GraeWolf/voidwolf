@@ -42,7 +42,8 @@ voidwolf-theme from-wallpaper ./img.png --name derived-lake --no-apply
 | `nord` | Nord |
 | `rose-pine` | Rosé Pine |
 
-Default wallpaper: `wallpapers/voidwolf-default.png` (`.jpg` symlink alias).
+Default wallpaper: `wallpapers/voidwolf-default.png` (voidwolf-dark).  
+Preset walls (PR14): `gruvbox.png`, `catppuccin-mocha.png`, `nord.png`, `rose-pine.png` under `wallpapers/`.
 
 ## What `set` does
 

@@ -46,7 +46,7 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 | 0 | Design | **Done** ([docs/design.md](docs/design.md)) |
 | 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | **PR1–7 done** |
 | 2 | Theming engine | **PR8–9b done** |
-| 3 | Opinionated desktop polish | PR10–13b done; PR14+ remaining |
+| 3 | Opinionated desktop polish | PR10–14 done; packaging PR15+ remaining |
 | 4 | XBPS meta-packages | Planned |
 | 5 | ISO / installer | After packaging |
 

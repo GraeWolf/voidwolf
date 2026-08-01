@@ -37,7 +37,7 @@ color15 = "#e0def4"
 gtk_theme = "Adwaita-dark"
 cursor_theme = "Adwaita"
 cursor_size = 24
-wallpaper = "wallpapers/voidwolf-default.png"
+wallpaper = "wallpapers/rose-pine.png"
 
 [options]
 dwm_border_px = 2

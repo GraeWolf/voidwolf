@@ -30,13 +30,31 @@ else
 	echo "OK   list ($n themes)"
 fi
 
-# wallpaper asset
+# wallpaper assets (PR8 default + PR14 presets)
 if [[ -f "$ROOT/wallpapers/voidwolf-default.png" ]]; then
 	echo "OK   default wallpaper png"
 else
 	echo "FAIL missing wallpapers/voidwolf-default.png"
 	fail=1
 fi
+for w in gruvbox catppuccin-mocha nord rose-pine; do
+	if [[ -f "$ROOT/wallpapers/${w}.png" ]]; then
+		echo "OK   wallpaper ${w}.png"
+	else
+		echo "FAIL missing wallpapers/${w}.png"
+		fail=1
+	fi
+done
+# each preset theme wallpaper field resolves to an existing file
+for t in gruvbox catppuccin-mocha nord rose-pine voidwolf-dark; do
+	rel=$(rg -o 'wallpaper\s*=\s*"[^"]+"' "$ROOT/themes/${t}.toml" | head -1 | sed 's/.*"\(.*\)"/\1/')
+	if [[ -n "$rel" && -f "$ROOT/$rel" ]]; then
+		echo "OK   theme $t wallpaper → $rel"
+	else
+		echo "FAIL theme $t wallpaper missing or unreadable (got: ${rel:-empty})"
+		fail=1
+	fi
+done
 
 # set without DISPLAY should still write files
 # Skip dwm rebuild + user gtk/dunst install in tests
