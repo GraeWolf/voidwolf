@@ -78,7 +78,7 @@ fi
 
 # Core launch family
 need_re "Super+Return terminal" 'MODKEY,\s+XK_Return,\s+spawn,.*termcmd'
-need_re "Super+Shift+Return browser" 'MODKEY\|ShiftMask,\s+XK_Return,\s+spawn,.*browser'
+need_re "Super+Shift+B browser" 'MODKEY\|ShiftMask,\s+XK_b,\s+spawn,.*browser'
 need_re "Super+Space launcher" 'MODKEY,\s+XK_space,\s+spawn,.*launcher'
 need_re "Super+Alt+Space menu" 'MODKEY\|Mod1Mask,\s+XK_space,\s+spawn,.*vwmenu'
 need_re "Super+Escape system menu" 'MODKEY,\s+XK_Escape,\s+spawn,.*sysmenu'

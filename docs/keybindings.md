@@ -26,7 +26,7 @@ Omarchy-inspired **Super (Mod4)** map for voidwolf dwm.
 | Bind | Action | Command |
 |------|--------|---------|
 | Super+Return | Terminal | `st` |
-| Super+Shift+Return | Browser | `voidwolf-browser` |
+| Super+Shift+B | Browser | `voidwolf-browser` |
 | Super+Space | App launcher | `voidwolf-launcher` |
 | Super+Alt+Space | Control menu | `voidwolf-menu` |
 | Super+Escape | System menu | `voidwolf-system-menu` |

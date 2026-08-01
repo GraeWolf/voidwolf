@@ -4,8 +4,8 @@ Dotfiles and session configuration installed by `bootstrap/install-dotfiles.sh` 
 
 | Path | Purpose |
 |------|---------|
-| `bash/` | PATH, aliases (PR12) |
-| `neovim/` | lean nvim defaults (PR12) |
+| `bash/` | PATH, rc, profile snippets (PR12) → `~/.config/voidwolf/` |
+| `neovim/` | lean nvim (PR12) → `~/.config/voidwolf-nvim/` via `NVIM_APPNAME` |
 | `X11/.xinitrc`, `.Xresources` | startx session (PR5) |
 | `pipewire/pipewire.conf.d/` | handbook conf.d links (PR5) |
 | `dunst/` | dunstrc template (include theme colors) — PR9a |

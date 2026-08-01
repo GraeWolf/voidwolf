@@ -63,7 +63,7 @@ Prior bspwm/xinitrc (if any) is saved as `~/.xinitrc.voidwolf-bak.<timestamp>` (
 | Check | How |
 |-------|-----|
 | Terminal | Super+Return |
-| Browser | Super+Shift+Return |
+| Browser | Super+Shift+B |
 | Launcher | Super+Space |
 | Bar | `voidwolf-status` text on root name |
 | GPU | `nvidia-smi` / `glxinfo -B` in st |

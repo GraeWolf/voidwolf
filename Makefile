@@ -41,3 +41,4 @@ test: ## Run tests/ checks
 	@./tests/helpers-validate.sh
 	@./tests/theme-schema-validate.sh
 	@./tests/nvidia-helpers-validate.sh
+	@./tests/bash-nvim-validate.sh

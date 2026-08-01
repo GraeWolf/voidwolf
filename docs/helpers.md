@@ -19,7 +19,7 @@ export PATH="$HOME/.local/bin:$PATH"
 | `voidwolf-lock` | Super+Ctrl+L | xsecurelock → slock → i3lock |
 | `voidwolf-screenshot` | Print / Super+Ctrl+C | maim + xclip |
 | `voidwolf-cheatsheet` | Super+K | Open keybindings.md |
-| `voidwolf-browser` | Super+Shift+Return | brave-origin* / brave-origin-nightly |
+| `voidwolf-browser` | Super+Shift+B | brave-origin* / brave-origin-nightly |
 | `voidwolf-filemanager` | Super+Shift+F | lf / ranger / thunar |
 | `voidwolf-clipboard` | Super+Ctrl+V | clipmenu / xclip |
 | `voidwolf-audio-tui` | Super+Ctrl+A | pulsemixer / wpctl |

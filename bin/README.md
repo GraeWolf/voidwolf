@@ -18,7 +18,7 @@ Full catalog: [docs/helpers.md](../docs/helpers.md).
 | `voidwolf-lock` | Super+Ctrl+L |
 | `voidwolf-screenshot` | Print / Super+Ctrl+C |
 | `voidwolf-cheatsheet` | Super+K |
-| `voidwolf-browser` | Super+Shift+Return |
+| `voidwolf-browser` | Super+Shift+B |
 | `voidwolf-filemanager` | Super+Shift+F |
 | `voidwolf-clipboard` | Super+Ctrl+V |
 | `voidwolf-audio-tui` | Super+Ctrl+A |

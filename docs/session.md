@@ -93,5 +93,6 @@ wpctl status
 ## Related
 
 - [bootstrap.md](bootstrap.md)  
+- [bash-nvim.md](bash-nvim.md) — bash + neovim (PR12)  
 - [design.md](design.md) — architecture sequence diagram  
 - [keybindings.md](keybindings.md)

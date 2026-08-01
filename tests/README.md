@@ -9,6 +9,7 @@
 | `helpers-validate.sh` | PR7 |
 | `theme-schema-validate.sh` | PR8–9 |
 | `nvidia-helpers-validate.sh` | PR10 |
+| `bash-nvim-validate.sh` | PR12 |
 
 ```bash
 make test

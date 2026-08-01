@@ -100,7 +100,7 @@ static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	/* === PR6 CORE: launch === */
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
-	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = browser } },
+	{ MODKEY|ShiftMask,             XK_b,      spawn,          {.v = browser } }, /* Super+Shift+B → Brave */
 	{ MODKEY,                       XK_space,  spawn,          {.v = launcher } },
 	{ MODKEY|Mod1Mask,              XK_space,  spawn,          {.v = vwmenu } },
 	{ MODKEY,                       XK_Escape, spawn,          {.v = sysmenu } },

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# voidwolf — install session dotfiles (PR5)
+# voidwolf — install session dotfiles (PR5 + PR12 bash/nvim)
 # Backs up existing files with .voidwolf-bak.<timestamp> before overwrite.
 set -euo pipefail
 
@@ -12,18 +12,20 @@ DRY_RUN=0
 TARGET_HOME="${HOME}"
 SKIP_PIPEWIRE=0
 SKIP_BASH=0
+SKIP_NVIM=0
 
 usage() {
 	cat <<'EOF'
 Usage: install-dotfiles.sh [options]
 
 Install voidwolf session files into the target home directory:
-  ~/.xinitrc, ~/.Xresources, PATH snippet, PipeWire conf.d, helpers
+  ~/.xinitrc, .Xresources, bash snippets, voidwolf-nvim, PipeWire conf.d, helpers
 
 Options:
   --home DIR       Target home (default: $HOME)
   --skip-pipewire  Do not run setup-pipewire.sh
-  --skip-bash      Do not touch bashrc / path snippet
+  --skip-bash      Do not touch bashrc / bash snippets
+  --skip-nvim      Do not install ~/.config/voidwolf-nvim
   --dry-run
   -h, --help
 EOF
@@ -34,6 +36,7 @@ while [[ $# -gt 0 ]]; do
 		--home) TARGET_HOME="${2:-}"; shift ;;
 		--skip-pipewire) SKIP_PIPEWIRE=1 ;;
 		--skip-bash) SKIP_BASH=1 ;;
+		--skip-nvim) SKIP_NVIM=1 ;;
 		--dry-run) DRY_RUN=1 ;;
 		-h|--help) usage; exit 0 ;;
 		*) voidwolf_die "unknown option: $1" ;;
@@ -97,29 +100,81 @@ else
 	voidwolf_log "[dry-run] install-user-bin.sh → ${PREFIX}/bin"
 fi
 
-# --- bash PATH ---
+# Ensure a line exists in a file (append once). Follows symlinks via >> to target.
+ensure_source_line() {
+	local file="$1" marker="$2" line="$3"
+	if [[ "${DRY_RUN}" -eq 1 ]]; then
+		voidwolf_log "[dry-run] ensure ${file} has: ${marker}"
+		return 0
+	fi
+	mkdir -p "$(dirname "$file")"
+	if [[ -f "$file" ]] && grep -qF "$marker" "$file" 2>/dev/null; then
+		voidwolf_log "Already present (${marker}): ${file}"
+		return 0
+	fi
+	# If file is a broken symlink or missing, create real file
+	if [[ ! -e "$file" && ! -L "$file" ]]; then
+		: >"$file"
+	fi
+	voidwolf_log "Append ${marker} → ${file}"
+	{
+		echo ""
+		echo "${marker}"
+		echo "${line}"
+	} >>"$file"
+}
+
+# --- bash PATH + rc + profile (PR12) ---
 if [[ "${SKIP_BASH}" -eq 0 ]]; then
-	path_snippet="${REPO_ROOT}/config/bash/voidwolf-path.sh"
-	dest_snippet="${TARGET_HOME}/.config/voidwolf/voidwolf-path.sh"
-	install_file "$path_snippet" "$dest_snippet" 0644
+	install_file \
+		"${REPO_ROOT}/config/bash/voidwolf-path.sh" \
+		"${TARGET_HOME}/.config/voidwolf/voidwolf-path.sh" 0644
+	install_file \
+		"${REPO_ROOT}/config/bash/voidwolf-rc.sh" \
+		"${TARGET_HOME}/.config/voidwolf/voidwolf-rc.sh" 0644
+	install_file \
+		"${REPO_ROOT}/config/bash/voidwolf-profile.sh" \
+		"${TARGET_HOME}/.config/voidwolf/voidwolf-profile.sh" 0644
 
 	bashrc="${TARGET_HOME}/.bashrc"
-	marker="# voidwolf PATH"
-	line="[ -f \"\${HOME}/.config/voidwolf/voidwolf-path.sh\" ] && . \"\${HOME}/.config/voidwolf/voidwolf-path.sh\""
-	if [[ "${DRY_RUN}" -eq 1 ]]; then
-		voidwolf_log "[dry-run] ensure bashrc sources voidwolf-path.sh"
+	ensure_source_line "$bashrc" "# voidwolf PATH" \
+		'[ -f "${HOME}/.config/voidwolf/voidwolf-path.sh" ] && . "${HOME}/.config/voidwolf/voidwolf-path.sh"'
+	ensure_source_line "$bashrc" "# voidwolf bash rc" \
+		'[ -f "${HOME}/.config/voidwolf/voidwolf-rc.sh" ] && . "${HOME}/.config/voidwolf/voidwolf-rc.sh"'
+
+	# Login shell: prefer .bash_profile, else .profile
+	bash_profile="${TARGET_HOME}/.bash_profile"
+	profile="${TARGET_HOME}/.profile"
+	if [[ -e "$bash_profile" || -L "$bash_profile" || ! -e "$profile" ]]; then
+		ensure_source_line "$bash_profile" "# voidwolf bash profile" \
+			'[ -f "${HOME}/.config/voidwolf/voidwolf-profile.sh" ] && . "${HOME}/.config/voidwolf/voidwolf-profile.sh"'
 	else
-		if [[ -f "$bashrc" ]] && grep -qF "voidwolf-path.sh" "$bashrc" 2>/dev/null; then
-			voidwolf_log "bashrc already sources voidwolf-path"
-		else
-			voidwolf_log "Append PATH source to ${bashrc}"
-			{
-				echo ""
-				echo "${marker}"
-				echo "${line}"
-			} >>"$bashrc"
-		fi
+		ensure_source_line "$profile" "# voidwolf bash profile" \
+			'[ -f "${HOME}/.config/voidwolf/voidwolf-profile.sh" ] && . "${HOME}/.config/voidwolf/voidwolf-profile.sh"'
 	fi
+fi
+
+# --- neovim (PR12): parallel config, never clobber ~/.config/nvim ---
+install_nvim_tree() {
+	local src="${REPO_ROOT}/config/neovim"
+	local dest="${TARGET_HOME}/.config/voidwolf-nvim"
+	[[ -f "${src}/init.lua" ]] || voidwolf_die "missing ${src}/init.lua"
+
+	voidwolf_log "Install neovim config → ${dest} (NVIM_APPNAME=voidwolf-nvim)"
+	if [[ "${DRY_RUN}" -eq 1 ]]; then
+		printf '[dry-run] install nvim tree %s → %s\n' "$src" "$dest"
+		return 0
+	fi
+	mkdir -p "${dest}/lua/voidwolf"
+	install -m 0644 "${src}/init.lua" "${dest}/init.lua"
+	local f
+	for f in options keymaps autocmds; do
+		install -m 0644 "${src}/lua/voidwolf/${f}.lua" "${dest}/lua/voidwolf/${f}.lua"
+	done
+}
+
+if [[ "${SKIP_NVIM}" -eq 0 ]]; then
+	install_nvim_tree
 fi
 
 # --- PipeWire ---
