@@ -1,0 +1,16 @@
+#!/bin/sh
+# File manager launcher (PR6b). Prefer lf in st, then common GUI FMs.
+if command -v lf >/dev/null 2>&1; then
+	exec st -e lf "$@"
+fi
+if command -v ranger >/dev/null 2>&1; then
+	exec st -e ranger "$@"
+fi
+if command -v thunar >/dev/null 2>&1; then
+	exec thunar "$@"
+fi
+if command -v pcmanfm >/dev/null 2>&1; then
+	exec pcmanfm "$@"
+fi
+# fallback: open home in st
+exec st -e sh -c 'cd; exec "$SHELL"'

@@ -1,0 +1,15 @@
+#!/bin/sh
+# Clipboard manager (PR6b Partial). Prefer clipmenu if installed.
+if command -v clipmenu >/dev/null 2>&1; then
+	exec clipmenu "$@"
+fi
+if command -v clipmenud >/dev/null 2>&1; then
+	# daemon may be running; try clipmenu again after note
+	notify-send "voidwolf" "Start clipmenud for clipboard history" 2>/dev/null || true
+fi
+if command -v xclip >/dev/null 2>&1; then
+	# show primary/clipboard briefly in st
+	exec st -e sh -c 'echo "=== CLIPBOARD ==="; xclip -o -selection clipboard 2>/dev/null; echo; echo "=== PRIMARY ==="; xclip -o -selection primary 2>/dev/null; echo; read -r _'
+fi
+printf '%s\n' "voidwolf-clipboard: install clipmenu or xclip" >&2
+exit 1

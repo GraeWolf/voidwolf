@@ -1,13 +1,13 @@
 /* voidwolf dwm config — Mod4 Omarchy-inspired keybinds
  *
- * PR6 core map is authoritative here; docs/keybindings.md mirrors it.
+ * PR6 core + PR6b remainder. docs/keybindings.md mirrors this file.
  * Lint: ./tests/keybind-lint.sh
  *
  * Policy locks:
  *   - MODKEY = Super (Mod4)
  *   - Super+K = cheatsheet only (never focus)
  *   - Super+L = focusdir right only (never layout)
- *   - Super+Shift+L = layout toggle
+ *   - Super+Shift+L = cyclelayout (not movestack)
  *
  * Fonts live here (not themed). Colors come from colors.h (theme-generated).
  */
@@ -29,6 +29,7 @@ static const Rule rules[] = {
 	/* class      instance    title       tags mask     isfloating   monitor */
 	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
 	{ "Firefox",  NULL,       NULL,       0,            0,           -1 },
+	{ "Brave-browser", NULL,  NULL,       0,            0,           -1 },
 };
 
 /* layout(s) */
@@ -75,12 +76,21 @@ static const char *wificmd[]     = { "voidwolf-wifi-tui", NULL };
 static const char *btopcmd[]     = { "st", "-e", "btop", NULL };
 static const char *dunstclose[]  = { "dunstctl", "close", NULL };
 static const char *dunstcloseall[] = { "dunstctl", "close-all", NULL };
+static const char *dunstpause[]  = { "dunstctl", "set-paused", "toggle", NULL };
+static const char *dunsthist[]   = { "dunstctl", "history-pop", NULL };
+static const char *scrotmenu[]   = { "voidwolf-screenshot", "menu", NULL };
+static const char *scrotfull[]   = { "voidwolf-screenshot", "full", NULL };
+static const char *scrotregion[] = { "voidwolf-screenshot", "region", NULL };
+static const char *filemgr[]     = { "voidwolf-filemanager", NULL };
+static const char *clipmenu[]    = { "voidwolf-clipboard", NULL };
 
 #include "movestack.c"
+#include "shiftview.c"
+#include "cyclelayout.c"
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
-	/* launch */
+	/* === PR6 CORE: launch === */
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = browser } },
 	{ MODKEY,                       XK_space,  spawn,          {.v = launcher } },
@@ -95,17 +105,28 @@ static const Key keys[] = {
 	{ MODKEY|ControlMask,           XK_b,      spawn,          {.v = btcmd } },
 	{ MODKEY|ControlMask,           XK_w,      spawn,          {.v = wificmd } },
 	{ MODKEY|ControlMask,           XK_t,      spawn,          {.v = btopcmd } },
+	{ MODKEY|ShiftMask,             XK_f,      spawn,          {.v = filemgr } },
+
+	/* === PR6b: notifications (Super+, is dunst — mon uses Super+period) === */
 	{ MODKEY,                       XK_comma,  spawn,          {.v = dunstclose } },
 	{ MODKEY|ShiftMask,             XK_comma,  spawn,          {.v = dunstcloseall } },
+	{ MODKEY|ControlMask,           XK_comma,  spawn,          {.v = dunstpause } },
+	{ MODKEY|Mod1Mask,              XK_comma,  spawn,          {.v = dunsthist } },
+
+	/* === PR6b: capture === */
+	{ 0,                            XK_Print,  spawn,          {.v = scrotfull } },
+	{ ShiftMask,                    XK_Print,  spawn,          {.v = scrotregion } },
+	{ MODKEY|ControlMask,           XK_c,      spawn,          {.v = scrotmenu } },
+	{ MODKEY|ControlMask,           XK_v,      spawn,          {.v = clipmenu } },
 
 	/* client */
 	{ MODKEY,                       XK_w,      killclient,     {0} },
 	{ MODKEY,                       XK_t,      togglefloating, {0} },
 	{ MODKEY,                       XK_f,      togglefullscr,  {0} },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
+	{ MODKEY|ShiftMask,             XK_space,  togglebar,      {0} }, /* Omarchy-like bar toggle */
 
-	/* === PR6 CORE: focusdir (0=left 1=right 2=up 3=down) ===
-	 * Super+L = right ONLY. Super+K is cheatsheet (above), never focus. */
+	/* focusdir: 0=left 1=right 2=up 3=down — Super+L is focus right ONLY */
 	{ MODKEY,                       XK_h,      focusdir,       {.i = 0 } },
 	{ MODKEY,                       XK_l,      focusdir,       {.i = 1 } },
 	{ MODKEY,                       XK_j,      focusdir,       {.i = 3 } },
@@ -114,11 +135,11 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_Up,     focusdir,       {.i = 2 } },
 	{ MODKEY,                       XK_Down,   focusdir,       {.i = 3 } },
 
-	/* Alt+Tab window cycle (design: retained; uses focusstack) */
+	/* Alt+Tab window cycle */
 	{ Mod1Mask,                     XK_Tab,    focusstack,     {.i = +1 } },
 	{ Mod1Mask|ShiftMask,           XK_Tab,    focusstack,     {.i = -1 } },
 
-	/* movestack (not Super+Shift+L — that is layout) */
+	/* movestack (not Super+Shift+L) */
 	{ MODKEY|ShiftMask,             XK_h,      movestack,      {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_j,      movestack,      {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_Left,   movestack,      {.i = -1 } },
@@ -126,23 +147,31 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_Up,     movestack,      {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_Right,  movestack,      {.i = +1 } },
 
-	/* layout: Super+Shift+L toggles previous layout (stock setlayout NULL) */
-	{ MODKEY|ShiftMask,             XK_l,      setlayout,      {0} },
+	/* layout: Super+Shift+L cycles layouts via cyclelayout */
+	{ MODKEY|ShiftMask,             XK_l,      cyclelayout,    {.i = +1 } },
+	{ MODKEY|ControlMask|ShiftMask, XK_l,      cyclelayout,    {.i = -1 } },
 	{ MODKEY,                       XK_m,      setlayout,      {.v = &layouts[2]} },
 	{ MODKEY|ShiftMask,             XK_t,      setlayout,      {.v = &layouts[0]} },
 
-	/* master / stack */
+	/* master / stack — Super+equal/minus setmfact */
 	{ MODKEY,                       XK_i,      incnmaster,     {.i = +1 } },
 	{ MODKEY,                       XK_d,      incnmaster,     {.i = -1 } },
 	{ MODKEY,                       XK_equal,  setmfact,       {.f = +0.05} },
 	{ MODKEY,                       XK_minus,  setmfact,       {.f = -0.05} },
-	{ MODKEY,                       XK_Tab,    view,           {0} },
+	{ MODKEY,                       XK_z,      zoom,           {0} },
 
-	/* monitors */
+	/* === PR6b: tag cycle (Super+Tab) + former tags (Super+Ctrl+Tab) === */
+	{ MODKEY,                       XK_Tab,    shiftview,      {.i = +1 } },
+	{ MODKEY|ShiftMask,             XK_Tab,    shiftview,      {.i = -1 } },
+	{ MODKEY|ControlMask,           XK_Tab,    view,           {0} }, /* toggle last tagset */
+
+	/* monitors — Super+period family (Super+comma is dunst) */
 	{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
+	{ MODKEY|ControlMask,           XK_period, focusmon,       {.i = -1 } },
+	{ MODKEY|ControlMask|ShiftMask, XK_period, tagmon,         {.i = -1 } },
 
-	/* tags */
+	/* tags 1–9 */
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
 	TAGKEYS(                        XK_3,                      2)
@@ -161,7 +190,6 @@ static const Key keys[] = {
 };
 
 /* button definitions */
-/* click can be ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
 static const Button buttons[] = {
 	/* click                event mask      button          function        argument */
 	{ ClkLtSymbol,          0,              Button1,        setlayout,      {0} },

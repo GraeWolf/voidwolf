@@ -16,6 +16,8 @@ voidwolf user-facing helpers. Install with:
 | `voidwolf-theme` / `voidwolf-wallpaper` | Stubs until PR8 |
 | `voidwolf-audio-tui` / `bluetooth-tui` / `wifi-tui` | PR4 fallbacks |
 | `voidwolf-status` | PR5 — dwm bar via xsetroot |
-| `voidwolf-screenshot` | PR7 |
+| `voidwolf-screenshot` | PR6b — maim + xclip |
+| `voidwolf-filemanager` | PR6b — lf/ranger/thunar |
+| `voidwolf-clipboard` | PR6b — clipmenu/xclip |
 | `voidwolf-prime`, `voidwolf-gpu-check` | PR10 |
 | `voidwolf-doctor` | PR13 |

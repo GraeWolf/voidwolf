@@ -66,9 +66,15 @@ else
 	echo "OK   Super+L is not setlayout"
 fi
 
-# Super+Shift+L is layout
-need_re "Super+Shift+L layout (setlayout)" \
-	'MODKEY\|ShiftMask,\s+XK_l,\s+setlayout'
+# Super+Shift+L is layout cycle (cyclelayout or setlayout — never focusdir)
+need_re "Super+Shift+L layout cycle" \
+	'MODKEY\|ShiftMask,\s+XK_l,\s+(cyclelayout|setlayout)'
+if rg -n 'MODKEY\|ShiftMask,\s+XK_l,' "$CFG" | rg -q 'focusdir|movestack'; then
+	echo "FAIL Super+Shift+L must not be focusdir/movestack"
+	fail=1
+else
+	echo "OK   Super+Shift+L is not focusdir/movestack"
+fi
 
 # Core launch family
 need_re "Super+Return terminal" 'MODKEY,\s+XK_Return,\s+spawn,.*termcmd'
@@ -98,6 +104,17 @@ need_re "TAGKEYS 9" 'TAGKEYS\(\s*XK_9,'
 # Theme / wallpaper stubs
 need_re "theme pick bind" 'themecmd|voidwolf-theme'
 need_re "wallpaper pick bind" 'wallcmd|voidwolf-wallpaper'
+
+# PR6b remainder
+need_re "Super+Tab shiftview (tag cycle)" 'MODKEY,\s+XK_Tab,\s+shiftview'
+need_re "Super+Shift+Tab shiftview reverse" 'MODKEY\|ShiftMask,\s+XK_Tab,\s+shiftview'
+need_re "Print screenshot" 'XK_Print.*scrot|voidwolf-screenshot'
+need_re "Super+Ctrl+C capture menu" 'MODKEY\|ControlMask,\s+XK_c,\s+spawn'
+need_re "dunst silence Super+Ctrl+comma" 'set-paused|dunstpause'
+need_re "togglebar Super+Shift+space" 'MODKEY\|ShiftMask,\s+XK_space,\s+togglebar'
+need_re "focusmon Super+period" 'MODKEY,\s+XK_period,\s+focusmon'
+need_re "tagmon Super+Shift+period" 'MODKEY\|ShiftMask,\s+XK_period,\s+tagmon'
+need_re "setmfact Super+equal" 'MODKEY,\s+XK_equal,\s+setmfact'
 
 # Commands array must reference helpers
 for cmd in termcmd browser launcher vwmenu sysmenu lockcmd cheatcmd; do

@@ -1,0 +1,80 @@
+#!/bin/sh
+# voidwolf-screenshot — capture helpers (PR6b / PR7)
+# Requires: maim, xclip (optional: slop for region — maim -s uses built-in select)
+set -e
+
+mode="${1:-menu}"
+dir="${VOIDWOLF_SCREENSHOT_DIR:-$HOME/Pictures/Screenshots}"
+mkdir -p "$dir"
+stamp=$(date +%Y%m%d-%H%M%S)
+file="$dir/voidwolf-$stamp.png"
+
+notify() {
+	if command -v notify-send >/dev/null 2>&1; then
+		notify-send "voidwolf" "$1"
+	fi
+}
+
+need_maim() {
+	if ! command -v maim >/dev/null 2>&1; then
+		echo "voidwolf-screenshot: maim not found (xbps-install maim)" >&2
+		notify "maim not installed"
+		exit 1
+	fi
+}
+
+copy_clip() {
+	if command -v xclip >/dev/null 2>&1; then
+		xclip -selection clipboard -t image/png -i "$1"
+	fi
+}
+
+do_full() {
+	need_maim
+	maim "$file"
+	copy_clip "$file"
+	notify "Screenshot saved: $file"
+}
+
+do_region() {
+	need_maim
+	maim -s "$file"
+	copy_clip "$file"
+	notify "Region screenshot: $file"
+}
+
+do_window() {
+	need_maim
+	if command -v xdotool >/dev/null 2>&1; then
+		maim -i "$(xdotool getactivewindow)" "$file"
+	else
+		maim -s "$file"
+	fi
+	copy_clip "$file"
+	notify "Window screenshot: $file"
+}
+
+do_menu() {
+	choice=$(printf '%s\n' \
+		"Full screen" \
+		"Region" \
+		"Active window" \
+		"Cancel" | dmenu -i -p "capture:")
+	case "$choice" in
+		"Full screen") do_full ;;
+		"Region") do_region ;;
+		"Active window") do_window ;;
+		*) exit 0 ;;
+	esac
+}
+
+case "$mode" in
+	menu|capture) do_menu ;;
+	full) do_full ;;
+	region|sel) do_region ;;
+	window|win) do_window ;;
+	*)
+		echo "Usage: voidwolf-screenshot [menu|full|region|window]" >&2
+		exit 2
+		;;
+esac

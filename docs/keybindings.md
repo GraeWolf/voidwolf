@@ -1,4 +1,4 @@
-# Keybindings (core — PR6)
+# Keybindings
 
 Omarchy-inspired **Super (Mod4)** map for voidwolf dwm.
 
@@ -6,8 +6,8 @@ Omarchy-inspired **Super (Mod4)** map for voidwolf dwm.
 |---|---|
 | **Source of truth (code)** | `suckless/dwm/config.h` |
 | **Lint** | `./tests/keybind-lint.sh` / `make test` |
-| **Scope** | **Core** binds only — remainder in PR6b |
-| **Full Omarchy table** | [design.md](design.md) |
+| **Scope** | **PR6 core + PR6b remainder** |
+| **Full Omarchy comparison** | [design.md](design.md) |
 
 ## Policy locks
 
@@ -16,11 +16,10 @@ Omarchy-inspired **Super (Mod4)** map for voidwolf dwm.
 | Mod key | **Super** (`Mod4Mask`) only for WM binds |
 | Super+K | **Cheatsheet** — never focus up |
 | Super+L | **focusdir right** — never layout cycle |
-| Super+Shift+L | Layout toggle (`setlayout {0}`) |
+| Super+Shift+L | **cyclelayout** forward (not movestack) |
+| Super+, | **dunst** dismiss — monitors use **Super+.** family |
 | Super+J | focusdir **down** (not Omarchy layout-flip) |
 | Universal Super+C/V | **Unsupported** (X11; see design Appendix C) |
-
-Lint enforces these. Changing them requires updating `tests/keybind-lint.sh`.
 
 ## Launch
 
@@ -33,6 +32,7 @@ Lint enforces these. Changing them requires updating `tests/keybind-lint.sh`.
 | Super+Escape | System menu | `voidwolf-system-menu` |
 | Super+Ctrl+L | Lock | `voidwolf-lock` |
 | Super+Shift+N | Neovim | `st -e nvim` |
+| Super+Shift+F | File manager | `voidwolf-filemanager` |
 | Super+K | Keybind cheatsheet | `voidwolf-cheatsheet` |
 | Super+Ctrl+Shift+Space | Theme pick (stub PR8) | `voidwolf-theme pick` |
 | Super+Ctrl+Space | Wallpaper pick (stub PR8) | `voidwolf-wallpaper pick` |
@@ -41,12 +41,14 @@ Lint enforces these. Changing them requires updating `tests/keybind-lint.sh`.
 
 | Bind | Action |
 |------|--------|
-| Super+W | Close window (`killclient`) |
+| Super+W | Close window |
 | Super+T | Toggle floating |
-| Super+F | Fullscreen (`togglefullscr` / actualfullscreen) |
+| Super+F | Fullscreen |
 | Super+B | Toggle bar |
+| Super+Shift+Space | Toggle bar (Omarchy-like) |
+| Super+Z | Zoom (swap master) |
 | Super+Shift+Q | Quit dwm |
-| Super+Ctrl+Shift+Q | Restart dwm (restartsig) |
+| Super+Ctrl+Shift+Q | Restart dwm |
 
 ## Focus (focusdir)
 
@@ -57,10 +59,6 @@ Lint enforces these. Changing them requires updating `tests/keybind-lint.sh`.
 | Super+Up | Up |
 | Super+J / Super+Down | Down |
 
-Super+K is **not** focus.
-
-### Alt+Tab (window cycle)
-
 | Bind | Action |
 |------|--------|
 | Alt+Tab | Focus next in stack |
@@ -70,24 +68,22 @@ Super+K is **not** focus.
 
 | Bind | Action |
 |------|--------|
-| Super+Shift+H / Left | Move client up the stack |
-| Super+Shift+J / Down | Move client down the stack |
-| Super+Shift+Up / Right | Move client (stack order) |
-
-Super+Shift+L is **layout**, not movestack.
+| Super+Shift+H / Left | Move client in stack |
+| Super+Shift+J / Down | Move client in stack |
+| Super+Shift+Up / Right | Move client in stack |
 
 ## Layout / master
 
 | Bind | Action |
 |------|--------|
-| Super+Shift+L | Toggle previous layout |
+| Super+Shift+L | Cycle layouts forward |
+| Super+Ctrl+Shift+L | Cycle layouts reverse |
 | Super+M | Monocle |
-| Super+Shift+T | Tile layout |
+| Super+Shift+T | Tile |
 | Super+I / Super+D | ± masters |
-| Super+= / Super+- | ± master factor |
-| Super+Tab | Toggle last tags |
+| Super+= / Super+- | ± master factor (`setmfact`) |
 
-## Tags (workspaces)
+## Tags
 
 | Bind | Action |
 |------|--------|
@@ -97,43 +93,51 @@ Super+Shift+L is **layout**, not movestack.
 | Super+Ctrl+Shift+1 … 9 | Toggle client tag |
 | Super+0 | View all |
 | Super+Shift+0 | Tag all |
+| Super+Tab | Next tag set (`shiftview +1`) |
+| Super+Shift+Tab | Previous tag set (`shiftview -1`) |
+| Super+Ctrl+Tab | Toggle last tagset (`view {0}`) |
 
-## Monitors (minimal core)
+## Monitors
+
+Super+, is reserved for notifications — monitors use **period**:
 
 | Bind | Action |
 |------|--------|
 | Super+. | Focus next monitor |
+| Super+Ctrl+. | Focus previous monitor |
 | Super+Shift+. | Send client to next monitor |
+| Super+Ctrl+Shift+. | Send client to previous monitor |
 
-Broader mon cycling lands in PR6b if needed.
-
-## System TUIs
+## Capture (PR6b)
 
 | Bind | Action |
 |------|--------|
-| Super+Ctrl+A | Audio (`voidwolf-audio-tui`) |
-| Super+Ctrl+B | Bluetooth |
-| Super+Ctrl+W | Wi‑Fi / NetworkManager |
-| Super+Ctrl+T | btop |
+| Print | Full screenshot → `~/Pictures/Screenshots` + clipboard |
+| Shift+Print | Region screenshot |
+| Super+Ctrl+C | Capture menu (full / region / window) |
+| Super+Ctrl+V | Clipboard helper (`clipmenu` if installed) |
 
-## Notifications (core)
+Requires `maim` and `xclip` (PR3 package lists).
+
+## Notifications
 
 | Bind | Action |
 |------|--------|
 | Super+, | Dismiss latest (`dunstctl close`) |
 | Super+Shift+, | Dismiss all |
+| Super+Ctrl+, | Toggle silence (`set-paused toggle`) |
+| Super+Alt+, | History pop (`history-pop`) |
 
-Further notification binds (history, silence) → PR6b / design table.
+## System TUIs
 
-## Intentionally incomplete (PR6b+)
+| Bind | Action |
+|------|--------|
+| Super+Ctrl+A | Audio |
+| Super+Ctrl+B | Bluetooth |
+| Super+Ctrl+W | Wi‑Fi |
+| Super+Ctrl+T | btop |
 
-Not required for PR6 “core” exit criteria; may already exist partially:
-
-- Screenshot / capture menu (`voidwolf-screenshot`, Print)
-- Full Omarchy omission list polish
-- Phase 3: scratchpad, sticky, vanitygaps binds
-
-## Mouse (stock-style)
+## Mouse
 
 | Bind | Action |
 |------|--------|
@@ -141,9 +145,18 @@ Not required for PR6 “core” exit criteria; may already exist partially:
 | Super+Btn3 | Resize window |
 | Super+Btn2 | Toggle floating |
 
+## Intentionally later (Phase 3 / other PRs)
+
+| Bind | Status |
+|------|--------|
+| Super+S scratchpad | PR13b |
+| Super+O sticky | PR13b |
+| Gaps toggles | PR13b |
+| Super+C/V universal clipboard | Unsupported on X11 |
+
 ## Cheatsheet
 
 ```bash
-voidwolf-cheatsheet    # Super+K — opens this file in less via st
+voidwolf-cheatsheet    # Super+K
 ./tests/keybind-lint.sh
 ```
