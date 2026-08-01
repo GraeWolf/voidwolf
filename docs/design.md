@@ -99,7 +99,7 @@ The repository is empty. There is no installer, no packages, no config tree. Imp
 | Keybinds | Mod4 Omarchy-inspired map | Document dwm limits and deliberate non-maps |
 | Suckless install prefix (Phase 1–3) | **`PREFIX=$HOME/.local`** (user-owned) | Theme rebuild/re-exec needs **no sudo**; `~/.local/bin` first on PATH |
 | Phase 1 suckless patches | **Locked** (see below) | No further debate before PR4 |
-| Phase 3 dwm patches (planned defaults) | **vanitygaps + scratchpad + sticky** | Not Phase 1; **will** ship as Phase 3 defaults (not “maybe”) |
+| Phase 3 dwm patches (defaults) | **vanitygaps + scratchpad + sticky + attachaside** | PR13b; Super+S / Super+O / Super+G |
 | Delivery | Scripts → XBPS → ISO | Ship value early; Phase 4 personal/local XBPS; Phase 5 ISO after packaging works |
 | License / hostname | MIT / `voidwolf` | Locked product identity |
 

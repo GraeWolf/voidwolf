@@ -6,7 +6,7 @@ Omarchy-inspired **Super (Mod4)** map for voidwolf dwm.
 |---|---|
 | **Source of truth (code)** | `suckless/dwm/config.h` |
 | **Lint** | `./tests/keybind-lint.sh` / `make test` |
-| **Scope** | **PR6 core + PR6b remainder + PR11 media/brightness** |
+| **Scope** | **PR6–PR6b + PR11 media + PR13b gaps/scratch/sticky** |
 | **Full Omarchy comparison** | [design.md](design.md) |
 
 ## Policy locks
@@ -82,6 +82,19 @@ Omarchy-inspired **Super (Mod4)** map for voidwolf dwm.
 | Super+Shift+T | Tile |
 | Super+I / Super+D | ± masters |
 | Super+= / Super+- | ± master factor (`setmfact`) |
+
+## Scratchpad / sticky / gaps (PR13b)
+
+| Bind | Action |
+|------|--------|
+| Super+S | Toggle scratchpad terminal (`st` titled `scratchpad`) |
+| Super+O | Toggle sticky (client visible on all tags) |
+| Super+G | Toggle gaps on/off |
+| Super+Shift+G | Reset gaps to defaults |
+| Super+Ctrl+= | Increase gaps |
+| Super+Ctrl+- | Decrease gaps |
+
+**attachaside:** new tiled clients join the stack after the master (not as the new master). No keybind.
 
 ## Tags
 
@@ -159,14 +172,12 @@ Requires `maim` and `xclip` (PR3 package lists).
 | Super+Btn3 | Resize window |
 | Super+Btn2 | Toggle floating |
 
-## Intentionally later (Phase 3 / other PRs)
+## Intentionally unsupported / later
 
-| Bind | Status |
-|------|--------|
-| Super+S scratchpad | PR13b |
-| Super+O sticky | PR13b |
-| Gaps toggles | PR13b |
-| Super+C/V universal clipboard | Unsupported on X11 |
+| Bind / feature | Status |
+|----------------|--------|
+| Super+C/V universal clipboard | Unsupported on X11 (see design Appendix C) |
+| Systray | Not in Phase 1–3 defaults |
 
 ## Cheatsheet
 

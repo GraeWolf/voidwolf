@@ -134,8 +134,25 @@ need_re "volume helper commands" 'voidwolf-volume'
 need_re "brightness helper commands" 'voidwolf-brightness'
 need_re "XF86keysym include" 'XF86keysym'
 
+# PR13b
+need_re "Super+S scratchpad" 'MODKEY,\s+XK_s,\s+togglescratch'
+need_re "Super+O sticky" 'MODKEY,\s+XK_o,\s+togglesticky'
+need_re "Super+G togglegaps" 'MODKEY,\s+XK_g,\s+togglegaps'
+need_re "Super+Shift+G defaultgaps" 'MODKEY\|ShiftMask,\s+XK_g,\s+defaultgaps'
+need_re "vanitygaps include" 'vanitygaps\.c'
+need_re "scratchpadcmd defined" 'scratchpadcmd'
+need_re "attachaside present in tree" 'attachaside'
+
+# attachaside lives in dwm.c
+if rg -q 'attachaside' "${ROOT}/suckless/dwm/dwm.c"; then
+	echo "OK   attachaside in dwm.c"
+else
+	echo "FAIL attachaside missing from dwm.c"
+	fail=1
+fi
+
 if [[ "$fail" -ne 0 ]]; then
 	echo "keybind-lint: FAILED"
 	exit 1
 fi
-echo "keybind-lint: all OK (core PR6 + PR11 policy)"
+echo "keybind-lint: all OK (PR6 + PR11 + PR13b policy)"

@@ -1,13 +1,14 @@
 /* voidwolf dwm config — Mod4 Omarchy-inspired keybinds
  *
- * PR6 core + PR6b remainder + PR11 media/brightness. docs/keybindings.md mirrors this file.
- * Lint: ./tests/keybind-lint.sh
+ * PR6/PR6b + PR11 media + PR13b gaps/scratchpad/sticky/attachaside.
+ * docs/keybindings.md mirrors this file. Lint: ./tests/keybind-lint.sh
  *
  * Policy locks:
  *   - MODKEY = Super (Mod4)
  *   - Super+K = cheatsheet only (never focus)
  *   - Super+L = focusdir right only (never layout)
  *   - Super+Shift+L = cyclelayout (not movestack)
+ *   - Super+S = scratchpad; Super+O = sticky
  *
  * Fonts live here (not themed). Colors come from colors.h (theme-generated).
  */
@@ -17,6 +18,12 @@
 /* appearance */
 static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
+/* vanitygaps (PR13b) */
+static const unsigned int gappih    = 8;        /* horiz inner gap between windows */
+static const unsigned int gappiv    = 8;        /* vert inner gap between windows */
+static const unsigned int gappoh    = 8;        /* horiz outer gap — edge */
+static const unsigned int gappov    = 8;        /* vert outer gap — edge */
+static       int smartgaps          = 0;        /* 1 = no outer gap when single window */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
 static const char *fonts[]          = { "Fira Code:size=11", "DejaVu Sans Mono:size=11" };
@@ -40,11 +47,18 @@ static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 0;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 
+#define FORCE_VSPLIT 1  /* nrowgrid: force two clients to split vertically */
+#include "vanitygaps.c"
+
 static const Layout layouts[] = {
 	/* symbol     arrange function */
 	{ "[]=",      tile },    /* first entry is default */
-	{ "><>",      NULL },    /* no layout function means floating behavior */
 	{ "[M]",      monocle },
+	{ "><>",      NULL },    /* floating */
+	{ "[@]",      spiral },
+	{ "[\\]",     dwindle },
+	{ "TTT",      bstack },
+	{ NULL,       NULL },    /* cyclelayout terminator */
 };
 
 /* key definitions */
@@ -91,6 +105,9 @@ static const char *voldown[]     = { "voidwolf-volume", "down", NULL };
 static const char *volmute[]     = { "voidwolf-volume", "mute", NULL };
 static const char *brightup[]    = { "voidwolf-brightness", "up", NULL };
 static const char *brightdown[]  = { "voidwolf-brightness", "down", NULL };
+/* PR13b scratchpad — floating st toggled with Super+S */
+static const char scratchpadname[] = "scratchpad";
+static const char *scratchpadcmd[] = { "st", "-t", scratchpadname, "-g", "120x34", NULL };
 
 #include "movestack.c"
 #include "shiftview.c"
@@ -140,6 +157,14 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_f,      togglefullscr,  {0} },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglebar,      {0} }, /* Omarchy-like bar toggle */
+
+	/* === PR13b: scratchpad, sticky, vanitygaps === */
+	{ MODKEY,                       XK_s,      togglescratch,  {.v = scratchpadcmd } },
+	{ MODKEY,                       XK_o,      togglesticky,   {0} },
+	{ MODKEY,                       XK_g,      togglegaps,     {0} },
+	{ MODKEY|ShiftMask,             XK_g,      defaultgaps,    {0} },
+	{ MODKEY|ControlMask,           XK_equal,  incrgaps,       {.i = +2 } },
+	{ MODKEY|ControlMask,           XK_minus,  incrgaps,       {.i = -2 } },
 
 	/* focusdir: 0=left 1=right 2=up 3=down — Super+L is focus right ONLY */
 	{ MODKEY,                       XK_h,      focusdir,       {.i = 0 } },
