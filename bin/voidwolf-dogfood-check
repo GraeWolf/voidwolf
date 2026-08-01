@@ -112,10 +112,23 @@ elif [[ -z "${DISPLAY:-}" ]]; then
 fi
 
 # XLibre
-if xbps-query -l 2>/dev/null | rg -q 'xlibre-xserver'; then
-	ok "xlibre-xserver package installed"
+# Do NOT use: xbps-query -l | rg -q …  under set -o pipefail.
+# rg -q exits early on match → SIGPIPE on xbps-query → pipeline fails even when present.
+xlibre_pkg=
+if xlibre_pkg=$(xbps-query -p pkgver xlibre-xserver 2>/dev/null) && [[ -n "$xlibre_pkg" ]]; then
+	ok "xlibre-xserver installed ($xlibre_pkg)"
+elif xbps-query -p pkgver xlibre 2>/dev/null >/dev/null; then
+	ok "xlibre meta installed ($(xbps-query -p pkgver xlibre 2>/dev/null))"
 else
-	note "xlibre-xserver not listed (repos/packages step incomplete?)"
+	note "xlibre-xserver not installed (repos/packages step incomplete?)"
+fi
+if [[ -n "${DISPLAY:-}" ]] && command -v xdpyinfo >/dev/null 2>&1; then
+	vendor=$(xdpyinfo 2>/dev/null | awk -F: '/vendor string/{gsub(/^ +/,"",$2); print $2; exit}')
+	if [[ "${vendor}" == *XLibre* ]]; then
+		ok "X server vendor: ${vendor}"
+	elif [[ -n "${vendor}" ]]; then
+		note "X vendor is '${vendor}' (expected XLibre for voidwolf target)"
+	fi
 fi
 
 # NVIDIA system conf (optional if vendor /usr/share snippets work)
