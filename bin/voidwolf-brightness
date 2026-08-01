@@ -1,0 +1,105 @@
+#!/bin/sh
+# voidwolf-brightness — backlight control (laptop profile / XF86 keys)
+# Prefers brightnessctl; falls back to light(1) or sysfs.
+# Usage: voidwolf-brightness {up|down|get|set <percent>}
+set -e
+
+export PATH="${HOME}/.local/bin:${PATH}"
+STEP="${VOIDWOLF_BRIGHTNESS_STEP:-5}"
+
+use_brightnessctl() {
+	command -v brightnessctl >/dev/null 2>&1
+}
+
+use_light() {
+	command -v light >/dev/null 2>&1
+}
+
+sysfs_backlight() {
+	# First writable backlight device
+	for d in /sys/class/backlight/*; do
+		[ -d "$d" ] || continue
+		[ -w "$d/brightness" ] || continue
+		printf '%s\n' "$d"
+		return 0
+	done
+	return 1
+}
+
+case "${1:-}" in
+	up|+)
+		if use_brightnessctl; then
+			brightnessctl set "${STEP}%+" >/dev/null
+		elif use_light; then
+			light -A "$STEP"
+		else
+			bl=$(sysfs_backlight) || {
+				echo "voidwolf-brightness: no backlight backend (install brightnessctl)" >&2
+				exit 1
+			}
+			max=$(cat "$bl/max_brightness")
+			cur=$(cat "$bl/brightness")
+			delta=$(( max * STEP / 100 ))
+			[ "$delta" -lt 1 ] && delta=1
+			next=$(( cur + delta ))
+			[ "$next" -gt "$max" ] && next=$max
+			printf '%s\n' "$next" >"$bl/brightness"
+		fi
+		;;
+	down|-)
+		if use_brightnessctl; then
+			brightnessctl set "${STEP}%-" >/dev/null
+		elif use_light; then
+			light -U "$STEP"
+		else
+			bl=$(sysfs_backlight) || {
+				echo "voidwolf-brightness: no backlight backend (install brightnessctl)" >&2
+				exit 1
+			}
+			max=$(cat "$bl/max_brightness")
+			cur=$(cat "$bl/brightness")
+			delta=$(( max * STEP / 100 ))
+			[ "$delta" -lt 1 ] && delta=1
+			next=$(( cur - delta ))
+			[ "$next" -lt 0 ] && next=0
+			printf '%s\n' "$next" >"$bl/brightness"
+		fi
+		;;
+	get|status|"")
+		if use_brightnessctl; then
+			brightnessctl -m | awk -F, '{print $4}'
+		elif use_light; then
+			light -G
+		else
+			bl=$(sysfs_backlight) || {
+				echo "voidwolf-brightness: no backlight" >&2
+				exit 1
+			}
+			max=$(cat "$bl/max_brightness")
+			cur=$(cat "$bl/brightness")
+			echo "$(( cur * 100 / max ))%"
+		fi
+		;;
+	set)
+		pct="${2:-}"
+		[ -n "$pct" ] || { echo "Usage: voidwolf-brightness set <percent>" >&2; exit 2; }
+		pct=${pct%%%} # strip trailing %
+		if use_brightnessctl; then
+			brightnessctl set "${pct}%" >/dev/null
+		elif use_light; then
+			light -S "$pct"
+		else
+			bl=$(sysfs_backlight) || {
+				echo "voidwolf-brightness: no backlight backend" >&2
+				exit 1
+			}
+			max=$(cat "$bl/max_brightness")
+			next=$(( max * pct / 100 ))
+			printf '%s\n' "$next" >"$bl/brightness"
+		fi
+		;;
+	*)
+		echo "Usage: voidwolf-brightness {up|down|get|set <percent>}" >&2
+		exit 2
+		;;
+esac

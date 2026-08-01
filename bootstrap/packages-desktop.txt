@@ -1,0 +1,6 @@
+# packages-desktop.txt — desktop extras (--profile desktop)
+# Discrete multi-monitor is fine with packages-desktop-required (xrandr).
+# This list is intentionally lean; keep GPU packages in packages-nvidia.txt.
+
+# Nothing required beyond desktop-required for Phase 1–3.
+# Placeholder for future: multi-monitor helpers, fan control, etc.

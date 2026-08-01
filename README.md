@@ -46,7 +46,7 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 | 0 | Design | **Done** ([docs/design.md](docs/design.md)) |
 | 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | **PR1–7 done** |
 | 2 | Theming engine | **PR8–9b done** |
-| 3 | Opinionated desktop polish | In progress (PR10 NVIDIA done) |
+| 3 | Opinionated desktop polish | PR10–11 done; dogfood startx remaining |
 | 4 | XBPS meta-packages | Planned |
 | 5 | ISO / installer | After packaging |
 
@@ -91,6 +91,7 @@ make theme-list
 | [docs/repos.md](docs/repos.md) | XLibre + vw-repo wiring (PR2) |
 | [docs/nvidia.md](docs/nvidia.md) | GPU profiles (PR10) |
 | [docs/hardware-profiles.md](docs/hardware-profiles.md) | Laptop / desktop (PR11) |
+| [docs/dogfood.md](docs/dogfood.md) | Live host validation notes |
 
 ## License
 

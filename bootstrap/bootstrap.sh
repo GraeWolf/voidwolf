@@ -216,6 +216,7 @@ fi
 if [[ "${SKIP_SERVICES}" -eq 0 ]]; then
 	log "Step: services, sudoers, ufw, groups"
 	svc_args=()
+	[[ -n "${PROFILE}" ]] && svc_args+=(--profile "${PROFILE}")
 	[[ "${DRY_RUN}" -eq 1 ]] && svc_args+=(--dry-run)
 	bash "${SCRIPT_DIR}/enable-services.sh" "${svc_args[@]+"${svc_args[@]}"}"
 else

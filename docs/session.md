@@ -33,8 +33,11 @@ Then:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
+voidwolf-dogfood-check   # optional host readiness report
 startx
 ```
+
+Live host notes: [dogfood.md](dogfood.md).
 
 ## Files
 

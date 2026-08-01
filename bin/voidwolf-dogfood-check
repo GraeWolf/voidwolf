@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+# voidwolf-dogfood-check — host readiness for NVIDIA + startx session
+# Non-destructive; exit 0 if critical path looks ready, 1 if blockers remain.
+set -euo pipefail
+
+export PATH="${HOME}/.local/bin:${PATH}"
+fail=0
+warn=0
+
+ok()   { printf 'OK    %s\n' "$*"; }
+bad()  { printf 'FAIL  %s\n' "$*"; fail=$((fail + 1)); }
+note() { printf 'WARN  %s\n' "$*"; warn=$((warn + 1)); }
+info() { printf 'INFO  %s\n' "$*"; }
+
+echo "voidwolf dogfood check — $(date -Iseconds 2>/dev/null || date)"
+echo "host=$(hostname) user=$(id -un) uid=$(id -u)"
+echo "------------------------------------------------------------"
+
+# OS
+if [[ -f /etc/os-release ]]; then
+	# shellcheck disable=SC1091
+	. /etc/os-release
+	if [[ "${ID:-}" == "void" ]]; then
+		ok "Void Linux (${PRETTY_NAME:-void})"
+	else
+		bad "not Void Linux (ID=${ID:-unknown})"
+	fi
+else
+	bad "missing /etc/os-release"
+fi
+
+# Seat / runtime
+if [[ -n "${XDG_RUNTIME_DIR:-}" && -d "${XDG_RUNTIME_DIR}" ]]; then
+	ok "XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}"
+else
+	bad "XDG_RUNTIME_DIR unset — enable elogind and re-login"
+fi
+
+# Session files
+[[ -f "${HOME}/.xinitrc" ]] && rg -q 'voidwolf|dwm' "${HOME}/.xinitrc" 2>/dev/null \
+	&& ok "~/.xinitrc is voidwolf/dwm" \
+	|| bad "~/.xinitrc missing or not voidwolf (run install-dotfiles.sh)"
+
+[[ -x "${HOME}/.local/bin/dwm" ]] && ok "dwm → ${HOME}/.local/bin/dwm" || bad "dwm not in ~/.local/bin"
+[[ -x "${HOME}/.local/bin/st" ]] && ok "st present" || bad "st missing"
+[[ -x "${HOME}/.local/bin/voidwolf-status" ]] && ok "voidwolf-status present" || bad "helpers not installed"
+
+# PipeWire conf.d
+if [[ -L "${HOME}/.config/pipewire/pipewire.conf.d/10-wireplumber.conf" ]]; then
+	ok "PipeWire conf.d wireplumber link"
+else
+	note "PipeWire conf.d missing — run setup-pipewire.sh"
+fi
+
+# Theme
+if [[ -f "${HOME}/.config/voidwolf/current/name" ]]; then
+	ok "theme current=$(cat "${HOME}/.config/voidwolf/current/name")"
+else
+	note "no theme set — voidwolf-theme set voidwolf-dark"
+fi
+
+# Browser
+if voidwolf-browser --version >/dev/null 2>&1 || command -v brave-origin-nightly >/dev/null 2>&1 \
+	|| command -v brave-origin >/dev/null 2>&1 || command -v brave >/dev/null 2>&1; then
+	ok "browser binary resolvable"
+else
+	# probe without launching full GUI: just resolve
+	if PATH="${HOME}/.local/bin:${PATH}" sh -c '
+		for b in brave-origin brave-origin-bin brave-origin-nightly brave-browser brave brave-nightly; do
+			command -v "$b" >/dev/null 2>&1 && exit 0
+		done
+		for p in /opt/brave.com/brave-origin-nightly/brave-origin-nightly \
+			/opt/brave.com/brave/brave; do
+			[ -x "$p" ] && exit 0
+		done
+		exit 1
+	'; then
+		ok "browser binary on PATH/opt"
+	else
+		note "Brave not found — Super+Shift+Return will fail (install brave-origin*)"
+	fi
+fi
+
+# GPU
+if command -v voidwolf-gpu-check >/dev/null 2>&1; then
+	prof=$(voidwolf-gpu-check --print-profile 2>/dev/null || true)
+	pkg=$(voidwolf-gpu-check --print-package 2>/dev/null || true)
+	info "gpu-check profile=${prof:-?} package=${pkg:-?}"
+else
+	note "voidwolf-gpu-check not on PATH"
+fi
+
+if command -v nvidia-smi >/dev/null 2>&1; then
+	if nvidia-smi >/dev/null 2>&1; then
+		ok "nvidia-smi works"
+	else
+		bad "nvidia-smi present but failed"
+	fi
+else
+	info "nvidia-smi not installed (ok for --gpu none)"
+fi
+
+if command -v glxinfo >/dev/null 2>&1 && [[ -n "${DISPLAY:-}" ]]; then
+	ren=$(glxinfo -B 2>/dev/null | awk -F: '/OpenGL renderer/{print $2; exit}' | sed 's/^ *//')
+	if [[ -n "$ren" ]]; then
+		ok "GL renderer: $ren"
+	else
+		note "glxinfo failed (no usable GL on DISPLAY=${DISPLAY:-unset})"
+	fi
+elif [[ -z "${DISPLAY:-}" ]]; then
+	info "DISPLAY unset — GL check skipped (run after startx)"
+fi
+
+# XLibre
+if xbps-query -l 2>/dev/null | rg -q 'xlibre-xserver'; then
+	ok "xlibre-xserver package installed"
+else
+	note "xlibre-xserver not listed (repos/packages step incomplete?)"
+fi
+
+# NVIDIA system conf (optional if vendor /usr/share snippets work)
+if [[ -f /etc/modprobe.d/voidwolf-nvidia.conf ]]; then
+	ok "voidwolf nvidia modprobe conf installed"
+else
+	info "no /etc/modprobe.d/voidwolf-nvidia.conf — sudo ./bootstrap/nvidia-setup.sh --profile …"
+fi
+if [[ -d /etc/X11/xorg.conf.d ]] && ls /etc/X11/xorg.conf.d/*nvidia* >/dev/null 2>&1; then
+	ok "voidwolf Xorg nvidia snippet present"
+else
+	info "no /etc/X11/xorg.conf.d/*nvidia* (vendor /usr/share snippets may suffice)"
+fi
+
+# Session tools
+for t in startx xsetroot xrdb dunst; do
+	if command -v "$t" >/dev/null 2>&1; then
+		ok "tool $t"
+	else
+		bad "missing tool: $t"
+	fi
+done
+
+# Screenshot deps
+if command -v maim >/dev/null 2>&1; then
+	ok "maim (screenshots)"
+else
+	note "maim missing — Super+Print screenshot will fail"
+fi
+if command -v xclip >/dev/null 2>&1; then
+	ok "xclip (clipboard images)"
+else
+	note "xclip missing — screenshot copy-to-clipboard degraded"
+fi
+
+echo "------------------------------------------------------------"
+if [[ "$fail" -ne 0 ]]; then
+	echo "RESULT: BLOCKED ($fail critical) — fix FAILs before startx dogfood"
+	exit 1
+fi
+if [[ "$warn" -ne 0 ]]; then
+	echo "RESULT: READY WITH WARNINGS ($warn) — startx should work; address WARN/INFO"
+	exit 0
+fi
+echo "RESULT: READY — logout TTY session and: export PATH=\"\$HOME/.local/bin:\$PATH\"; startx"
+exit 0

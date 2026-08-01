@@ -1,6 +1,6 @@
 /* voidwolf dwm config — Mod4 Omarchy-inspired keybinds
  *
- * PR6 core + PR6b remainder. docs/keybindings.md mirrors this file.
+ * PR6 core + PR6b remainder + PR11 media/brightness. docs/keybindings.md mirrors this file.
  * Lint: ./tests/keybind-lint.sh
  *
  * Policy locks:
@@ -11,6 +11,8 @@
  *
  * Fonts live here (not themed). Colors come from colors.h (theme-generated).
  */
+
+#include <X11/XF86keysym.h>
 
 /* appearance */
 static const unsigned int borderpx  = 2;        /* border pixel of windows */
@@ -83,6 +85,12 @@ static const char *scrotfull[]   = { "voidwolf-screenshot", "full", NULL };
 static const char *scrotregion[] = { "voidwolf-screenshot", "region", NULL };
 static const char *filemgr[]     = { "voidwolf-filemanager", NULL };
 static const char *clipmenu[]    = { "voidwolf-clipboard", NULL };
+/* PR11: media + backlight (desktop volume always; brightness no-ops if no sysfs) */
+static const char *volup[]       = { "voidwolf-volume", "up", NULL };
+static const char *voldown[]     = { "voidwolf-volume", "down", NULL };
+static const char *volmute[]     = { "voidwolf-volume", "mute", NULL };
+static const char *brightup[]    = { "voidwolf-brightness", "up", NULL };
+static const char *brightdown[]  = { "voidwolf-brightness", "down", NULL };
 
 #include "movestack.c"
 #include "shiftview.c"
@@ -118,6 +126,13 @@ static const Key keys[] = {
 	{ ShiftMask,                    XK_Print,  spawn,          {.v = scrotregion } },
 	{ MODKEY|ControlMask,           XK_c,      spawn,          {.v = scrotmenu } },
 	{ MODKEY|ControlMask,           XK_v,      spawn,          {.v = clipmenu } },
+
+	/* === PR11: XF86 media / brightness (no Super modifier) === */
+	{ 0, XF86XK_AudioRaiseVolume,  spawn, {.v = volup } },
+	{ 0, XF86XK_AudioLowerVolume,  spawn, {.v = voldown } },
+	{ 0, XF86XK_AudioMute,         spawn, {.v = volmute } },
+	{ 0, XF86XK_MonBrightnessUp,   spawn, {.v = brightup } },
+	{ 0, XF86XK_MonBrightnessDown, spawn, {.v = brightdown } },
 
 	/* client */
 	{ MODKEY,                       XK_w,      killclient,     {0} },

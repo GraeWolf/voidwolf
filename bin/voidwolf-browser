@@ -1,14 +1,37 @@
 #!/bin/sh
 # Super+Shift+Return — Brave via vw-repo package names
+# Package names and binary names often differ (e.g. brave-origin-bin → brave-origin-nightly).
 export PATH="${HOME}/.local/bin:${PATH}"
 
-for b in brave-origin brave-origin-bin brave brave-browser; do
+# Prefer explicit binaries (command -v), then known install paths.
+for b in \
+	brave-origin \
+	brave-origin-bin \
+	brave-origin-nightly \
+	brave-browser \
+	brave \
+	brave-nightly
+do
 	if command -v "$b" >/dev/null 2>&1; then
 		exec "$b" "$@"
 	fi
 done
 
-echo "voidwolf-browser: no Brave package found" >&2
+# Fallback: scan common vw-repo / official install prefixes
+for path in \
+	/opt/brave.com/brave-origin-nightly/brave-origin-nightly \
+	/opt/brave.com/brave-origin/brave-origin \
+	/opt/brave.com/brave/brave \
+	/usr/lib/brave-browser/brave \
+	/usr/lib/brave-bin/brave
+do
+	if [ -x "$path" ]; then
+		exec "$path" "$@"
+	fi
+done
+
+echo "voidwolf-browser: no Brave binary found" >&2
 echo "  try: sudo xbps-install -y brave-origin   # or brave-origin-bin" >&2
+echo "  binaries often named: brave-origin, brave-origin-nightly, brave" >&2
 command -v notify-send >/dev/null 2>&1 && notify-send "voidwolf" "Brave not installed"
 exit 1

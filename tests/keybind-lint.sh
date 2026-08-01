@@ -124,8 +124,18 @@ done
 # No stock Mod1 as MODKEY
 forbid_re "MODKEY must not be Mod1Mask" '^#define MODKEY Mod1Mask'
 
+# PR11 media / brightness
+need_re "XF86 AudioRaiseVolume" 'XF86XK_AudioRaiseVolume'
+need_re "XF86 AudioLowerVolume" 'XF86XK_AudioLowerVolume'
+need_re "XF86 AudioMute" 'XF86XK_AudioMute'
+need_re "XF86 MonBrightnessUp" 'XF86XK_MonBrightnessUp'
+need_re "XF86 MonBrightnessDown" 'XF86XK_MonBrightnessDown'
+need_re "volume helper commands" 'voidwolf-volume'
+need_re "brightness helper commands" 'voidwolf-brightness'
+need_re "XF86keysym include" 'XF86keysym'
+
 if [[ "$fail" -ne 0 ]]; then
 	echo "keybind-lint: FAILED"
 	exit 1
 fi
-echo "keybind-lint: all OK (core PR6 policy)"
+echo "keybind-lint: all OK (core PR6 + PR11 policy)"

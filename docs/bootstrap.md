@@ -60,7 +60,8 @@ After a real run: **re-login** (groups + elogind), then later `startx` (PR5+).
 | `packages-desktop-required.txt` | elogind, PipeWire, NM, BT, fonts, tools |
 | `packages-desktop-optional.txt` | best-effort TUIs, extractors |
 | `packages-build-suckless.txt` | gcc/make/X11 devel |
-| `packages-laptop.txt` | brightnessctl, tlp |
+| `packages-laptop.txt` | brightnessctl, tlp (PR11) |
+| `packages-desktop.txt` | desktop extras (optional; lean) |
 | `packages-nvidia.txt` | dkms, linux-headers (+ driver via script) |
 
 ## Services enabled

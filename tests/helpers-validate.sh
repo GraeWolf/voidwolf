@@ -25,6 +25,9 @@ required=(
 	voidwolf-theme
 	voidwolf-gpu-check
 	voidwolf-prime
+	voidwolf-volume
+	voidwolf-brightness
+	voidwolf-dogfood-check
 	install-user-bin.sh
 )
 
@@ -72,6 +75,28 @@ if rg -q 'dmenu_run' "${BIN}/voidwolf-launcher"; then
 	echo "OK   launcher uses dmenu_run"
 else
 	echo "FAIL launcher should use dmenu_run"
+	fail=1
+fi
+
+# browser resolves multiple Brave binary names (dogfood: brave-origin-nightly)
+if rg -q 'brave-origin-nightly' "${BIN}/voidwolf-browser"; then
+	echo "OK   browser knows brave-origin-nightly"
+else
+	echo "FAIL voidwolf-browser should resolve brave-origin-nightly"
+	fail=1
+fi
+
+# volume / brightness usage strings
+if rg -q 'wpctl' "${BIN}/voidwolf-volume"; then
+	echo "OK   volume uses wpctl"
+else
+	echo "FAIL voidwolf-volume should use wpctl"
+	fail=1
+fi
+if rg -q 'brightnessctl' "${BIN}/voidwolf-brightness"; then
+	echo "OK   brightness prefers brightnessctl"
+else
+	echo "FAIL voidwolf-brightness should prefer brightnessctl"
 	fail=1
 fi
 

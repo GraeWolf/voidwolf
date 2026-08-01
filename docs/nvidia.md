@@ -127,6 +127,13 @@ Re-enable XLibre later with `./bootstrap/repos.sh` and reinstall `xlibre-minimal
 | GL | `glxinfo -B` / `voidwolf-prime glxinfo -B` |
 | Session | `startx` → dwm |
 | Report | `voidwolf-gpu-check` / `--json` |
+| Host readiness | `voidwolf-dogfood-check` |
+
+### Dogfood note (XLibre × proprietary)
+
+On a discrete RTX 40-series host with XLibre, the NVIDIA DDX may log **ABI / “unsupported” warnings** but still produce a working session (GL + multi-monitor verified). Re-run `voidwolf-gpu-check` and `glxinfo` after every XLibre or `nvidia` upgrade. Full narrative: [dogfood.md](dogfood.md).
+
+Vendor packages often ship `/usr/share/X11/xorg.conf.d/10-nvidia*.conf`. `nvidia-setup.sh` still installs voidwolf snippets under `/etc/X11/xorg.conf.d/` (modeset + explicit Device/OutputClass) so bootstrap is self-contained without relying on package layout.
 
 ## 32-bit libs
 

@@ -6,7 +6,7 @@ Omarchy-inspired **Super (Mod4)** map for voidwolf dwm.
 |---|---|
 | **Source of truth (code)** | `suckless/dwm/config.h` |
 | **Lint** | `./tests/keybind-lint.sh` / `make test` |
-| **Scope** | **PR6 core + PR6b remainder** |
+| **Scope** | **PR6 core + PR6b remainder + PR11 media/brightness** |
 | **Full Omarchy comparison** | [design.md](design.md) |
 
 ## Policy locks
@@ -107,6 +107,20 @@ Super+, is reserved for notifications — monitors use **period**:
 | Super+Ctrl+. | Focus previous monitor |
 | Super+Shift+. | Send client to next monitor |
 | Super+Ctrl+Shift+. | Send client to previous monitor |
+
+## Media / brightness (PR11)
+
+No Super modifier — hardware XF86 keys:
+
+| Key | Action | Command |
+|-----|--------|---------|
+| XF86 AudioRaiseVolume | Volume up | `voidwolf-volume up` |
+| XF86 AudioLowerVolume | Volume down | `voidwolf-volume down` |
+| XF86 AudioMute | Mute toggle | `voidwolf-volume mute` |
+| XF86 MonBrightnessUp | Brightness + | `voidwolf-brightness up` |
+| XF86 MonBrightnessDown | Brightness − | `voidwolf-brightness down` |
+
+Laptop packages (`--profile laptop`) install `brightnessctl`. Desktop still gets volume binds; brightness is a no-op without a backlight.
 
 ## Capture (PR6b)
 

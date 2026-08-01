@@ -81,10 +81,20 @@ if [[ "${WITH_PICOM}" -eq 1 ]]; then
 	voidwolf_install_optional picom
 fi
 
-if [[ "${PROFILE}" == "laptop" ]]; then
-	mapfile -t LAPTOP_PKGS < <(voidwolf_read_pkg_list "${SCRIPT_DIR}/packages-laptop.txt")
-	voidwolf_install_required "${LAPTOP_PKGS[@]}"
-fi
+case "${PROFILE}" in
+	laptop)
+		mapfile -t LAPTOP_PKGS < <(voidwolf_read_pkg_list "${SCRIPT_DIR}/packages-laptop.txt")
+		voidwolf_install_required "${LAPTOP_PKGS[@]}"
+		;;
+	desktop)
+		if [[ -f "${SCRIPT_DIR}/packages-desktop.txt" ]]; then
+			mapfile -t DESKTOP_EXTRA < <(voidwolf_read_pkg_list "${SCRIPT_DIR}/packages-desktop.txt")
+			if [[ ${#DESKTOP_EXTRA[@]} -gt 0 ]]; then
+				voidwolf_install_optional "${DESKTOP_EXTRA[@]}"
+			fi
+		fi
+		;;
+esac
 
 # NVIDIA common + family package
 if [[ "${GPU}" != "none" ]]; then

@@ -9,6 +9,7 @@ source "${SCRIPT_DIR}/lib.sh"
 DRY_RUN=0
 SKIP_UFW=0
 SKIP_SUDOERS=0
+PROFILE=""
 TARGET_USER="${VOIDWOLF_TARGET_USER:-}"
 
 # Runit service directory names on Void
@@ -40,6 +41,7 @@ Enable voidwolf system services (runit), install wheel sudoers, configure ufw,
 and add the target user to desktop groups.
 
 Options:
+  --profile desktop|laptop  Laptop enables tlp when present (PR11)
   --user NAME     Target user for groups (default: SUDO_USER or VOIDWOLF_TARGET_USER or $USER if not root)
   --skip-ufw      Do not enable/configure ufw
   --skip-sudoers  Do not install voidwolf-wheel sudoers drop-in
@@ -50,6 +52,7 @@ EOF
 
 while [[ $# -gt 0 ]]; do
 	case "$1" in
+		--profile) PROFILE="${2:-}"; shift ;;
 		--user) TARGET_USER="${2:-}"; shift ;;
 		--skip-ufw) SKIP_UFW=1 ;;
 		--skip-sudoers) SKIP_SUDOERS=1 ;;
@@ -168,6 +171,15 @@ for svc in "${SERVICES[@]}"; do
 	fi
 	enable_sv "$svc"
 done
+
+# PR11: laptop power management (optional package)
+if [[ "${PROFILE}" == "laptop" ]]; then
+	if [[ -d /etc/sv/tlp ]]; then
+		enable_sv tlp
+	else
+		voidwolf_log "tlp service not installed yet (packages-laptop / brightnessctl + tlp)"
+	fi
+fi
 
 if [[ "${SKIP_SUDOERS}" -eq 0 ]]; then
 	install_sudoers

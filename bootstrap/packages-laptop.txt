@@ -1,5 +1,12 @@
 # packages-laptop.txt — laptop hardware helpers (--profile laptop)
+# GPU is orthogonal: use --gpu none|nvidia-hybrid|nvidia-hybrid-randr as needed.
 
+# Backlight (voidwolf-brightness / XF86 keys)
 brightnessctl
+
+# Power management (enabled via enable-services.sh --profile laptop)
 tlp
-# acpid optional; elogind handles many lid events
+
+# Optional niceties (install-packages treats list as required for laptop profile)
+# light          # alternative to brightnessctl; not required if brightnessctl present
+# acpi           # CLI battery; voidwolf-status uses sysfs without this

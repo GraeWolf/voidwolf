@@ -19,7 +19,7 @@ export PATH="$HOME/.local/bin:$PATH"
 | `voidwolf-lock` | Super+Ctrl+L | xsecurelock → slock → i3lock |
 | `voidwolf-screenshot` | Print / Super+Ctrl+C | maim + xclip |
 | `voidwolf-cheatsheet` | Super+K | Open keybindings.md |
-| `voidwolf-browser` | Super+Shift+Return | brave-origin* |
+| `voidwolf-browser` | Super+Shift+Return | brave-origin* / brave-origin-nightly |
 | `voidwolf-filemanager` | Super+Shift+F | lf / ranger / thunar |
 | `voidwolf-clipboard` | Super+Ctrl+V | clipmenu / xclip |
 | `voidwolf-audio-tui` | Super+Ctrl+A | pulsemixer / wpctl |
@@ -29,7 +29,10 @@ export PATH="$HOME/.local/bin:$PATH"
 | `voidwolf-wallpaper` | Super+Ctrl+Space | restore / set / pick |
 | `voidwolf-theme` | Super+Ctrl+Shift+Space | set/list/pick/validate (PR8) |
 | `voidwolf-gpu-check` | (manual) | GPU detect / `--gpu` recommendation (PR10) |
-| `voidwolf-prime` | (manual) | Run app on NVIDIA (PRIME offload) |
+| `voidwolf-prime` | (manual / menus) | PRIME offload wrapper (PR10) |
+| `voidwolf-volume` | XF86 volume keys | `wpctl` up/down/mute (PR11) |
+| `voidwolf-brightness` | XF86 brightness keys | backlight control (PR11) |
+| `voidwolf-dogfood-check` | (manual) | Host readiness for startx dogfood |
 
 ## System menu behavior
 
