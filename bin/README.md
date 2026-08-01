@@ -15,7 +15,7 @@ voidwolf user-facing helpers. Install with:
 | `voidwolf-cheatsheet` | PR4 — opens docs/keybindings.md |
 | `voidwolf-theme` / `voidwolf-wallpaper` | Stubs until PR8 |
 | `voidwolf-audio-tui` / `bluetooth-tui` / `wifi-tui` | PR4 fallbacks |
-| `voidwolf-status` | PR5 |
+| `voidwolf-status` | PR5 — dwm bar via xsetroot |
 | `voidwolf-screenshot` | PR7 |
 | `voidwolf-prime`, `voidwolf-gpu-check` | PR10 |
 | `voidwolf-doctor` | PR13 |

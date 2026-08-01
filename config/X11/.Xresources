@@ -1,0 +1,48 @@
+! voidwolf base Xresources (static)
+! Theme palette merges from ~/.config/voidwolf/generated/theme.Xresources (PR8)
+
+! --- DPI (override per machine if needed) ---
+Xft.dpi: 96
+Xft.antialias: true
+Xft.hinting: true
+Xft.rgba: rgb
+Xft.hintstyle: hintslight
+
+! --- st defaults (xresources patch reads these; theme overrides colors) ---
+st.font: Fira Code:pixelsize=14:antialias=true:autohint=true
+st.borderpx: 2
+
+! Default 16-color + bg/fg (voidwolf-dark-ish; PR8 replaces via generated file)
+*.foreground: #ebdbb2
+*.background: #1d2021
+*.cursorColor: #ebdbb2
+
+! black
+*.color0:  #1d2021
+*.color8:  #928374
+! red
+*.color1:  #cc241d
+*.color9:  #fb4934
+! green
+*.color2:  #98971a
+*.color10: #b8bb26
+! yellow
+*.color3:  #d79921
+*.color11: #fabd2f
+! blue
+*.color4:  #458588
+*.color12: #83a598
+! magenta
+*.color5:  #b16286
+*.color13: #d3869b
+! cyan
+*.color6:  #689d6a
+*.color14: #8ec07c
+! white
+*.color7:  #a89984
+*.color15: #ebdbb2
+
+! st. resource names (some builds prefer st.colorN)
+st.foreground: #ebdbb2
+st.background: #1d2021
+st.cursorColor: #ebdbb2

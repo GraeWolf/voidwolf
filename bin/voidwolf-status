@@ -1,0 +1,65 @@
+#!/bin/sh
+# voidwolf-status — feed dwm bar via xsetroot -name
+# Phase 1: lightweight shell loop (slstatus optional later).
+
+INTERVAL="${VOIDWOLF_STATUS_INTERVAL:-2}"
+
+battery() {
+	# sysfs BAT*
+	bat=
+	for d in /sys/class/power_supply/BAT*; do
+		[ -d "$d" ] || continue
+		cap=$(cat "$d/capacity" 2>/dev/null) || continue
+		stat=$(cat "$d/status" 2>/dev/null) || stat="?"
+		case "$stat" in
+			Charging) icon="⚡" ;;
+			Discharging) icon="🔋" ;;
+			Full|*) icon="🔋" ;;
+		esac
+		bat="${icon}${cap}%"
+		break
+	done
+	[ -n "$bat" ] && printf '%s' "$bat"
+}
+
+volume() {
+	if command -v wpctl >/dev/null 2>&1; then
+		# wpctl get-volume @DEFAULT_AUDIO_SINK@
+		out=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null) || return 0
+		# Volume: 0.40 [MUTED]
+		vol=$(printf '%s' "$out" | awk '{print int($2*100)}')
+		case "$out" in
+			*MUTED*) printf '🔇' ;;
+			*) printf '🔊%s%%' "$vol" ;;
+		esac
+	fi
+}
+
+network() {
+	if command -v nmcli >/dev/null 2>&1; then
+		ssid=$(nmcli -t -f active,ssid dev wifi 2>/dev/null | awk -F: '$1=="yes"{print $2; exit}')
+		if [ -n "$ssid" ]; then
+			printf '📡%s' "$ssid"
+			return
+		fi
+		# wired
+		if nmcli -t -f DEVICE,TYPE,STATE dev status 2>/dev/null | grep -q ':ethernet:connected'; then
+			printf '🖧'
+		fi
+	fi
+}
+
+clock() {
+	date '+%a %Y-%m-%d %H:%M'
+}
+
+while true; do
+	parts=
+	v=$(volume) && [ -n "$v" ] && parts="${parts}${parts:+ | }${v}"
+	b=$(battery) && [ -n "$b" ] && parts="${parts}${parts:+ | }${b}"
+	n=$(network) && [ -n "$n" ] && parts="${parts}${parts:+ | }${n}"
+	c=$(clock)
+	parts="${parts}${parts:+ | }${c}"
+	xsetroot -name " $parts " 2>/dev/null || true
+	sleep "$INTERVAL"
+done

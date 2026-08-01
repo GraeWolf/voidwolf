@@ -33,7 +33,7 @@ After a real run: **re-login** (groups + elogind), then later `startx` (PR5+).
 | Repos (nonfree, XLibre, vw-repo) | `repos.sh` | PR2 |
 | Packages | `install-packages.sh` | PR3 |
 | Services, sudoers, ufw, groups | `enable-services.sh` | PR3 |
-| Suckless build | `build-suckless.sh` | PR4 |
+| Suckless build | `build-suckless.sh` (`--with-suckless`) | PR4 |
 | PipeWire conf.d + dotfiles | `setup-pipewire.sh`, `install-dotfiles.sh` | PR5 |
 
 ### Flags

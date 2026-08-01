@@ -10,7 +10,7 @@ help: ## Show available targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
 	@echo ""
-	@echo "Note: session/theme targets land in later PRs (PR5+)."
+	@echo "Note: theme engine lands in PR8+."
 
 # --- Planned (stubs return a clear message until implemented) ---
 
@@ -27,9 +27,8 @@ build-suckless: ## Build and install dwm/st/dmenu to ~/.local (no sudo)
 	@./bootstrap/build-suckless.sh
 	@./bin/install-user-bin.sh
 
-install-dotfiles: ## Install config/ session files (PR5)
-	@echo "Not implemented yet (PR5). See bootstrap/install-dotfiles.sh."
-	@exit 1
+install-dotfiles: ## Install session .xinitrc, Xresources, PipeWire conf.d
+	@./bootstrap/install-dotfiles.sh
 
 theme-list: ## List themes (PR8)
 	@echo "Not implemented yet (PR8). See bin/voidwolf-theme."
@@ -38,3 +37,4 @@ theme-list: ## List themes (PR8)
 test: ## Run tests/ checks
 	@./tests/repos-pins-validate.sh
 	@./tests/package-lists-validate.sh
+	@./tests/session-files-validate.sh

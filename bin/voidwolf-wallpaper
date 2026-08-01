@@ -1,5 +1,65 @@
 #!/bin/sh
-# Wallpaper picker stub (PR8).
-printf '%s\n' "voidwolf-wallpaper: not implemented yet (PR8)" >&2
-command -v notify-send >/dev/null 2>&1 && notify-send "voidwolf" "Wallpaper picker lands in PR8"
-exit 0
+# voidwolf-wallpaper — set / restore wallpaper
+# Full picker lands in PR8; restore uses last path or a solid fallback.
+
+cmd="${1:-restore}"
+cfg="${HOME}/.config/voidwolf/current/wallpaper"
+default_wall=""
+
+# Prefer repo default if VOIDWOLF_ROOT / repo-root known
+if [ -f "${HOME}/.config/voidwolf/repo-root" ]; then
+	root=$(cat "${HOME}/.config/voidwolf/repo-root")
+	if [ -f "${root}/wallpapers/voidwolf-default.jpg" ]; then
+		default_wall="${root}/wallpapers/voidwolf-default.jpg"
+	fi
+fi
+
+set_wall() {
+	path="$1"
+	[ -n "$path" ] && [ -f "$path" ] || return 1
+	if command -v xwallpaper >/dev/null 2>&1; then
+		xwallpaper --zoom "$path"
+	elif command -v feh >/dev/null 2>&1; then
+		feh --bg-fill "$path"
+	elif command -v hsetroot >/dev/null 2>&1; then
+		hsetroot -cover "$path"
+	else
+		return 1
+	fi
+	mkdir -p "$(dirname "$cfg")"
+	printf '%s\n' "$path" >"$cfg"
+	return 0
+}
+
+case "$cmd" in
+	restore)
+		if [ -f "$cfg" ]; then
+			path=$(cat "$cfg")
+			set_wall "$path" && exit 0
+		fi
+		if [ -n "$default_wall" ]; then
+			set_wall "$default_wall" && exit 0
+		fi
+		# solid fallback so session is not blank-ugly
+		if command -v hsetroot >/dev/null 2>&1; then
+			hsetroot -solid "#1d2021"
+		elif command -v xsetroot >/dev/null 2>&1; then
+			xsetroot -solid "#1d2021"
+		fi
+		exit 0
+		;;
+	set)
+		path="${2:-}"
+		[ -n "$path" ] || { echo "Usage: voidwolf-wallpaper set <path>" >&2; exit 2; }
+		set_wall "$path" || { echo "voidwolf-wallpaper: failed to set $path" >&2; exit 1; }
+		;;
+	pick)
+		echo "voidwolf-wallpaper pick: theme/wallpaper UI lands in PR8" >&2
+		command -v notify-send >/dev/null 2>&1 && notify-send "voidwolf" "Wallpaper picker lands in PR8"
+		exit 0
+		;;
+	*)
+		echo "Usage: voidwolf-wallpaper <restore|set|pick> [path]" >&2
+		exit 2
+		;;
+esac

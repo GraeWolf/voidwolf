@@ -44,7 +44,7 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 | Phase | Goal | State |
 |-------|------|--------|
 | 0 | Design | **Done** ([docs/design.md](docs/design.md)) |
-| 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | In progress (PR1–4: through vendored suckless) |
+| 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | In progress (PR1–5: through session/startx stack) |
 | 2 | Theming engine | Planned |
 | 3 | Opinionated desktop polish | Planned |
 | 4 | XBPS meta-packages | Planned |
@@ -57,20 +57,21 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 ./bootstrap/bootstrap.sh --profile laptop --gpu none --dry-run
 make test
 
-# Build suckless + helpers (no sudo)
+# Build suckless + session files (no sudo for these)
 make build-suckless
+make install-dotfiles
 export PATH="$HOME/.local/bin:$PATH"
+# startx   # after elogind re-login
 
 # On Void (needs sudo for packages/services):
-# ./bootstrap/bootstrap.sh --profile laptop --gpu nvidia-hybrid
-# re-login, then later: startx (PR5+)
+# ./bootstrap/bootstrap.sh --profile laptop --gpu nvidia-hybrid --with-suckless
 ```
 
 ```bash
 make help
 make test
 make build-suckless
-make bootstrap-dry-run
+make install-dotfiles
 ```
 
 ## Documentation
@@ -78,7 +79,8 @@ make bootstrap-dry-run
 | Doc | Purpose |
 |-----|---------|
 | [docs/design.md](docs/design.md) | Approved architecture & PR plan |
-| [docs/bootstrap.md](docs/bootstrap.md) | Bootstrap usage (PR2–3) |
+| [docs/bootstrap.md](docs/bootstrap.md) | Bootstrap usage (PR2–5) |
+| [docs/session.md](docs/session.md) | startx / PipeWire / dwm loop |
 | [docs/keybindings.md](docs/keybindings.md) | Omarchy → dwm map (filled in PR6) |
 | [docs/theming.md](docs/theming.md) | Theme engine usage (PR8+) |
 | [docs/repos.md](docs/repos.md) | XLibre + vw-repo wiring (PR2) |
