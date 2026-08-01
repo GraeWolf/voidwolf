@@ -1,7 +1,12 @@
 #!/bin/sh
 # voidwolf-dmenu — themed dmenu wrapper (CLI colors override config.h)
 # Usage: voidwolf-dmenu [dmenu args...]
-# Env: VOIDWOLF_DMENU_{NB,NF,SB,SF,FN} or read generated theme later (PR8/9a)
+# Loads ~/.config/voidwolf/generated/dmenu.env when present (voidwolf-theme set).
+
+if [ -f "${HOME}/.config/voidwolf/generated/dmenu.env" ]; then
+	# shellcheck disable=SC1091
+	. "${HOME}/.config/voidwolf/generated/dmenu.env"
+fi
 
 NB="${VOIDWOLF_DMENU_NB:-#1d2021}"
 NF="${VOIDWOLF_DMENU_NF:-#ebdbb2}"

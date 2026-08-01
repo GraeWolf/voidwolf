@@ -1,3 +1,8 @@
 # wallpapers/
 
-Theme wallpapers. Default asset `voidwolf-default.jpg` ships with **PR8**.
+| File | Notes |
+|------|--------|
+| `voidwolf-default.png` | Default dark gradient (PR8) |
+| `voidwolf-default.jpg` | Symlink → png (path alias) |
+
+Themes reference `wallpapers/voidwolf-default.png`.

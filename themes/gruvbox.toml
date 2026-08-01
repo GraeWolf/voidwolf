@@ -1,0 +1,43 @@
+schema_version = 1
+name = "gruvbox"
+display_name = "Gruvbox"
+author = "voidwolf"
+description = "Gruvbox dark medium"
+
+[palette]
+bg = "#282828"
+fg = "#ebdbb2"
+cursor = "#ebdbb2"
+accent = "#fe8019"
+urgent = "#fb4934"
+border_normal = "#3c3836"
+border_focused = "#fe8019"
+bar_bg = "#282828"
+bar_fg = "#ebdbb2"
+bar_selected_bg = "#fe8019"
+bar_selected_fg = "#1d2021"
+color0 = "#282828"
+color1 = "#cc241d"
+color2 = "#98971a"
+color3 = "#d79921"
+color4 = "#458588"
+color5 = "#b16286"
+color6 = "#689d6a"
+color7 = "#a89984"
+color8 = "#928374"
+color9 = "#fb4934"
+color10 = "#b8bb26"
+color11 = "#fabd2f"
+color12 = "#83a598"
+color13 = "#d3869b"
+color14 = "#8ec07c"
+color15 = "#ebdbb2"
+
+[meta]
+gtk_theme = "Adwaita-dark"
+cursor_theme = "Adwaita"
+cursor_size = 24
+wallpaper = "wallpapers/voidwolf-default.png"
+
+[options]
+dwm_border_px = 2

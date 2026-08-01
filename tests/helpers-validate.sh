@@ -22,6 +22,7 @@ required=(
 	voidwolf-wifi-tui
 	voidwolf-status
 	voidwolf-wallpaper
+	voidwolf-theme
 	install-user-bin.sh
 )
 

@@ -1,5 +1,17 @@
 # themes/
 
-TOML theme presets. Schema and files land in **PR8**.
+Shipped TOML presets for `voidwolf-theme` (PR8).
 
-Planned IDs: `voidwolf-dark`, `gruvbox`, `catppuccin-mocha`, `nord`, `rose-pine`.
+| name | display |
+|------|---------|
+| voidwolf-dark | Voidwolf Dark (default) |
+| gruvbox | Gruvbox |
+| catppuccin-mocha | Catppuccin Mocha |
+| nord | Nord |
+| rose-pine | Rosé Pine |
+
+```bash
+voidwolf-theme list
+voidwolf-theme set voidwolf-dark
+voidwolf-theme validate themes/nord.toml
+```

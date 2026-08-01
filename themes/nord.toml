@@ -1,0 +1,43 @@
+schema_version = 1
+name = "nord"
+display_name = "Nord"
+author = "voidwolf"
+description = "Nord polar night"
+
+[palette]
+bg = "#2e3440"
+fg = "#d8dee9"
+cursor = "#d8dee9"
+accent = "#88c0d0"
+urgent = "#bf616a"
+border_normal = "#3b4252"
+border_focused = "#88c0d0"
+bar_bg = "#2e3440"
+bar_fg = "#d8dee9"
+bar_selected_bg = "#88c0d0"
+bar_selected_fg = "#2e3440"
+color0 = "#3b4252"
+color1 = "#bf616a"
+color2 = "#a3be8c"
+color3 = "#ebcb8b"
+color4 = "#81a1c1"
+color5 = "#b48ead"
+color6 = "#88c0d0"
+color7 = "#e5e9f0"
+color8 = "#4c566a"
+color9 = "#bf616a"
+color10 = "#a3be8c"
+color11 = "#ebcb8b"
+color12 = "#81a1c1"
+color13 = "#b48ead"
+color14 = "#8fbcbb"
+color15 = "#eceff4"
+
+[meta]
+gtk_theme = "Adwaita-dark"
+cursor_theme = "Adwaita"
+cursor_size = 24
+wallpaper = "wallpapers/voidwolf-default.png"
+
+[options]
+dwm_border_px = 2

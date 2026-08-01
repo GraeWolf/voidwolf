@@ -27,7 +27,7 @@ export PATH="$HOME/.local/bin:$PATH"
 | `voidwolf-wifi-tui` | Super+Ctrl+W | nmtui |
 | `voidwolf-status` | (autostart) | dwm bar via xsetroot |
 | `voidwolf-wallpaper` | Super+Ctrl+Space | restore / set / pick |
-| `voidwolf-theme` | Super+Ctrl+Shift+Space | stub until PR8 |
+| `voidwolf-theme` | Super+Ctrl+Shift+Space | set/list/pick/validate (PR8) |
 
 ## System menu behavior
 

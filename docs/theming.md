@@ -1,42 +1,76 @@
-# Theming
+# Theming (PR8)
 
-voidwolf theming engine: named presets + wallpaper-driven palettes.
+voidwolf theming engine: named presets, generate adapters, rebuild dwm user-local.
 
-> **Status:** Stub for PR1. Schema, CLI, and adapters land in **PR8 / PR9a / PR9b**.  
-> Full design: [design.md](design.md) (Theme engine sections).
-
-## Planned CLI
+## CLI
 
 ```bash
+export PATH="$HOME/.local/bin:$PATH"
+export VOIDWOLF_ROOT=/path/to/voidwolf-grok   # optional if repo-root recorded
+
 voidwolf-theme list
-voidwolf-theme set voidwolf-dark
-voidwolf-theme from-wallpaper ~/Pictures/wall.png
-voidwolf-theme pick
-voidwolf-theme validate themes/gruvbox.toml
-voidwolf-theme build-suckless   # PREFIX=$HOME/.local — no sudo
+voidwolf-theme validate              # all shipped themes
+voidwolf-theme set voidwolf-dark     # apply default
+voidwolf-theme set nord
+voidwolf-theme current
+voidwolf-theme show gruvbox
+voidwolf-theme pick                  # dmenu chooser
+voidwolf-theme build-suckless        # re-apply current + rebuild dwm
+voidwolf-theme reload
+# voidwolf-theme from-wallpaper …  → PR9b
 ```
 
-## Shipped presets (planned)
+### Exit codes
 
-| ID | Name |
-|----|------|
+| Code | Meaning |
+|------|---------|
+| 0 | ok |
+| 1 | usage |
+| 2 | theme not found |
+| 3 | adapter failure (e.g. dwm rebuild) |
+| 4 | schema invalid |
+
+## Shipped presets
+
+| name | display |
+|------|---------|
 | `voidwolf-dark` | Voidwolf Dark (default) |
 | `gruvbox` | Gruvbox |
 | `catppuccin-mocha` | Catppuccin Mocha |
 | `nord` | Nord |
 | `rose-pine` | Rosé Pine |
 
-## Targets
+Default wallpaper: `wallpapers/voidwolf-default.png` (`.jpg` symlink alias).
 
-| Target | Mechanism (Phase 2+) |
-|--------|----------------------|
-| st | Xresources / xrdb (new windows) |
-| dwm | generate `colors.h` → rebuild → re-exec |
-| dmenu | CLI color args (override config.h) |
-| GTK 3/4 | settings + gtk.css |
-| dunst | generated config from palette |
-| Wallpaper | feh / xwallpaper |
+## What `set` does
 
-## Extractor order (locked)
+1. Validate TOML (`schema_version = 1`, palette, color0–15)
+2. Write `$VOIDWOLF_HOME/generated/` (`colors.h`, `theme.Xresources`, `dmenu.env`)
+3. Atomic update `$VOIDWOLF_HOME/current/name`
+4. Copy `colors.h` → `suckless/dwm/colors.h`
+5. If palette hash changed: `build-suckless.sh --dwm-only` (**no sudo**, `PREFIX=$HOME/.local`)
+6. `kill -HUP dwm` when `DISPLAY` set (restartsig re-exec)
+7. `xrdb -merge` theme Xresources
+8. Set wallpaper via `voidwolf-wallpaper set` when path resolves
 
-**wallust → matugen → pywal** (automatic fallback at PR9b).
+`VOIDWOLF_HOME` defaults to `~/.config/voidwolf`.
+
+Set `VOIDWOLF_THEME_SKIP_REBUILD=1` to write adapters only (used by tests; still updates `colors.h`).
+
+## Schema (summary)
+
+See [design.md](design.md) for the full field table. Required:
+
+- `schema_version = 1`
+- `name`
+- `palette.bg`, `fg`, `accent`, `urgent`
+- `palette.color0` … `color15` for shipped themes
+
+Fonts are **not** themed (edit `suckless/*/config.h`).
+
+## Later
+
+| PR | Work |
+|----|------|
+| PR9a | dunst / GTK adapters |
+| PR9b | `from-wallpaper` (wallust → matugen → pywal) |

@@ -26,4 +26,4 @@ Full catalog: [docs/helpers.md](../docs/helpers.md).
 | `voidwolf-wifi-tui` | Super+Ctrl+W |
 | `voidwolf-status` | Session autostart (bar) |
 | `voidwolf-wallpaper` | Super+Ctrl+Space |
-| `voidwolf-theme` | Super+Ctrl+Shift+Space (stub → PR8) |
+| `voidwolf-theme` | Super+Ctrl+Shift+Space — set/list/pick/validate (PR8) |

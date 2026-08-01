@@ -10,7 +10,7 @@ help: ## Show available targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
 	@echo ""
-	@echo "Note: theme engine lands in PR8+."
+	@echo "Note: GTK/dunst adapters PR9a; wallpaper extract PR9b."
 
 # --- Planned (stubs return a clear message until implemented) ---
 
@@ -30,9 +30,8 @@ build-suckless: ## Build and install dwm/st/dmenu to ~/.local (no sudo)
 install-dotfiles: ## Install session .xinitrc, Xresources, PipeWire conf.d
 	@./bootstrap/install-dotfiles.sh
 
-theme-list: ## List themes (PR8)
-	@echo "Not implemented yet (PR8). See bin/voidwolf-theme."
-	@exit 1
+theme-list: ## List themes
+	@VOIDWOLF_ROOT="$(CURDIR)" ./bin/voidwolf-theme list
 
 test: ## Run tests/ checks
 	@./tests/repos-pins-validate.sh
@@ -40,3 +39,4 @@ test: ## Run tests/ checks
 	@./tests/session-files-validate.sh
 	@./tests/keybind-lint.sh
 	@./tests/helpers-validate.sh
+	@./tests/theme-schema-validate.sh

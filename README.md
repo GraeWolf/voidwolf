@@ -44,8 +44,8 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 | Phase | Goal | State |
 |-------|------|--------|
 | 0 | Design | **Done** ([docs/design.md](docs/design.md)) |
-| 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | In progress (PR1–7: helpers polished) |
-| 2 | Theming engine | Planned |
+| 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | **PR1–7 done** |
+| 2 | Theming engine | **PR8 MVP done** (adapters PR9) |
 | 3 | Opinionated desktop polish | Planned |
 | 4 | XBPS meta-packages | Planned |
 | 5 | ISO / installer | After packaging |
@@ -61,6 +61,7 @@ make test
 make build-suckless
 make install-dotfiles
 export PATH="$HOME/.local/bin:$PATH"
+voidwolf-theme set voidwolf-dark   # PR8: colors + wallpaper + rebuild dwm
 # startx   # after elogind re-login
 
 # On Void (needs sudo for packages/services):
@@ -72,6 +73,7 @@ make help
 make test
 make build-suckless
 make install-dotfiles
+make theme-list
 ```
 
 ## Documentation
@@ -82,6 +84,7 @@ make install-dotfiles
 | [docs/bootstrap.md](docs/bootstrap.md) | Bootstrap usage (PR2–5) |
 | [docs/session.md](docs/session.md) | startx / PipeWire / dwm loop |
 | [docs/helpers.md](docs/helpers.md) | User scripts (launcher, lock, capture) |
+| [docs/theming.md](docs/theming.md) | Theme engine (PR8) |
 | [docs/keybindings.md](docs/keybindings.md) | Omarchy → dwm map (filled in PR6) |
 | [docs/theming.md](docs/theming.md) | Theme engine usage (PR8+) |
 | [docs/repos.md](docs/repos.md) | XLibre + vw-repo wiring (PR2) |

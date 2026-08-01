@@ -1,0 +1,46 @@
+schema_version = 1
+name = "voidwolf-dark"
+display_name = "Voidwolf Dark"
+author = "voidwolf"
+description = "Default dark theme — cool black with amber accent"
+
+[palette]
+bg = "#0b0c0e"
+fg = "#e6e8eb"
+cursor = "#e6e8eb"
+accent = "#e6a23c"
+urgent = "#f07178"
+border_normal = "#2a2e35"
+border_focused = "#e6a23c"
+bar_bg = "#0b0c0e"
+bar_fg = "#e6e8eb"
+bar_selected_bg = "#e6a23c"
+bar_selected_fg = "#0b0c0e"
+color0 = "#0b0c0e"
+color1 = "#f07178"
+color2 = "#c3e88d"
+color3 = "#ffcb6b"
+color4 = "#82aaff"
+color5 = "#c792ea"
+color6 = "#89ddff"
+color7 = "#e6e8eb"
+color8 = "#4a5160"
+color9 = "#f07178"
+color10 = "#c3e88d"
+color11 = "#ffcb6b"
+color12 = "#82aaff"
+color13 = "#c792ea"
+color14 = "#89ddff"
+color15 = "#ffffff"
+
+[meta]
+gtk_theme = "Adwaita-dark"
+icon_theme = "Adwaita"
+cursor_theme = "Adwaita"
+cursor_size = 24
+wallpaper = "wallpapers/voidwolf-default.png"
+
+[options]
+dwm_border_px = 2
+dwm_showbar = true
+picom_opacity_inactive = 1.0

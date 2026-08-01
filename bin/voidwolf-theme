@@ -1,15 +1,509 @@
-#!/bin/sh
-# Theme engine stub (PR8). Accepts pick/set/list so dwm binds do not hard-fail.
-case "${1:-}" in
-	pick|set|list|from-wallpaper|validate|build-suckless)
-		printf '%s\n' "voidwolf-theme: engine not implemented yet (PR8). arg=$*" >&2
-		if command -v notify-send >/dev/null 2>&1; then
-			notify-send "voidwolf-theme" "Theme engine lands in PR8"
-		fi
-		exit 0
-		;;
-	*)
-		printf '%s\n' "Usage: voidwolf-theme <pick|set|list|from-wallpaper|validate|build-suckless>" >&2
-		exit 2
-		;;
-esac
+#!/usr/bin/env python3
+"""voidwolf-theme — color theme engine (PR8 MVP).
+
+Exit codes: 0 ok, 1 usage, 2 not found, 3 adapter failure, 4 schema invalid.
+"""
+from __future__ import annotations
+
+import hashlib
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+try:
+    import tomllib
+except ImportError:  # pragma: no cover
+    print("voidwolf-theme: Python 3.11+ with tomllib required", file=sys.stderr)
+    sys.exit(1)
+
+HEX_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
+REQUIRED_PALETTE = ("bg", "fg", "accent", "urgent")
+ANSI = tuple(f"color{i}" for i in range(16))
+
+# --- paths -----------------------------------------------------------------
+
+def repo_root() -> Path:
+    env = os.environ.get("VOIDWOLF_ROOT")
+    if env:
+        return Path(env).expanduser().resolve()
+    home_marker = Path.home() / ".config/voidwolf/repo-root"
+    if home_marker.is_file():
+        return Path(home_marker.read_text().strip()).resolve()
+    # bin/voidwolf-theme → repo root
+    return Path(__file__).resolve().parent.parent
+
+
+def voidwolf_home() -> Path:
+    return Path(os.environ.get("VOIDWOLF_HOME", Path.home() / ".config/voidwolf")).expanduser()
+
+
+def theme_search_dirs() -> list[Path]:
+    dirs = [
+        voidwolf_home() / "themes",
+        repo_root() / "themes",
+        Path("/usr/share/voidwolf/themes"),
+    ]
+    return [d for d in dirs if d.is_dir()]
+
+
+def atomic_write(path: Path, data: str | bytes, mode: int = 0o644) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if isinstance(data, str):
+        payload = data.encode()
+    else:
+        payload = data
+    fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=".tmp-")
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(payload)
+        os.chmod(tmp, mode)
+        os.replace(tmp, path)
+    except Exception:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
+# --- load / validate -------------------------------------------------------
+
+def load_toml(path: Path) -> dict:
+    with path.open("rb") as f:
+        return tomllib.load(f)
+
+
+def validate_theme(data: dict, path: Path | None = None, strict_ansi: bool = True) -> list[str]:
+    errs: list[str] = []
+    if data.get("schema_version") != 1:
+        errs.append("schema_version must be 1")
+    if not data.get("name"):
+        errs.append("name is required")
+    pal = data.get("palette") or {}
+    if not isinstance(pal, dict):
+        errs.append("palette must be a table")
+        return errs
+    for key in REQUIRED_PALETTE:
+        if key not in pal:
+            errs.append(f"palette.{key} is required")
+        elif not isinstance(pal[key], str) or not HEX_RE.match(pal[key]):
+            errs.append(f"palette.{key} must be #RRGGBB")
+    for key, val in pal.items():
+        if isinstance(val, str) and val.startswith("#") and not HEX_RE.match(val):
+            errs.append(f"palette.{key} invalid hex: {val}")
+    if strict_ansi:
+        for c in ANSI:
+            if c not in pal:
+                errs.append(f"palette.{c} is required for shipped themes")
+            elif not HEX_RE.match(str(pal.get(c, ""))):
+                errs.append(f"palette.{c} must be #RRGGBB")
+    return errs
+
+
+def normalize(data: dict) -> dict:
+    """Fill defaults for optional palette fields."""
+    pal = dict(data.get("palette") or {})
+    bg, fg, accent = pal["bg"], pal["fg"], pal["accent"]
+    pal.setdefault("cursor", fg)
+    pal.setdefault("border_normal", _blend(bg, "#000000", 0.3))
+    pal.setdefault("border_focused", accent)
+    pal.setdefault("bar_bg", bg)
+    pal.setdefault("bar_fg", fg)
+    pal.setdefault("bar_selected_bg", accent)
+    pal.setdefault("bar_selected_fg", bg)
+    data = dict(data)
+    data["palette"] = pal
+    meta = dict(data.get("meta") or {})
+    data["meta"] = meta
+    opts = dict(data.get("options") or {})
+    data["options"] = opts
+    return data
+
+
+def _blend(a: str, b: str, t: float) -> str:
+    def h(x: str) -> tuple[int, int, int]:
+        x = x.lstrip("#")
+        return int(x[0:2], 16), int(x[2:4], 16), int(x[4:6], 16)
+
+    ar, ag, ab = h(a)
+    br, bg, bb = h(b)
+    r = int(ar * (1 - t) + br * t)
+    g = int(ag * (1 - t) + bg * t)
+    b_ = int(ab * (1 - t) + bb * t)
+    return f"#{r:02x}{g:02x}{b_:02x}"
+
+
+def find_theme(name: str) -> Path | None:
+    for d in theme_search_dirs():
+        p = d / f"{name}.toml"
+        if p.is_file():
+            return p
+    return None
+
+
+def list_themes() -> list[tuple[str, str, Path]]:
+    seen: set[str] = set()
+    out: list[tuple[str, str, Path]] = []
+    for d in theme_search_dirs():
+        for p in sorted(d.glob("*.toml")):
+            try:
+                data = load_toml(p)
+            except Exception:
+                continue
+            name = str(data.get("name") or p.stem)
+            if name in seen:
+                continue
+            seen.add(name)
+            disp = str(data.get("display_name") or name)
+            out.append((name, disp, p))
+    return out
+
+
+def resolve_wallpaper(rel: str | None) -> Path | None:
+    if not rel:
+        return None
+    path = Path(rel)
+    if path.is_absolute() and path.is_file():
+        return path
+    candidates = [
+        repo_root() / rel,
+        Path("/usr/share/voidwolf") / rel,
+        voidwolf_home() / rel,
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c
+    return None
+
+
+# --- adapters --------------------------------------------------------------
+
+def gen_colors_h(pal: dict) -> str:
+    return f"""/* colors.h — GENERATED by voidwolf-theme; do not hand-edit */
+static const char col_gray1[]       = "{pal['bar_bg']}"; /* bg / bar bg */
+static const char col_gray2[]       = "{pal['border_normal']}"; /* border unfocused */
+static const char col_gray3[]       = "{pal['bar_fg']}"; /* fg */
+static const char col_gray4[]       = "{pal['bar_selected_fg']}"; /* sel fg */
+static const char col_cyan[]        = "{pal['bar_selected_bg']}"; /* accent / sel */
+static const char col_urgborder[]   = "{pal['urgent']}";
+
+static const char *colors[][3] = {{
+	/*               fg         bg         border   */
+	[SchemeNorm] = {{ col_gray3, col_gray1, col_gray2 }},
+	[SchemeSel]  = {{ col_gray4, col_cyan,  col_cyan  }},
+}};
+"""
+
+
+def gen_xresources(pal: dict) -> str:
+    lines = [
+        "! voidwolf generated theme.Xresources — do not hand-edit",
+        f"*.foreground: {pal['fg']}",
+        f"*.background: {pal['bg']}",
+        f"*.cursorColor: {pal.get('cursor', pal['fg'])}",
+        f"st.foreground: {pal['fg']}",
+        f"st.background: {pal['bg']}",
+        f"st.cursorColor: {pal.get('cursor', pal['fg'])}",
+    ]
+    for i in range(16):
+        c = pal.get(f"color{i}", pal["fg"] if i == 7 else pal["bg"])
+        lines.append(f"*.color{i}: {c}")
+        lines.append(f"st.color{i}: {c}")
+    return "\n".join(lines) + "\n"
+
+
+def gen_dmenu_env(pal: dict) -> str:
+    return (
+        f"export VOIDWOLF_DMENU_NB='{pal['bg']}'\n"
+        f"export VOIDWOLF_DMENU_NF='{pal['fg']}'\n"
+        f"export VOIDWOLF_DMENU_SB='{pal['accent']}'\n"
+        f"export VOIDWOLF_DMENU_SF='{pal['bar_selected_fg']}'\n"
+    )
+
+
+def gen_palette_toml(data: dict) -> str:
+    # minimal dump for state
+    pal = data["palette"]
+    lines = ["# generated palette snapshot", f'name = "{data["name"]}"', "[palette]"]
+    for k, v in pal.items():
+        lines.append(f'{k} = "{v}"')
+    return "\n".join(lines) + "\n"
+
+
+def apply_adapters(data: dict, *, rebuild_dwm: bool = True) -> None:
+    data = normalize(data)
+    pal = data["palette"]
+    home = voidwolf_home()
+    gen = home / "generated"
+    cur = home / "current"
+    gen.mkdir(parents=True, exist_ok=True)
+    cur.mkdir(parents=True, exist_ok=True)
+
+    # Tests / CI: VOIDWOLF_THEME_SKIP_REBUILD=1 writes adapters only
+    if os.environ.get("VOIDWOLF_THEME_SKIP_REBUILD", "").lower() in ("1", "true", "yes"):
+        rebuild_dwm = False
+
+    # generated files
+    colors_h = gen_colors_h(pal)
+    xres = gen_xresources(pal)
+    dmenu_env = gen_dmenu_env(pal)
+    atomic_write(gen / "colors.h", colors_h)
+    atomic_write(gen / "theme.Xresources", xres)
+    atomic_write(gen / "dmenu.env", dmenu_env)
+    atomic_write(gen / "palette.toml", gen_palette_toml(data))
+
+    # state
+    atomic_write(cur / "name", data["name"] + "\n")
+    atomic_write(cur / "palette.toml", gen_palette_toml(data))
+
+    # dwm colors.h in source tree + rebuild if needed
+    dwm_colors = repo_root() / "suckless" / "dwm" / "colors.h"
+    content_hash = hashlib.sha256(colors_h.encode()).hexdigest()
+    hash_file = gen / "colors.hash"
+    old_hash = hash_file.read_text().strip() if hash_file.is_file() else ""
+    need_build = content_hash != old_hash
+
+    try:
+        atomic_write(dwm_colors, colors_h)
+    except OSError as e:
+        print(f"voidwolf-theme: cannot write {dwm_colors}: {e}", file=sys.stderr)
+        sys.exit(3)
+
+    if rebuild_dwm and need_build:
+        build_script = repo_root() / "bootstrap" / "build-suckless.sh"
+        if build_script.is_file():
+            print("==> rebuilding dwm (colors.h changed, PREFIX=$HOME/.local, no sudo)")
+            r = subprocess.run(
+                [str(build_script), "--dwm-only", "--no-clean"],
+                env={**os.environ, "PREFIX": str(Path.home() / ".local")},
+            )
+            if r.returncode != 0:
+                print("voidwolf-theme: dwm rebuild failed", file=sys.stderr)
+                sys.exit(3)
+        atomic_write(hash_file, content_hash + "\n")
+        # re-exec dwm if running
+        if os.environ.get("DISPLAY"):
+            subprocess.run(["pkill", "-HUP", "-x", "dwm"], check=False)
+    else:
+        if not need_build:
+            print("==> colors.h unchanged (skip rebuild)")
+        elif not rebuild_dwm:
+            print("==> skip dwm rebuild (VOIDWOLF_THEME_SKIP_REBUILD or rebuild_dwm=False)")
+        atomic_write(hash_file, content_hash + "\n")
+
+    # xrdb
+    if os.environ.get("DISPLAY"):
+        xres_path = gen / "theme.Xresources"
+        base = Path.home() / ".Xresources"
+        if base.is_file():
+            subprocess.run(["xrdb", "-merge", str(base)], check=False)
+        subprocess.run(["xrdb", "-merge", str(xres_path)], check=False)
+
+    # wallpaper
+    wall_rel = (data.get("meta") or {}).get("wallpaper")
+    wall = resolve_wallpaper(wall_rel) if wall_rel else None
+    if wall:
+        atomic_write(cur / "wallpaper", str(wall) + "\n")
+        wp = shutil.which("voidwolf-wallpaper")
+        if wp and os.environ.get("DISPLAY"):
+            subprocess.run([wp, "set", str(wall)], check=False)
+        elif os.environ.get("DISPLAY"):
+            if shutil.which("xwallpaper"):
+                subprocess.run(["xwallpaper", "--zoom", str(wall)], check=False)
+            elif shutil.which("feh"):
+                subprocess.run(["feh", "--bg-fill", str(wall)], check=False)
+    print(f"==> theme applied: {data['name']}")
+
+
+# --- commands --------------------------------------------------------------
+
+def cmd_list(_: list[str]) -> int:
+    for name, disp, path in list_themes():
+        print(f"{name:24} {disp:24} ({path})")
+    return 0
+
+
+def cmd_current(_: list[str]) -> int:
+    name_f = voidwolf_home() / "current" / "name"
+    if not name_f.is_file():
+        print("(none)")
+        return 0
+    print(name_f.read_text().strip())
+    return 0
+
+
+def cmd_show(args: list[str]) -> int:
+    name = args[0] if args else None
+    if not name:
+        nf = voidwolf_home() / "current" / "name"
+        if nf.is_file():
+            name = nf.read_text().strip()
+        else:
+            print("voidwolf-theme: no current theme; pass a name", file=sys.stderr)
+            return 1
+    path = find_theme(name)
+    if not path:
+        print(f"voidwolf-theme: theme not found: {name}", file=sys.stderr)
+        return 2
+    print(path.read_text())
+    return 0
+
+
+def cmd_validate(args: list[str]) -> int:
+    if not args:
+        # validate all shipped
+        rc = 0
+        for name, _, path in list_themes():
+            data = load_toml(path)
+            errs = validate_theme(data, path)
+            if errs:
+                rc = 4
+                print(f"FAIL {path}")
+                for e in errs:
+                    print(f"  - {e}")
+            else:
+                print(f"OK   {name} ({path})")
+        return rc
+    path = Path(args[0])
+    if not path.is_file():
+        # try as theme name
+        p2 = find_theme(args[0])
+        if not p2:
+            print(f"voidwolf-theme: not found: {args[0]}", file=sys.stderr)
+            return 2
+        path = p2
+    data = load_toml(path)
+    errs = validate_theme(data, path)
+    if errs:
+        for e in errs:
+            print(f"error: {e}", file=sys.stderr)
+        return 4
+    print(f"OK {path}")
+    return 0
+
+
+def cmd_set(args: list[str]) -> int:
+    if not args:
+        print("Usage: voidwolf-theme set <name>", file=sys.stderr)
+        return 1
+    name = args[0]
+    path = find_theme(name)
+    if not path:
+        print(f"voidwolf-theme: theme not found: {name}", file=sys.stderr)
+        return 2
+    data = load_toml(path)
+    errs = validate_theme(data, path)
+    if errs:
+        for e in errs:
+            print(f"error: {e}", file=sys.stderr)
+        return 4
+    apply_adapters(data)
+    return 0
+
+
+def cmd_pick(_: list[str]) -> int:
+    themes = list_themes()
+    if not themes:
+        print("voidwolf-theme: no themes found", file=sys.stderr)
+        return 2
+    lines = "\n".join(f"{n}\t{d}" for n, d, _ in themes)
+    dmenu = shutil.which("voidwolf-dmenu") or shutil.which("dmenu")
+    if not dmenu or not os.environ.get("DISPLAY"):
+        # fallback: print list and use first or stdin
+        print("Available themes (no dmenu/DISPLAY):")
+        for n, d, _ in themes:
+            print(f"  {n} — {d}")
+        print("Use: voidwolf-theme set <name>")
+        return 1
+    proc = subprocess.run(
+        [dmenu, "-i", "-p", "theme:", "-l", "10"],
+        input=lines,
+        text=True,
+        capture_output=True,
+    )
+    if proc.returncode != 0 or not proc.stdout.strip():
+        return 0
+    choice = proc.stdout.strip().split("\t", 1)[0].strip()
+    return cmd_set([choice])
+
+
+def cmd_build_suckless(_: list[str]) -> int:
+    """Force regenerate colors from current theme and rebuild dwm."""
+    name_f = voidwolf_home() / "current" / "name"
+    if name_f.is_file():
+        return cmd_set([name_f.read_text().strip()])
+    # default
+    return cmd_set(["voidwolf-dark"])
+
+
+def cmd_reload(_: list[str]) -> int:
+    return cmd_build_suckless([])
+
+
+def cmd_from_wallpaper(args: list[str]) -> int:
+    print(
+        "voidwolf-theme: from-wallpaper lands in PR9b "
+        "(wallust → matugen → pywal). For now: voidwolf-theme set <name>",
+        file=sys.stderr,
+    )
+    if args:
+        print(f"  (received path: {args[0]})", file=sys.stderr)
+    return 1
+
+
+def usage() -> None:
+    print(
+        """voidwolf-theme — manage voidwolf color themes
+
+Usage:
+  voidwolf-theme list
+  voidwolf-theme show [name]
+  voidwolf-theme current
+  voidwolf-theme set <name>
+  voidwolf-theme pick
+  voidwolf-theme validate [path|name]
+  voidwolf-theme build-suckless
+  voidwolf-theme reload
+  voidwolf-theme from-wallpaper <path>   # PR9b
+
+Exit: 0 ok, 1 usage, 2 not found, 3 adapter failure, 4 schema invalid
+
+Paths:
+  VOIDWOLF_HOME  default ~/.config/voidwolf
+  VOIDWOLF_ROOT  repo root (themes/, suckless/)
+"""
+    )
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) < 2 or argv[1] in ("-h", "--help", "help"):
+        usage()
+        return 0 if len(argv) > 1 else 1
+    cmd = argv[1]
+    args = argv[2:]
+    table = {
+        "list": cmd_list,
+        "show": cmd_show,
+        "current": cmd_current,
+        "set": cmd_set,
+        "pick": cmd_pick,
+        "validate": cmd_validate,
+        "build-suckless": cmd_build_suckless,
+        "reload": cmd_reload,
+        "from-wallpaper": cmd_from_wallpaper,
+    }
+    if cmd not in table:
+        usage()
+        return 1
+    try:
+        return table[cmd](args)
+    except BrokenPipeError:
+        return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
