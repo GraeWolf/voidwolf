@@ -1,0 +1,12 @@
+#!/bin/sh
+if command -v pulsemixer >/dev/null 2>&1; then
+	exec st -e pulsemixer
+fi
+if command -v wiremix >/dev/null 2>&1; then
+	exec st -e wiremix
+fi
+if command -v wpctl >/dev/null 2>&1; then
+	exec st -e sh -c 'wpctl status; echo; read -r _'
+fi
+printf '%s\n' "voidwolf-audio-tui: install pulsemixer or use wpctl" >&2
+exit 1

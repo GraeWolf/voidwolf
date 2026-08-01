@@ -23,7 +23,7 @@ Full docs: [docs/bootstrap.md](../docs/bootstrap.md).
 | `sudoers.d/voidwolf-wheel` | PR3 | `%wheel` sudo |
 | `lib.sh` | PR3 | Shared helpers |
 | `bootstrap.sh` | PR2–3 | Entrypoint |
-| `build-suckless.sh` | PR4 | (not yet) |
+| `build-suckless.sh` | PR4 | dwm/st/dmenu → `~/.local` (no sudo) |
 | `setup-pipewire.sh`, `install-dotfiles.sh` | PR5 | (not yet) |
 
 ## Partial runs

@@ -1,0 +1,17 @@
+#!/bin/sh
+# Show keybind cheatsheet (PR6 will expand docs/keybindings.md).
+doc="${VOIDWOLF_ROOT:-}/docs/keybindings.md"
+if [ -z "${VOIDWOLF_ROOT:-}" ]; then
+	# resolve relative to this script → repo root
+	self=$(readlink -f "$0" 2>/dev/null || echo "$0")
+	root=$(CDPATH= cd -- "$(dirname "$self")/.." && pwd)
+	doc="$root/docs/keybindings.md"
+fi
+if command -v st >/dev/null 2>&1 && [ -f "$doc" ]; then
+	exec st -e sh -c "less -R '$doc'; read -r _"
+fi
+if [ -f "$doc" ]; then
+	exec less -R "$doc"
+fi
+printf '%s\n' "voidwolf-cheatsheet: see docs/keybindings.md" >&2
+exit 1

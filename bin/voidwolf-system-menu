@@ -1,0 +1,25 @@
+#!/bin/sh
+# System menu: lock / suspend / reboot / poweroff (PR7 polish).
+# Default power path: lock-then-suspend (design).
+choice=$(printf '%s\n' \
+	"Lock" \
+	"Lock & suspend" \
+	"Logout (kill dwm)" \
+	"Reboot" \
+	"Power off" \
+	"Cancel" | dmenu -i -p "system:")
+case "$choice" in
+	"Lock") exec voidwolf-lock ;;
+	"Lock & suspend")
+		voidwolf-lock &
+		sleep 1
+		loginctl suspend
+		;;
+	"Logout (kill dwm)")
+		# clean quit (SIGTERM → quit 0 via restartsig handlers)
+		pkill -TERM dwm 2>/dev/null || pkill dwm
+		;;
+	"Reboot") loginctl reboot ;;
+	"Power off") loginctl poweroff ;;
+	*) exit 0 ;;
+esac

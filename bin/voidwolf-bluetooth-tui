@@ -1,0 +1,9 @@
+#!/bin/sh
+if command -v bluetuith >/dev/null 2>&1; then
+	exec st -e bluetuith
+fi
+if command -v bluetoothctl >/dev/null 2>&1; then
+	exec st -e bluetoothctl
+fi
+printf '%s\n' "voidwolf-bluetooth-tui: bluetoothctl not found" >&2
+exit 1

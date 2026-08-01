@@ -1,0 +1,6 @@
+#!/bin/sh
+if command -v nmtui >/dev/null 2>&1; then
+	exec st -e nmtui
+fi
+printf '%s\n' "voidwolf-wifi-tui: nmtui not found (NetworkManager)" >&2
+exit 1

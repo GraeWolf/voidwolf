@@ -10,7 +10,7 @@ help: ## Show available targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
 	@echo ""
-	@echo "Note: full package/session/theme targets land in later PRs."
+	@echo "Note: session/theme targets land in later PRs (PR5+)."
 
 # --- Planned (stubs return a clear message until implemented) ---
 
@@ -23,9 +23,9 @@ repos-dry-run: ## Dry-run third-party repo wiring (no root)
 bootstrap-dry-run: ## Dry-run full PR2+PR3 path (profile=desktop gpu=none)
 	@./bootstrap/bootstrap.sh --profile desktop --gpu none --dry-run
 
-build-suckless: ## Build and install dwm/st/dmenu to ~/.local (PR4)
-	@echo "Not implemented yet (PR4). See suckless/ and bootstrap/build-suckless.sh."
-	@exit 1
+build-suckless: ## Build and install dwm/st/dmenu to ~/.local (no sudo)
+	@./bootstrap/build-suckless.sh
+	@./bin/install-user-bin.sh
 
 install-dotfiles: ## Install config/ session files (PR5)
 	@echo "Not implemented yet (PR5). See bootstrap/install-dotfiles.sh."

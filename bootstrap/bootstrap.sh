@@ -220,16 +220,20 @@ Completed:
   - ufw: deny in / allow out / force enable
   - User groups: wheel network bluetooth video audio input storage
 
-Not yet implemented (later PRs):
-  - PR4: suckless build (PREFIX=\$HOME/.local)
+Next optional step (PR4 — suckless):
+  ./bootstrap/build-suckless.sh
+  ./bin/install-user-bin.sh
+  source config/bash/voidwolf-path.sh   # or add to ~/.bashrc
+
+Still later:
   - PR5: PipeWire conf.d, .xinitrc, voidwolf-status, install-dotfiles
   - PR8: voidwolf-theme
-  - PR10: NVIDIA PRIME/xorg deep config (packages may already be installed)
+  - PR10: NVIDIA PRIME/xorg deep config
 
 Next steps for you:
   1. Re-login (or reboot) so elogind session + groups apply
   2. Verify: sv status dbus elogind NetworkManager
-  3. After PR4–5: startx
+  3. Build suckless (above), then after PR5: startx
 
 Log: ${LOG_FILE}
 EOF

@@ -7,14 +7,14 @@
 *.xbps.sig*
 *.xbps.sig2
 
-# Suckless / local installs
+# Suckless build outputs only (not source directories)
 suckless/**/config.h.bak
-suckless/**/colors.h
-!suckless/**/colors.h.in
-suckless/**/dwm
-suckless/**/st
-suckless/**/dmenu
-suckless/**/*.1
+suckless/dwm/dwm
+suckless/st/st
+suckless/dmenu/dmenu
+suckless/dmenu/stest
+# theme may dirty colors.h; default colors.h is tracked
+# man pages are tracked from upstream tarballs
 
 # Generated theme state (user machines; not committed)
 .voidwolf-generated/

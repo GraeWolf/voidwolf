@@ -1,0 +1,15 @@
+#!/bin/sh
+# Theme engine stub (PR8). Accepts pick/set/list so dwm binds do not hard-fail.
+case "${1:-}" in
+	pick|set|list|from-wallpaper|validate|build-suckless)
+		printf '%s\n' "voidwolf-theme: engine not implemented yet (PR8). arg=$*" >&2
+		if command -v notify-send >/dev/null 2>&1; then
+			notify-send "voidwolf-theme" "Theme engine lands in PR8"
+		fi
+		exit 0
+		;;
+	*)
+		printf '%s\n' "Usage: voidwolf-theme <pick|set|list|from-wallpaper|validate|build-suckless>" >&2
+		exit 2
+		;;
+esac

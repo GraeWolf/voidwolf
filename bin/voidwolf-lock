@@ -1,0 +1,10 @@
+#!/bin/sh
+# Lock screen: prefer xsecurelock, else slock.
+if command -v xsecurelock >/dev/null 2>&1; then
+	exec xsecurelock
+fi
+if command -v slock >/dev/null 2>&1; then
+	exec slock
+fi
+printf '%s\n' "voidwolf-lock: install xsecurelock or slock" >&2
+exit 1

@@ -44,7 +44,7 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 | Phase | Goal | State |
 |-------|------|--------|
 | 0 | Design | **Done** ([docs/design.md](docs/design.md)) |
-| 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | In progress (PR1–3: skeleton + repos + packages/services) |
+| 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | In progress (PR1–4: through vendored suckless) |
 | 2 | Theming engine | Planned |
 | 3 | Opinionated desktop polish | Planned |
 | 4 | XBPS meta-packages | Planned |
@@ -57,7 +57,11 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 ./bootstrap/bootstrap.sh --profile laptop --gpu none --dry-run
 make test
 
-# On Void (needs sudo):
+# Build suckless + helpers (no sudo)
+make build-suckless
+export PATH="$HOME/.local/bin:$PATH"
+
+# On Void (needs sudo for packages/services):
 # ./bootstrap/bootstrap.sh --profile laptop --gpu nvidia-hybrid
 # re-login, then later: startx (PR5+)
 ```
@@ -65,6 +69,7 @@ make test
 ```bash
 make help
 make test
+make build-suckless
 make bootstrap-dry-run
 ```
 

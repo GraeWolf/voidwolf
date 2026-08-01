@@ -1,0 +1,13 @@
+#!/bin/sh
+# Control menu stub (PR7). Minimal placeholder via dmenu.
+choice=$(printf '%s\n' \
+	"Theme (stub — PR8)" \
+	"Wallpaper (stub — PR8)" \
+	"Keybindings" \
+	"Cancel" | dmenu -i -p "voidwolf:")
+case "$choice" in
+	Theme*) command -v voidwolf-theme >/dev/null && exec voidwolf-theme pick || notify-send "voidwolf" "Theme engine lands in PR8" 2>/dev/null || true ;;
+	Wallpaper*) command -v voidwolf-wallpaper >/dev/null && exec voidwolf-wallpaper pick || true ;;
+	Keybindings*) exec voidwolf-cheatsheet ;;
+	*) exit 0 ;;
+esac
