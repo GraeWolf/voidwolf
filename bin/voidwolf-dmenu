@@ -1,0 +1,19 @@
+#!/bin/sh
+# voidwolf-dmenu — themed dmenu wrapper (CLI colors override config.h)
+# Usage: voidwolf-dmenu [dmenu args...]
+# Env: VOIDWOLF_DMENU_{NB,NF,SB,SF,FN} or read generated theme later (PR8/9a)
+
+NB="${VOIDWOLF_DMENU_NB:-#1d2021}"
+NF="${VOIDWOLF_DMENU_NF:-#ebdbb2}"
+SB="${VOIDWOLF_DMENU_SB:-#458588}"
+SF="${VOIDWOLF_DMENU_SF:-#1d2021}"
+FN="${VOIDWOLF_DMENU_FN:-Fira Code:size=11}"
+
+# Prefer user-local dmenu
+DMENU="dmenu"
+command -v dmenu >/dev/null 2>&1 || {
+	echo "voidwolf-dmenu: dmenu not found (build-suckless.sh)" >&2
+	exit 1
+}
+
+exec dmenu -fn "$FN" -nb "$NB" -nf "$NF" -sb "$SB" -sf "$SF" "$@"

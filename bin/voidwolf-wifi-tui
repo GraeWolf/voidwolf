@@ -1,6 +1,12 @@
 #!/bin/sh
+# Super+Ctrl+W — network / Wi-Fi
+export PATH="${HOME}/.local/bin:${PATH}"
+
 if command -v nmtui >/dev/null 2>&1; then
-	exec st -e nmtui
+	exec st -t "network" -e nmtui
 fi
-printf '%s\n' "voidwolf-wifi-tui: nmtui not found (NetworkManager)" >&2
+if command -v nmcli >/dev/null 2>&1; then
+	exec st -t "network" -e sh -c 'nmcli dev wifi list; echo; nmcli c show; echo; echo "[enter]"; read -r _'
+fi
+echo "voidwolf-wifi-tui: NetworkManager tools not found" >&2
 exit 1

@@ -1,9 +1,18 @@
 #!/bin/sh
-# App launcher (PR7 will polish). dmenu_run with themed colors when set.
-# CLI colors override dmenu config.h (design).
+# voidwolf-launcher — application launcher (Super+Space)
+# Uses dmenu_run with voidwolf themed colors.
+
+export PATH="${HOME}/.local/bin:${PATH}"
+
 NB="${VOIDWOLF_DMENU_NB:-#1d2021}"
 NF="${VOIDWOLF_DMENU_NF:-#ebdbb2}"
 SB="${VOIDWOLF_DMENU_SB:-#458588}"
 SF="${VOIDWOLF_DMENU_SF:-#1d2021}"
 FN="${VOIDWOLF_DMENU_FN:-Fira Code:size=11}"
+
+if ! command -v dmenu_run >/dev/null 2>&1; then
+	echo "voidwolf-launcher: dmenu_run not found" >&2
+	exit 1
+fi
+
 exec dmenu_run -fn "$FN" -nb "$NB" -nf "$NF" -sb "$SB" -sf "$SF" "$@"

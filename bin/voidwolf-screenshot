@@ -1,7 +1,9 @@
 #!/bin/sh
-# voidwolf-screenshot — capture helpers (PR6b / PR7)
-# Requires: maim, xclip (optional: slop for region — maim -s uses built-in select)
+# voidwolf-screenshot — capture (Print / Super+Ctrl+C)
+# Requires maim; prefers xclip for clipboard copy.
 set -e
+
+export PATH="${HOME}/.local/bin:${PATH}"
 
 mode="${1:-menu}"
 dir="${VOIDWOLF_SCREENSHOT_DIR:-$HOME/Pictures/Screenshots}"
@@ -10,22 +12,28 @@ stamp=$(date +%Y%m%d-%H%M%S)
 file="$dir/voidwolf-$stamp.png"
 
 notify() {
-	if command -v notify-send >/dev/null 2>&1; then
-		notify-send "voidwolf" "$1"
+	command -v notify-send >/dev/null 2>&1 && notify-send -a voidwolf "Screenshot" "$1"
+}
+
+dmenu_pick() {
+	if command -v voidwolf-dmenu >/dev/null 2>&1; then
+		voidwolf-dmenu -i -p "capture:"
+	else
+		dmenu -i -p "capture:"
 	fi
 }
 
 need_maim() {
 	if ! command -v maim >/dev/null 2>&1; then
-		echo "voidwolf-screenshot: maim not found (xbps-install maim)" >&2
-		notify "maim not installed"
+		echo "voidwolf-screenshot: maim not found" >&2
+		notify "Install maim for screenshots"
 		exit 1
 	fi
 }
 
 copy_clip() {
 	if command -v xclip >/dev/null 2>&1; then
-		xclip -selection clipboard -t image/png -i "$1"
+		xclip -selection clipboard -t image/png -i "$1" 2>/dev/null || true
 	fi
 }
 
@@ -33,25 +41,33 @@ do_full() {
 	need_maim
 	maim "$file"
 	copy_clip "$file"
-	notify "Screenshot saved: $file"
+	notify "Full screen → $file"
 }
 
 do_region() {
 	need_maim
-	maim -s "$file"
-	copy_clip "$file"
-	notify "Region screenshot: $file"
+	# -s select; -u hide cursor; fail cleanly if cancelled
+	if maim -s -u "$file" 2>/dev/null; then
+		copy_clip "$file"
+		notify "Region → $file"
+	else
+		notify "Region capture cancelled"
+		exit 0
+	fi
 }
 
 do_window() {
 	need_maim
 	if command -v xdotool >/dev/null 2>&1; then
-		maim -i "$(xdotool getactivewindow)" "$file"
-	else
-		maim -s "$file"
+		wid=$(xdotool getactivewindow 2>/dev/null) || wid=
+		if [ -n "$wid" ]; then
+			maim -i "$wid" "$file"
+			copy_clip "$file"
+			notify "Window → $file"
+			return
+		fi
 	fi
-	copy_clip "$file"
-	notify "Window screenshot: $file"
+	do_region
 }
 
 do_menu() {
@@ -59,7 +75,7 @@ do_menu() {
 		"Full screen" \
 		"Region" \
 		"Active window" \
-		"Cancel" | dmenu -i -p "capture:")
+		"Cancel" | dmenu_pick) || exit 0
 	case "$choice" in
 		"Full screen") do_full ;;
 		"Region") do_region ;;

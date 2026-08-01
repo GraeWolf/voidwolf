@@ -39,3 +39,4 @@ test: ## Run tests/ checks
 	@./tests/package-lists-validate.sh
 	@./tests/session-files-validate.sh
 	@./tests/keybind-lint.sh
+	@./tests/helpers-validate.sh

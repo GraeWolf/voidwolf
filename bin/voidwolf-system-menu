@@ -1,25 +1,84 @@
 #!/bin/sh
-# System menu: lock / suspend / reboot / poweroff (PR7 polish).
-# Default power path: lock-then-suspend (design).
+# voidwolf-system-menu — power/session menu (Super+Escape)
+# Default power path is lock-then-suspend (design).
+
+export PATH="${HOME}/.local/bin:${PATH}"
+
+dmenu_pick() {
+	if command -v voidwolf-dmenu >/dev/null 2>&1; then
+		voidwolf-dmenu -i -p "system:"
+	else
+		dmenu -i -p "system:"
+	fi
+}
+
+notify() {
+	command -v notify-send >/dev/null 2>&1 && notify-send "voidwolf" "$1"
+}
+
+do_suspend() {
+	if command -v loginctl >/dev/null 2>&1; then
+		loginctl suspend
+	elif command -v zzz >/dev/null 2>&1; then
+		zzz
+	elif command -v systemctl >/dev/null 2>&1; then
+		systemctl suspend
+	else
+		notify "No suspend command (loginctl/zzz)"
+		return 1
+	fi
+}
+
+do_logout() {
+	# Prefer clean dwm quit via SIGTERM (restartsig → quit 0)
+	if pgrep -x dwm >/dev/null 2>&1; then
+		pkill -TERM -x dwm 2>/dev/null || pkill -x dwm
+	else
+		notify "dwm not running"
+	fi
+}
+
 choice=$(printf '%s\n' \
 	"Lock" \
 	"Lock & suspend" \
-	"Logout (kill dwm)" \
+	"Suspend" \
+	"Logout" \
 	"Reboot" \
 	"Power off" \
-	"Cancel" | dmenu -i -p "system:")
+	"Cancel" | dmenu_pick) || exit 0
+
 case "$choice" in
-	"Lock") exec voidwolf-lock ;;
+	"Lock")
+		exec voidwolf-lock
+		;;
 	"Lock & suspend")
+		# design default: lock first, then suspend
 		voidwolf-lock &
+		# give lock time to grab input
 		sleep 1
-		loginctl suspend
+		do_suspend
 		;;
-	"Logout (kill dwm)")
-		# clean quit (SIGTERM → quit 0 via restartsig handlers)
-		pkill -TERM dwm 2>/dev/null || pkill dwm
+	"Suspend")
+		do_suspend
 		;;
-	"Reboot") loginctl reboot ;;
-	"Power off") loginctl poweroff ;;
-	*) exit 0 ;;
+	"Logout")
+		do_logout
+		;;
+	"Reboot")
+		if command -v loginctl >/dev/null 2>&1; then
+			loginctl reboot
+		else
+			sudo reboot
+		fi
+		;;
+	"Power off")
+		if command -v loginctl >/dev/null 2>&1; then
+			loginctl poweroff
+		else
+			sudo poweroff
+		fi
+		;;
+	*)
+		exit 0
+		;;
 esac

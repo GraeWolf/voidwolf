@@ -1,9 +1,12 @@
 #!/bin/sh
+# Super+Ctrl+B — bluetooth
+export PATH="${HOME}/.local/bin:${PATH}"
+
 if command -v bluetuith >/dev/null 2>&1; then
-	exec st -e bluetuith
+	exec st -t "bluetooth" -e bluetuith
 fi
 if command -v bluetoothctl >/dev/null 2>&1; then
-	exec st -e bluetoothctl
+	exec st -t "bluetooth" -e bluetoothctl
 fi
-printf '%s\n' "voidwolf-bluetooth-tui: bluetoothctl not found" >&2
+echo "voidwolf-bluetooth-tui: bluetoothctl not found" >&2
 exit 1

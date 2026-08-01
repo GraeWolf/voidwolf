@@ -1,13 +1,65 @@
 #!/bin/sh
-# Control menu stub (PR7). Minimal placeholder via dmenu.
+# voidwolf-menu — control menu (Super+Alt+Space)
+# Omarchy-like quick actions without a heavy DE.
+
+export PATH="${HOME}/.local/bin:${PATH}"
+
+dmenu_pick() {
+	prompt="${1:-voidwolf:}"
+	if command -v voidwolf-dmenu >/dev/null 2>&1; then
+		voidwolf-dmenu -i -p "$prompt"
+	else
+		dmenu -i -p "$prompt"
+	fi
+}
+
+run_bg() {
+	"$@" >/dev/null 2>&1 &
+}
+
 choice=$(printf '%s\n' \
-	"Theme (stub — PR8)" \
-	"Wallpaper (stub — PR8)" \
+	"Launcher" \
+	"Terminal" \
+	"Browser" \
+	"File manager" \
+	"Neovim" \
+	"Screenshot" \
+	"Theme" \
+	"Wallpaper" \
+	"Audio" \
+	"Bluetooth" \
+	"Wi-Fi" \
+	"System monitor" \
 	"Keybindings" \
-	"Cancel" | dmenu -i -p "voidwolf:")
+	"Clipboard" \
+	"System menu" \
+	"Lock" \
+	"Cancel" | dmenu_pick) || exit 0
+
 case "$choice" in
-	Theme*) command -v voidwolf-theme >/dev/null && exec voidwolf-theme pick || notify-send "voidwolf" "Theme engine lands in PR8" 2>/dev/null || true ;;
-	Wallpaper*) command -v voidwolf-wallpaper >/dev/null && exec voidwolf-wallpaper pick || true ;;
-	Keybindings*) exec voidwolf-cheatsheet ;;
+	"Launcher") exec voidwolf-launcher ;;
+	"Terminal") exec st ;;
+	"Browser") exec voidwolf-browser ;;
+	"File manager") exec voidwolf-filemanager ;;
+	"Neovim") exec st -e nvim ;;
+	"Screenshot") exec voidwolf-screenshot menu ;;
+	"Theme")
+		if command -v voidwolf-theme >/dev/null 2>&1; then
+			exec voidwolf-theme pick
+		fi
+		;;
+	"Wallpaper")
+		if command -v voidwolf-wallpaper >/dev/null 2>&1; then
+			exec voidwolf-wallpaper pick
+		fi
+		;;
+	"Audio") exec voidwolf-audio-tui ;;
+	"Bluetooth") exec voidwolf-bluetooth-tui ;;
+	"Wi-Fi") exec voidwolf-wifi-tui ;;
+	"System monitor") exec st -e btop ;;
+	"Keybindings") exec voidwolf-cheatsheet ;;
+	"Clipboard") exec voidwolf-clipboard ;;
+	"System menu") exec voidwolf-system-menu ;;
+	"Lock") exec voidwolf-lock ;;
 	*) exit 0 ;;
 esac

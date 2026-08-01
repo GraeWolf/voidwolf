@@ -1,10 +1,34 @@
 #!/bin/sh
-# Lock screen: prefer xsecurelock, else slock.
+# voidwolf-lock — screen lock (Super+Ctrl+L, system menu)
+# Prefer xsecurelock; fallback slock. Never runs as root.
+
+export PATH="${HOME}/.local/bin:${PATH}"
+
+if [ "$(id -u)" -eq 0 ]; then
+	echo "voidwolf-lock: refusing to lock as root" >&2
+	exit 1
+fi
+
+# Dim/blank hints for xsecurelock (harmless if unused)
+export XSECURELOCK_SHOW_DATETIME="${XSECURELOCK_SHOW_DATETIME:-1}"
+export XSECURELOCK_DATETIME_FORMAT="${XSECURELOCK_DATETIME_FORMAT:-%Y-%m-%d %H:%M}"
+export XSECURELOCK_PASSWORD_PROMPT="${XSECURELOCK_PASSWORD_PROMPT:-asterisks}"
+export XSECURELOCK_COMPOSITE_OBSCURER="${XSECURELOCK_COMPOSITE_OBSCURER:-0}"
+
 if command -v xsecurelock >/dev/null 2>&1; then
+	# xss-lock style: ensure DPMS can blank after lock if available
+	command -v xset >/dev/null 2>&1 && xset s blank 2>/dev/null || true
 	exec xsecurelock
 fi
+
 if command -v slock >/dev/null 2>&1; then
 	exec slock
 fi
-printf '%s\n' "voidwolf-lock: install xsecurelock or slock" >&2
+
+if command -v i3lock >/dev/null 2>&1; then
+	exec i3lock -c 1d2021
+fi
+
+echo "voidwolf-lock: install xsecurelock or slock" >&2
+command -v notify-send >/dev/null 2>&1 && notify-send "voidwolf" "No lock screen (install xsecurelock)"
 exit 1

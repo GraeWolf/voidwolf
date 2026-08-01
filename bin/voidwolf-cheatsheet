@@ -1,17 +1,49 @@
 #!/bin/sh
-# Show keybind cheatsheet (PR6 will expand docs/keybindings.md).
-doc="${VOIDWOLF_ROOT:-}/docs/keybindings.md"
-if [ -z "${VOIDWOLF_ROOT:-}" ]; then
-	# resolve relative to this script → repo root
+# voidwolf-cheatsheet — Super+K keybind help
+export PATH="${HOME}/.local/bin:${PATH}"
+
+resolve_doc() {
+	if [ -n "${VOIDWOLF_ROOT:-}" ] && [ -f "${VOIDWOLF_ROOT}/docs/keybindings.md" ]; then
+		echo "${VOIDWOLF_ROOT}/docs/keybindings.md"
+		return
+	fi
+	if [ -f "${HOME}/.config/voidwolf/repo-root" ]; then
+		root=$(cat "${HOME}/.config/voidwolf/repo-root")
+		if [ -f "${root}/docs/keybindings.md" ]; then
+			echo "${root}/docs/keybindings.md"
+			return
+		fi
+	fi
 	self=$(readlink -f "$0" 2>/dev/null || echo "$0")
 	root=$(CDPATH= cd -- "$(dirname "$self")/.." && pwd)
-	doc="$root/docs/keybindings.md"
+	if [ -f "${root}/docs/keybindings.md" ]; then
+		echo "${root}/docs/keybindings.md"
+		return
+	fi
+	return 1
+}
+
+doc=$(resolve_doc) || {
+	echo "voidwolf-cheatsheet: docs/keybindings.md not found" >&2
+	# minimal fallback text
+	if command -v st >/dev/null 2>&1; then
+		exec st -e sh -c 'printf "%s\n" \
+			"voidwolf keybinds (fallback)" \
+			"Super+Return  terminal" \
+			"Super+Space   launcher" \
+			"Super+W       close" \
+			"Super+F       fullscreen" \
+			"Super+K       this help" \
+			"Super+Escape  system menu"; read -r _'
+	fi
+	exit 1
+}
+
+pager="less -R"
+command -v less >/dev/null 2>&1 || pager="more"
+
+if command -v st >/dev/null 2>&1; then
+	exec st -t "voidwolf keybindings" -e sh -c "$pager \"$doc\"; printf '\\n[press enter]'; read -r _"
 fi
-if command -v st >/dev/null 2>&1 && [ -f "$doc" ]; then
-	exec st -e sh -c "less -R '$doc'; read -r _"
-fi
-if [ -f "$doc" ]; then
-	exec less -R "$doc"
-fi
-printf '%s\n' "voidwolf-cheatsheet: see docs/keybindings.md" >&2
-exit 1
+
+exec sh -c "$pager \"$doc\""

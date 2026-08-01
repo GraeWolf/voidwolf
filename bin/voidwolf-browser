@@ -1,9 +1,14 @@
 #!/bin/sh
-# Launch Brave: prefer brave-origin (vw-repo), then brave-origin-bin, then brave.
-for b in brave-origin brave-origin-bin brave; do
+# Super+Shift+Return — Brave via vw-repo package names
+export PATH="${HOME}/.local/bin:${PATH}"
+
+for b in brave-origin brave-origin-bin brave brave-browser; do
 	if command -v "$b" >/dev/null 2>&1; then
 		exec "$b" "$@"
 	fi
 done
-printf '%s\n' "voidwolf-browser: no brave package found (brave-origin / brave-origin-bin)" >&2
+
+echo "voidwolf-browser: no Brave package found" >&2
+echo "  try: sudo xbps-install -y brave-origin   # or brave-origin-bin" >&2
+command -v notify-send >/dev/null 2>&1 && notify-send "voidwolf" "Brave not installed"
 exit 1

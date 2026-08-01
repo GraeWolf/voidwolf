@@ -5,7 +5,8 @@
 | `repos-pins-validate.sh` | PR2 |
 | `package-lists-validate.sh` | PR3 |
 | `session-files-validate.sh` | PR5 |
-| `keybind-lint.sh` | PR6 |
+| `keybind-lint.sh` | PR6 / PR6b |
+| `helpers-validate.sh` | PR7 |
 | `theme-schema-validate.sh` | PR8 |
 
 ```bash

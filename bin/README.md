@@ -4,20 +4,26 @@ voidwolf user-facing helpers. Install with:
 
 ```bash
 ./bin/install-user-bin.sh   # → ~/.local/bin
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-| Script | Status |
-|--------|--------|
-| `voidwolf-browser` | PR4 — brave-origin / brave-origin-bin |
-| `voidwolf-launcher` | PR4 — dmenu_run + CLI colors |
-| `voidwolf-lock` | PR4 — xsecurelock / slock |
-| `voidwolf-menu` / `voidwolf-system-menu` | PR4 stubs (PR7 polish) |
-| `voidwolf-cheatsheet` | PR4 — opens docs/keybindings.md |
-| `voidwolf-theme` / `voidwolf-wallpaper` | Stubs until PR8 |
-| `voidwolf-audio-tui` / `bluetooth-tui` / `wifi-tui` | PR4 fallbacks |
-| `voidwolf-status` | PR5 — dwm bar via xsetroot |
-| `voidwolf-screenshot` | PR6b — maim + xclip |
-| `voidwolf-filemanager` | PR6b — lf/ranger/thunar |
-| `voidwolf-clipboard` | PR6b — clipmenu/xclip |
-| `voidwolf-prime`, `voidwolf-gpu-check` | PR10 |
-| `voidwolf-doctor` | PR13 |
+Full catalog: [docs/helpers.md](../docs/helpers.md).
+
+| Script | Bind / use |
+|--------|------------|
+| `voidwolf-dmenu` | Themed dmenu wrapper |
+| `voidwolf-launcher` | Super+Space |
+| `voidwolf-menu` | Super+Alt+Space |
+| `voidwolf-system-menu` | Super+Escape (lock & suspend default) |
+| `voidwolf-lock` | Super+Ctrl+L |
+| `voidwolf-screenshot` | Print / Super+Ctrl+C |
+| `voidwolf-cheatsheet` | Super+K |
+| `voidwolf-browser` | Super+Shift+Return |
+| `voidwolf-filemanager` | Super+Shift+F |
+| `voidwolf-clipboard` | Super+Ctrl+V |
+| `voidwolf-audio-tui` | Super+Ctrl+A |
+| `voidwolf-bluetooth-tui` | Super+Ctrl+B |
+| `voidwolf-wifi-tui` | Super+Ctrl+W |
+| `voidwolf-status` | Session autostart (bar) |
+| `voidwolf-wallpaper` | Super+Ctrl+Space |
+| `voidwolf-theme` | Super+Ctrl+Shift+Space (stub → PR8) |

@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# Validate PR7 helper scripts exist, are executable, and have basic usage.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BIN="${ROOT}/bin"
+fail=0
+
+required=(
+	voidwolf-dmenu
+	voidwolf-launcher
+	voidwolf-menu
+	voidwolf-system-menu
+	voidwolf-lock
+	voidwolf-screenshot
+	voidwolf-cheatsheet
+	voidwolf-browser
+	voidwolf-filemanager
+	voidwolf-clipboard
+	voidwolf-audio-tui
+	voidwolf-bluetooth-tui
+	voidwolf-wifi-tui
+	voidwolf-status
+	voidwolf-wallpaper
+	install-user-bin.sh
+)
+
+for s in "${required[@]}"; do
+	path="${BIN}/${s}"
+	if [[ ! -f "$path" ]]; then
+		echo "FAIL missing $path"
+		fail=1
+		continue
+	fi
+	if [[ ! -x "$path" ]]; then
+		echo "FAIL not executable $path"
+		fail=1
+		continue
+	fi
+	echo "OK   $s"
+done
+
+# system menu must mention lock-then-suspend path
+if rg -q 'Lock & suspend' "${BIN}/voidwolf-system-menu"; then
+	echo "OK   system-menu has Lock & suspend"
+else
+	echo "FAIL system-menu missing Lock & suspend"
+	fail=1
+fi
+
+# lock refuses root
+if rg -q 'refusing to lock as root' "${BIN}/voidwolf-lock"; then
+	echo "OK   lock refuses root"
+else
+	echo "FAIL lock should refuse root"
+	fail=1
+fi
+
+# screenshot modes
+if rg -q 'do_full|do_region|do_window|do_menu' "${BIN}/voidwolf-screenshot"; then
+	echo "OK   screenshot modes"
+else
+	echo "FAIL screenshot modes incomplete"
+	fail=1
+fi
+
+# launcher uses dmenu_run
+if rg -q 'dmenu_run' "${BIN}/voidwolf-launcher"; then
+	echo "OK   launcher uses dmenu_run"
+else
+	echo "FAIL launcher should use dmenu_run"
+	fail=1
+fi
+
+need_docs="${ROOT}/docs/helpers.md"
+if [[ -f "$need_docs" ]]; then
+	echo "OK   docs/helpers.md"
+else
+	echo "FAIL missing docs/helpers.md"
+	fail=1
+fi
+
+if [[ "$fail" -ne 0 ]]; then
+	echo "helpers-validate: FAILED"
+	exit 1
+fi
+echo "helpers-validate: all OK"

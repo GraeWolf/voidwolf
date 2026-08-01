@@ -1,12 +1,18 @@
 #!/bin/sh
+# Super+Ctrl+A — audio controls
+export PATH="${HOME}/.local/bin:${PATH}"
+
 if command -v pulsemixer >/dev/null 2>&1; then
-	exec st -e pulsemixer
+	exec st -t "audio" -e pulsemixer
 fi
 if command -v wiremix >/dev/null 2>&1; then
-	exec st -e wiremix
+	exec st -t "audio" -e wiremix
+fi
+if command -v pavucontrol >/dev/null 2>&1; then
+	exec pavucontrol
 fi
 if command -v wpctl >/dev/null 2>&1; then
-	exec st -e sh -c 'wpctl status; echo; read -r _'
+	exec st -t "audio" -e sh -c 'wpctl status; echo; echo "[enter to close]"; read -r _'
 fi
-printf '%s\n' "voidwolf-audio-tui: install pulsemixer or use wpctl" >&2
+echo "voidwolf-audio-tui: install pulsemixer or pipewire tools" >&2
 exit 1
