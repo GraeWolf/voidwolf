@@ -1,12 +1,39 @@
 #!/bin/sh
-# Super+Ctrl+W — network / Wi-Fi
+# Super+Ctrl+W — network / Wi-Fi (PR13: nmtui → nmcli)
 export PATH="${HOME}/.local/bin:${PATH}"
 
+run_st() {
+	title="$1"
+	shift
+	if command -v st >/dev/null 2>&1; then
+		exec st -t "$title" -e "$@"
+	fi
+	exec "$@"
+}
+
 if command -v nmtui >/dev/null 2>&1; then
-	exec st -t "network" -e nmtui
+	run_st network nmtui
 fi
+
 if command -v nmcli >/dev/null 2>&1; then
-	exec st -t "network" -e sh -c 'nmcli dev wifi list; echo; nmcli c show; echo; echo "[enter]"; read -r _'
+	run_st network sh -c '
+		echo "=== NetworkManager (nmcli) ==="
+		nmcli general status 2>/dev/null || true
+		echo
+		nmcli device status 2>/dev/null || true
+		echo
+		echo "=== Wi-Fi list ==="
+		nmcli device wifi list 2>/dev/null || true
+		echo
+		echo "Tip: install NetworkManager-tui (nmtui) for interactive setup"
+		echo "[enter to close]"; read -r _
+	'
 fi
-echo "voidwolf-wifi-tui: NetworkManager tools not found" >&2
+
+if command -v iwctl >/dev/null 2>&1; then
+	run_st network iwctl
+fi
+
+echo "voidwolf-wifi-tui: NetworkManager tools not found (nmtui/nmcli)" >&2
+command -v notify-send >/dev/null 2>&1 && notify-send "voidwolf" "Network tools missing"
 exit 1

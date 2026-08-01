@@ -46,7 +46,7 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 | 0 | Design | **Done** ([docs/design.md](docs/design.md)) |
 | 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | **PR1–7 done** |
 | 2 | Theming engine | **PR8–9b done** |
-| 3 | Opinionated desktop polish | PR10–12 done; PR13+ remaining |
+| 3 | Opinionated desktop polish | PR10–13 done; PR13b/14+ remaining |
 | 4 | XBPS meta-packages | Planned |
 | 5 | ISO / installer | After packaging |
 
@@ -93,6 +93,7 @@ make theme-list
 | [docs/hardware-profiles.md](docs/hardware-profiles.md) | Laptop / desktop (PR11) |
 | [docs/dogfood.md](docs/dogfood.md) | Live host validation notes |
 | [docs/bash-nvim.md](docs/bash-nvim.md) | Bash + neovim defaults (PR12) |
+| [docs/displays.md](docs/displays.md) | Multi-monitor presets + HiDPI (PR13) |
 
 ## License
 

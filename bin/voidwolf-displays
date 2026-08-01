@@ -1,0 +1,210 @@
+#!/bin/sh
+# voidwolf-displays — xrandr layout presets (PR13)
+# Super+Alt+Space → Displays, or: voidwolf-displays [pick|list|apply <name>|arandr]
+export PATH="${HOME}/.local/bin:${PATH}"
+
+cmd="${1:-pick}"
+
+vw_home="${VOIDWOLF_HOME:-${HOME}/.config/voidwolf}"
+user_dir="${vw_home}/displays"
+repo_examples=""
+
+if [ -f "${vw_home}/repo-root" ]; then
+	root=$(cat "${vw_home}/repo-root")
+	[ -d "${root}/config/displays/examples" ] && repo_examples="${root}/config/displays/examples"
+fi
+if [ -z "$repo_examples" ] && [ -n "${VOIDWOLF_ROOT:-}" ] && [ -d "${VOIDWOLF_ROOT}/config/displays/examples" ]; then
+	repo_examples="${VOIDWOLF_ROOT}/config/displays/examples"
+fi
+
+dmenu_pick() {
+	prompt="${1:-displays:}"
+	if command -v voidwolf-dmenu >/dev/null 2>&1; then
+		voidwolf-dmenu -i -l 12 -p "$prompt"
+	else
+		dmenu -i -l 12 -p "$prompt"
+	fi
+}
+
+notify() {
+	command -v notify-send >/dev/null 2>&1 && notify-send -a voidwolf "Displays" "$1"
+}
+
+list_presets() {
+	# Print basenames of *.sh in user dir (executable or not)
+	if [ -d "$user_dir" ]; then
+		find "$user_dir" -maxdepth 1 -type f -name '*.sh' 2>/dev/null | sort
+	fi
+}
+
+list_examples() {
+	if [ -n "$repo_examples" ] && [ -d "$repo_examples" ]; then
+		find "$repo_examples" -maxdepth 1 -type f \( -name '*.sh' -o -name '*.sh.example' \) 2>/dev/null | sort
+	fi
+}
+
+apply_script() {
+	path="$1"
+	[ -f "$path" ] || { echo "voidwolf-displays: not found: $path" >&2; return 1; }
+	if ! command -v xrandr >/dev/null 2>&1; then
+		echo "voidwolf-displays: xrandr not found" >&2
+		return 1
+	fi
+	echo "voidwolf-displays: apply $path"
+	# shellcheck disable=SC1090
+	if sh "$path"; then
+		notify "Applied $(basename "$path")"
+		# optional wallpaper refresh after mode change
+		command -v voidwolf-wallpaper >/dev/null 2>&1 && voidwolf-wallpaper restore >/dev/null 2>&1 || true
+		return 0
+	fi
+	notify "Failed: $(basename "$path")"
+	return 1
+}
+
+show_xrandr() {
+	if command -v st >/dev/null 2>&1; then
+		exec st -t "xrandr" -e sh -c 'xrandr --query; echo; xrandr --listmonitors; echo; echo "[enter]"; read -r _'
+	fi
+	xrandr --query
+	xrandr --listmonitors 2>/dev/null || true
+}
+
+case "$cmd" in
+	list)
+		echo "# user presets ($user_dir)"
+		list_presets
+		echo "# examples ($repo_examples)"
+		list_examples
+		;;
+	apply)
+		name="${2:-}"
+		[ -n "$name" ] || { echo "Usage: voidwolf-displays apply <name|path>" >&2; exit 2; }
+		if [ -f "$name" ]; then
+			apply_script "$name"
+		elif [ -f "${user_dir}/${name}" ]; then
+			apply_script "${user_dir}/${name}"
+		elif [ -f "${user_dir}/${name}.sh" ]; then
+			apply_script "${user_dir}/${name}.sh"
+		else
+			echo "voidwolf-displays: unknown preset: $name" >&2
+			exit 1
+		fi
+		;;
+	arandr)
+		if command -v arandr >/dev/null 2>&1; then
+			exec arandr
+		fi
+		echo "voidwolf-displays: arandr not installed (optional package)" >&2
+		notify "Install arandr for GUI layout editor"
+		exit 1
+		;;
+	query|status)
+		show_xrandr
+		;;
+	pick|"")
+		# Build menu: user presets, separator actions, examples
+		items=""
+		while IFS= read -r p; do
+			[ -n "$p" ] || continue
+			base=$(basename "$p" .sh)
+			items="${items}preset: ${base}
+"
+		done <<EOF
+$(list_presets)
+EOF
+		items="${items}---
+List monitors (xrandr)
+Open arandr
+Install example presets
+Cancel
+"
+		# examples as apply-once
+		while IFS= read -r p; do
+			[ -n "$p" ] || continue
+			base=$(basename "$p" .example)
+			base=$(basename "$base" .sh)
+			items="${items}example: ${base}
+"
+		done <<EOF
+$(list_examples)
+EOF
+
+		choice=$(printf '%s' "$items" | dmenu_pick) || exit 0
+		case "$choice" in
+			"preset: "*)
+				name=${choice#preset: }
+				apply_script "${user_dir}/${name}.sh" || apply_script "${user_dir}/${name}"
+				;;
+			"example: "*)
+				name=${choice#example: }
+				# find matching example file
+				found=""
+				while IFS= read -r p; do
+					b=$(basename "$p" .example)
+					b=$(basename "$b" .sh)
+					if [ "$b" = "$name" ]; then
+						found=$p
+						break
+					fi
+				done <<EOF
+$(list_examples)
+EOF
+				if [ -n "$found" ]; then
+					apply_script "$found"
+				else
+					notify "Example not found: $name"
+					exit 1
+				fi
+				;;
+			"List monitors (xrandr)") show_xrandr ;;
+			"Open arandr")
+				if command -v arandr >/dev/null 2>&1; then
+					exec arandr
+				fi
+				notify "arandr not installed"
+				exit 1
+				;;
+			"Install example presets")
+				mkdir -p "$user_dir"
+				if [ -n "$repo_examples" ]; then
+					for f in "$repo_examples"/*; do
+						[ -f "$f" ] || continue
+						base=$(basename "$f" .example)
+						dest="${user_dir}/${base}"
+						# strip .example → .sh
+						case "$base" in
+							*.sh) dest="${user_dir}/${base}" ;;
+							*) dest="${user_dir}/${base}.sh" ;;
+						esac
+						if [ ! -e "$dest" ]; then
+							# drop .example suffix in content copy
+							cp "$f" "$dest"
+							chmod +x "$dest"
+							echo "installed $dest"
+						fi
+					done
+					notify "Examples copied to $user_dir"
+				else
+					notify "Repo examples not found (set VOIDWOLF_ROOT)"
+				fi
+				;;
+			*) exit 0 ;;
+		esac
+		;;
+	-h|--help|help)
+		cat <<'EOF'
+Usage: voidwolf-displays [pick|list|apply <name>|arandr|query]
+
+Presets: executable shell scripts under ~/.config/voidwolf/displays/*.sh
+Each script should run xrandr (and optionally restore wallpaper).
+
+Examples ship under config/displays/examples/ in the voidwolf repo.
+See docs/displays.md.
+EOF
+		;;
+	*)
+		echo "voidwolf-displays: unknown command: $cmd" >&2
+		exit 2
+		;;
+esac

@@ -1,0 +1,3 @@
+! voidwolf HiDPI helper — ~125% integer-ish scaling for 1080p small panels
+! xrdb -merge ~/.config/voidwolf/… or repo path
+Xft.dpi: 120

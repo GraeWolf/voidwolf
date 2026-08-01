@@ -1,18 +1,71 @@
 #!/bin/sh
-# Super+Ctrl+A — audio controls
+# Super+Ctrl+A — audio controls (PR13: runtime TUI fallback chain)
 export PATH="${HOME}/.local/bin:${PATH}"
 
+run_st() {
+	title="$1"
+	shift
+	if command -v st >/dev/null 2>&1; then
+		exec st -t "$title" -e "$@"
+	fi
+	exec "$@"
+}
+
+# Preferred interactive TUIs / GUIs
 if command -v pulsemixer >/dev/null 2>&1; then
-	exec st -t "audio" -e pulsemixer
+	run_st audio pulsemixer
 fi
 if command -v wiremix >/dev/null 2>&1; then
-	exec st -t "audio" -e wiremix
+	run_st audio wiremix
+fi
+if command -v pwvucontrol >/dev/null 2>&1; then
+	exec pwvucontrol
 fi
 if command -v pavucontrol >/dev/null 2>&1; then
 	exec pavucontrol
 fi
-if command -v wpctl >/dev/null 2>&1; then
-	exec st -t "audio" -e sh -c 'wpctl status; echo; echo "[enter to close]"; read -r _'
+
+# dmenu volume when no full TUI (uses voidwolf-volume / wpctl)
+if command -v voidwolf-volume >/dev/null 2>&1 || command -v wpctl >/dev/null 2>&1; then
+	dmenu_pick() {
+		if command -v voidwolf-dmenu >/dev/null 2>&1; then
+			voidwolf-dmenu -i -p "audio:"
+		else
+			dmenu -i -p "audio:"
+		fi
+	}
+	status="?"
+	if command -v voidwolf-volume >/dev/null 2>&1; then
+		status=$(voidwolf-volume get 2>/dev/null || echo "?")
+	elif command -v wpctl >/dev/null 2>&1; then
+		status=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null || echo "?")
+	fi
+	choice=$(printf '%s\n' \
+		"Volume up" \
+		"Volume down" \
+		"Mute toggle" \
+		"Show status ($status)" \
+		"wpctl status (st)" \
+		"Cancel" | dmenu_pick) || exit 0
+	case "$choice" in
+		"Volume up") voidwolf-volume up 2>/dev/null || wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ ;;
+		"Volume down") voidwolf-volume down 2>/dev/null || wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- ;;
+		"Mute toggle") voidwolf-volume mute 2>/dev/null || wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle ;;
+		"Show status"*)
+			msg=$(voidwolf-volume get 2>/dev/null || wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null)
+			command -v notify-send >/dev/null 2>&1 && notify-send "voidwolf audio" "$msg"
+			printf '%s\n' "$msg"
+			;;
+		"wpctl status (st)")
+			if command -v wpctl >/dev/null 2>&1; then
+				run_st audio sh -c 'wpctl status; echo; echo "[enter to close]"; read -r _'
+			fi
+			;;
+		*) exit 0 ;;
+	esac
+	exit 0
 fi
-echo "voidwolf-audio-tui: install pulsemixer or pipewire tools" >&2
+
+echo "voidwolf-audio-tui: no audio tools (install pulsemixer or pipewire/wireplumber)" >&2
+command -v notify-send >/dev/null 2>&1 && notify-send "voidwolf" "No audio TUI — install pulsemixer"
 exit 1

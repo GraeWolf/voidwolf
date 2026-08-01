@@ -1,0 +1,80 @@
+#!/bin/sh
+# voidwolf-about — short support snapshot (PR13; full doctor is later)
+export PATH="${HOME}/.local/bin:${PATH}"
+
+report() {
+	echo "=== voidwolf about ==="
+	echo "date:    $(date -Iseconds 2>/dev/null || date)"
+	echo "host:    $(hostname 2>/dev/null || echo '?')"
+	echo "user:    $(id -un)  uid=$(id -u)"
+	echo "kernel:  $(uname -sr)"
+	echo "DISPLAY: ${DISPLAY:-unset}"
+	echo "XDG_RUNTIME_DIR: ${XDG_RUNTIME_DIR:-unset}"
+	echo "PATH has .local/bin: $(printf '%s' "$PATH" | grep -q "${HOME}/.local/bin" && echo yes || echo no)"
+	echo
+
+	if [ -f "${HOME}/.config/voidwolf/current/name" ]; then
+		echo "theme:   $(cat "${HOME}/.config/voidwolf/current/name")"
+	else
+		echo "theme:   (none)"
+	fi
+	if [ -f "${HOME}/.config/voidwolf/repo-root" ]; then
+		echo "repo:    $(cat "${HOME}/.config/voidwolf/repo-root")"
+	fi
+	echo
+
+	echo "--- session tools ---"
+	for c in dwm st dmenu startx pipewire wireplumber wpctl nmcli bluetoothctl nvidia-smi; do
+		if command -v "$c" >/dev/null 2>&1; then
+			printf '  OK  %s\n' "$c"
+		else
+			printf '  --  %s\n' "$c"
+		fi
+	done
+	echo
+
+	echo "--- PipeWire ---"
+	if command -v wpctl >/dev/null 2>&1; then
+		wpctl status 2>/dev/null | head -40 || echo "  wpctl status failed"
+	else
+		echo "  wpctl missing"
+	fi
+	echo
+
+	echo "--- Bluetooth ---"
+	if command -v bluetoothctl >/dev/null 2>&1; then
+		bluetoothctl show 2>/dev/null | head -15 || echo "  no controller / service down"
+	else
+		echo "  bluetoothctl missing"
+	fi
+	echo
+
+	echo "--- NetworkManager ---"
+	if command -v nmcli >/dev/null 2>&1; then
+		nmcli -t -f STATE,CONNECTIVITY general 2>/dev/null || nmcli general status 2>/dev/null | head -5
+	else
+		echo "  nmcli missing"
+	fi
+	echo
+
+	if command -v voidwolf-gpu-check >/dev/null 2>&1; then
+		echo "--- GPU (voidwolf-gpu-check) ---"
+		voidwolf-gpu-check 2>/dev/null | head -25
+	fi
+
+	echo
+	echo "Docs: docs/session.md docs/displays.md docs/dogfood.md"
+}
+
+if [ "${1:-}" = "--stdout" ] || [ ! -t 1 ]; then
+	report
+	exit 0
+fi
+
+if [ -n "${DISPLAY:-}" ] && command -v st >/dev/null 2>&1; then
+	tmp=$(mktemp)
+	report >"$tmp"
+	st -t "voidwolf-about" -e sh -c "cat '$tmp'; rm -f '$tmp'; echo; echo '[enter]'; read -r _"
+else
+	report
+fi

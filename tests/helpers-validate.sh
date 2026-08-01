@@ -28,6 +28,8 @@ required=(
 	voidwolf-volume
 	voidwolf-brightness
 	voidwolf-dogfood-check
+	voidwolf-displays
+	voidwolf-about
 	install-user-bin.sh
 )
 
@@ -97,6 +99,13 @@ if rg -q 'brightnessctl' "${BIN}/voidwolf-brightness"; then
 	echo "OK   brightness prefers brightnessctl"
 else
 	echo "FAIL voidwolf-brightness should prefer brightnessctl"
+	fail=1
+fi
+
+if rg -q 'Displays' "${BIN}/voidwolf-menu"; then
+	echo "OK   menu has Displays entry"
+else
+	echo "FAIL voidwolf-menu should list Displays"
 	fail=1
 fi
 

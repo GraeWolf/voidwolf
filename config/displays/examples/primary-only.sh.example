@@ -1,0 +1,27 @@
+#!/bin/sh
+# voidwolf example: enable primary / first connected output only
+# Copy to ~/.config/voidwolf/displays/primary-only.sh and edit output names.
+set -e
+
+# Prefer common laptop internal, then first connected
+PRIMARY=""
+for cand in eDP-1 eDP-1-1 eDP1 LVDS-1 HDMI-0 DP-0; do
+	if xrandr --query | grep -q "^${cand} connected"; then
+		PRIMARY=$cand
+		break
+	fi
+done
+
+if [ -z "$PRIMARY" ]; then
+	PRIMARY=$(xrandr --query | awk '/ connected/{print $1; exit}')
+fi
+
+[ -n "$PRIMARY" ] || { echo "no connected outputs" >&2; exit 1; }
+
+# Turn off everything else
+for out in $(xrandr --query | awk '/ connected| disconnected/{print $1}'); do
+	[ "$out" = "$PRIMARY" ] && continue
+	xrandr --output "$out" --off 2>/dev/null || true
+done
+
+xrandr --output "$PRIMARY" --auto --primary

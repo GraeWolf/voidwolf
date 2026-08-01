@@ -1,10 +1,12 @@
 # packages-desktop-optional.txt — best-effort; missing packages are skipped
 # Prefer nicer TUIs when present; helpers fall back to bluetoothctl/nmtui/wpctl.
+# PR13: TUI polish — arandr for displays GUI; pulsemixer/bluetuith preferred apps.
 
 pulsemixer
 wiremix
 bluetuith
 pavucontrol
+pwvucontrol
 clipmenu
 arandr
 lf

@@ -1,0 +1,3 @@
+! voidwolf HiDPI helper — 150% of 96 for high-DPI laptop panels
+! Prefer integer Xft.dpi; no fractional Wayland-style scaling on X11.
+Xft.dpi: 144

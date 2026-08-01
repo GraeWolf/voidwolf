@@ -14,7 +14,9 @@ export PATH="$HOME/.local/bin:$PATH"
 |---------|------|------|
 | `voidwolf-dmenu` | (internal) | Themed dmenu wrapper |
 | `voidwolf-launcher` | Super+Space | `dmenu_run` + colors |
-| `voidwolf-menu` | Super+Alt+Space | Control menu |
+| `voidwolf-menu` | Super+Alt+Space | Control menu (theme, displays, TUIs, …) |
+| `voidwolf-displays` | menu → Displays | xrandr preset picker (PR13) |
+| `voidwolf-about` | menu → About | PipeWire / BT / NM / GPU snapshot (PR13) |
 | `voidwolf-system-menu` | Super+Escape | Lock / suspend / power |
 | `voidwolf-lock` | Super+Ctrl+L | xsecurelock → slock → i3lock |
 | `voidwolf-screenshot` | Print / Super+Ctrl+C | maim + xclip |
@@ -69,8 +71,19 @@ voidwolf-screenshot window
 
 Saves under `~/Pictures/Screenshots/` (override with `VOIDWOLF_SCREENSHOT_DIR`).
 
+## Displays
+
+```bash
+voidwolf-displays           # dmenu presets
+voidwolf-displays list
+voidwolf-displays apply name
+```
+
+See [displays.md](displays.md).
+
 ## Related
 
 - [keybindings.md](keybindings.md)  
 - [session.md](session.md)  
+- [displays.md](displays.md)  
 - [design.md](design.md)

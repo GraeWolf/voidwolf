@@ -1,20 +1,16 @@
 #!/bin/sh
 # voidwolf-menu — control menu (Super+Alt+Space)
-# Omarchy-like quick actions without a heavy DE.
+# PR13: Displays, About, polished TUI entries
 
 export PATH="${HOME}/.local/bin:${PATH}"
 
 dmenu_pick() {
 	prompt="${1:-voidwolf:}"
 	if command -v voidwolf-dmenu >/dev/null 2>&1; then
-		voidwolf-dmenu -i -p "$prompt"
+		voidwolf-dmenu -i -l 16 -p "$prompt"
 	else
-		dmenu -i -p "$prompt"
+		dmenu -i -l 16 -p "$prompt"
 	fi
-}
-
-run_bg() {
-	"$@" >/dev/null 2>&1 &
 }
 
 choice=$(printf '%s\n' \
@@ -26,12 +22,14 @@ choice=$(printf '%s\n' \
 	"Screenshot" \
 	"Theme" \
 	"Wallpaper" \
+	"Displays" \
 	"Audio" \
 	"Bluetooth" \
 	"Wi-Fi" \
 	"System monitor" \
 	"Keybindings" \
 	"Clipboard" \
+	"About / session" \
 	"System menu" \
 	"Lock" \
 	"Cancel" | dmenu_pick) || exit 0
@@ -53,12 +51,27 @@ case "$choice" in
 			exec voidwolf-wallpaper pick
 		fi
 		;;
+	"Displays")
+		if command -v voidwolf-displays >/dev/null 2>&1; then
+			exec voidwolf-displays pick
+		fi
+		;;
 	"Audio") exec voidwolf-audio-tui ;;
 	"Bluetooth") exec voidwolf-bluetooth-tui ;;
 	"Wi-Fi") exec voidwolf-wifi-tui ;;
-	"System monitor") exec st -e btop ;;
+	"System monitor")
+		if command -v btop >/dev/null 2>&1; then
+			exec st -e btop
+		fi
+		exec st -e top
+		;;
 	"Keybindings") exec voidwolf-cheatsheet ;;
 	"Clipboard") exec voidwolf-clipboard ;;
+	"About / session")
+		if command -v voidwolf-about >/dev/null 2>&1; then
+			exec voidwolf-about
+		fi
+		;;
 	"System menu") exec voidwolf-system-menu ;;
 	"Lock") exec voidwolf-lock ;;
 	*) exit 0 ;;

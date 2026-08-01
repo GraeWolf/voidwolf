@@ -10,6 +10,7 @@
 | `theme-schema-validate.sh` | PR8–9 |
 | `nvidia-helpers-validate.sh` | PR10 |
 | `bash-nvim-validate.sh` | PR12 |
+| `displays-tui-validate.sh` | PR13 |
 
 ```bash
 make test

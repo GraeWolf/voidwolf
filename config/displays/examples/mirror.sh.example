@@ -1,0 +1,18 @@
+#!/bin/sh
+# voidwolf example: mirror first two connected outputs (same mode when possible)
+set -e
+
+outs=$(xrandr --query | awk '/ connected/{print $1}')
+set -- $outs
+A=${1:-}
+B=${2:-}
+
+[ -n "$A" ] || { echo "no outputs" >&2; exit 1; }
+
+if [ -z "$B" ]; then
+	xrandr --output "$A" --auto --primary
+	exit 0
+fi
+
+# Use preferred mode of primary; --same-as mirrors
+xrandr --output "$A" --auto --primary --output "$B" --auto --same-as "$A"

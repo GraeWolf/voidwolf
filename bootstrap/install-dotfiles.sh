@@ -89,6 +89,14 @@ if [[ "${DRY_RUN}" -eq 0 ]]; then
 		"${TARGET_HOME}/.config/voidwolf/logs"
 	# record repo root for helpers that resolve docs
 	printf '%s\n' "${REPO_ROOT}" > "${TARGET_HOME}/.config/voidwolf/repo-root"
+	# PR13: leave a pointer README for display presets (never overwrite user scripts)
+	if [[ ! -f "${TARGET_HOME}/.config/voidwolf/displays/README" ]]; then
+		printf '%s\n' \
+			"Place xrandr preset scripts here as *.sh" \
+			"Examples: voidwolf-displays pick → Install example presets" \
+			"Docs: docs/displays.md" \
+			> "${TARGET_HOME}/.config/voidwolf/displays/README"
+	fi
 else
 	printf '[dry-run] mkdir voidwolf config dirs under %s\n' "${TARGET_HOME}/.config/voidwolf"
 fi

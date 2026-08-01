@@ -69,7 +69,7 @@ Binds live in `suckless/dwm/config.h` (no Super modifier). Brightness is harmles
 ## Desktop extras
 
 - **Discrete NVIDIA** — `--gpu nvidia` + `docs/nvidia.md`
-- **Multi-monitor** — Super+period family (`focusmon` / `tagmon`); display presets land in PR13
+- **Multi-monitor** — Super+period family (`focusmon` / `tagmon`); presets via `voidwolf-displays` ([displays.md](displays.md))
 
 ## Validation
 

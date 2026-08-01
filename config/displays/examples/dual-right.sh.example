@@ -1,0 +1,22 @@
+#!/bin/sh
+# voidwolf example: dual monitors — primary left, second to the right
+# Edit LEFT/RIGHT output names for your machine (xrandr --query).
+set -e
+
+# Defaults match a common discrete NVIDIA dual-HDMI desk (edit me)
+LEFT="${VOIDWOLF_DISPLAY_LEFT:-HDMI-0}"
+RIGHT="${VOIDWOLF_DISPLAY_RIGHT:-HDMI-1}"
+
+if ! xrandr --query | grep -q "^${LEFT} connected"; then
+	echo "left output not connected: $LEFT" >&2
+	exit 1
+fi
+if ! xrandr --query | grep -q "^${RIGHT} connected"; then
+	echo "right output not connected: $RIGHT (falling back to primary-only)" >&2
+	xrandr --output "$LEFT" --auto --primary
+	exit 0
+fi
+
+xrandr \
+	--output "$LEFT" --auto --primary --pos 0x0 \
+	--output "$RIGHT" --auto --right-of "$LEFT"

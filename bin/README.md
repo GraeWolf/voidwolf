@@ -14,6 +14,8 @@ Full catalog: [docs/helpers.md](../docs/helpers.md).
 | `voidwolf-dmenu` | Themed dmenu wrapper |
 | `voidwolf-launcher` | Super+Space |
 | `voidwolf-menu` | Super+Alt+Space |
+| `voidwolf-displays` | menu → Displays (PR13) |
+| `voidwolf-about` | menu → About / session (PR13) |
 | `voidwolf-system-menu` | Super+Escape (lock & suspend default) |
 | `voidwolf-lock` | Super+Ctrl+L |
 | `voidwolf-screenshot` | Print / Super+Ctrl+C |

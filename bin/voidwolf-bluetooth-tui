@@ -1,12 +1,38 @@
 #!/bin/sh
-# Super+Ctrl+B — bluetooth
+# Super+Ctrl+B — bluetooth (PR13: preferred TUI → bluetoothctl)
 export PATH="${HOME}/.local/bin:${PATH}"
 
+run_st() {
+	title="$1"
+	shift
+	if command -v st >/dev/null 2>&1; then
+		exec st -t "$title" -e "$@"
+	fi
+	exec "$@"
+}
+
+# Soft check: is the stack present?
+if command -v bluetoothctl >/dev/null 2>&1; then
+	if ! bluetoothctl show >/dev/null 2>&1; then
+		# Controller missing or service down — still open TUI so user can see errors
+		command -v notify-send >/dev/null 2>&1 && \
+			notify-send "voidwolf" "Bluetooth: controller offline? check bluetoothd"
+	fi
+fi
+
 if command -v bluetuith >/dev/null 2>&1; then
-	exec st -t "bluetooth" -e bluetuith
+	run_st bluetooth bluetuith
+fi
+if command -v bluetui >/dev/null 2>&1; then
+	run_st bluetooth bluetui
+fi
+if command -v blueberry >/dev/null 2>&1; then
+	exec blueberry
 fi
 if command -v bluetoothctl >/dev/null 2>&1; then
-	exec st -t "bluetooth" -e bluetoothctl
+	run_st bluetooth bluetoothctl
 fi
-echo "voidwolf-bluetooth-tui: bluetoothctl not found" >&2
+
+echo "voidwolf-bluetooth-tui: install bluez (bluetoothctl) or bluetuith" >&2
+command -v notify-send >/dev/null 2>&1 && notify-send "voidwolf" "Bluetooth tools missing"
 exit 1

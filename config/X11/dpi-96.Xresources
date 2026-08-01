@@ -1,0 +1,3 @@
+! voidwolf HiDPI helper — merge when you want classic 96 DPI
+! xrdb -merge config/X11/dpi-96.Xresources
+Xft.dpi: 96
