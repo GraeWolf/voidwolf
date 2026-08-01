@@ -20,6 +20,7 @@ required=(
 	voidwolf-audio-tui
 	voidwolf-bluetooth-tui
 	voidwolf-wifi-tui
+	voidwolf-float-term
 	voidwolf-status
 	voidwolf-wallpaper
 	voidwolf-theme
@@ -85,6 +86,14 @@ if rg -q 'brave-origin-nightly' "${BIN}/voidwolf-browser"; then
 	echo "OK   browser knows brave-origin-nightly"
 else
 	echo "FAIL voidwolf-browser should resolve brave-origin-nightly"
+	fail=1
+fi
+
+# TUI float helper
+if rg -q 'voidwolf-tui' "${BIN}/voidwolf-float-term"; then
+	echo "OK   float-term titles voidwolf-tui"
+else
+	echo "FAIL voidwolf-float-term should set voidwolf-tui title"
 	fail=1
 fi
 

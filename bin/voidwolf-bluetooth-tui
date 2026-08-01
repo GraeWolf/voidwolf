@@ -1,12 +1,15 @@
 #!/bin/sh
-# Super+Ctrl+B — bluetooth (PR13: preferred TUI → bluetoothctl)
+# Super+Ctrl+B — bluetooth (floating centered TUI)
 export PATH="${HOME}/.local/bin:${PATH}"
 
 run_st() {
-	title="$1"
+	label="$1"
 	shift
+	if command -v voidwolf-float-term >/dev/null 2>&1; then
+		exec voidwolf-float-term "$label" -- "$@"
+	fi
 	if command -v st >/dev/null 2>&1; then
-		exec st -t "$title" -e "$@"
+		exec st -t "voidwolf-tui:$label" -g "${VOIDWOLF_TUI_GEOM:-100x30}" -e "$@"
 	fi
 	exec "$@"
 }
@@ -14,7 +17,6 @@ run_st() {
 # Soft check: is the stack present?
 if command -v bluetoothctl >/dev/null 2>&1; then
 	if ! bluetoothctl show >/dev/null 2>&1; then
-		# Controller missing or service down — still open TUI so user can see errors
 		command -v notify-send >/dev/null 2>&1 && \
 			notify-send "voidwolf" "Bluetooth: controller offline? check bluetoothd"
 	fi

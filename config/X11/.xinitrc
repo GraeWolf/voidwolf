@@ -57,6 +57,11 @@ fi
 # Keyboard (optional user override)
 [ -f "${HOME}/.config/voidwolf/xkb" ] && . "${HOME}/.config/voidwolf/xkb"
 
+# XDG user directories (Desktop, Documents, Pictures, …)
+if command -v xdg-user-dirs-update >/dev/null 2>&1; then
+	xdg-user-dirs-update
+fi
+
 # PipeWire only — wireplumber + pipewire-pulse via conf.d (setup-pipewire.sh)
 if command -v pipewire >/dev/null 2>&1; then
 	pipewire &
@@ -64,6 +69,21 @@ fi
 
 # Notifications
 command -v dunst >/dev/null 2>&1 && dunst &
+
+# Idle lock: MIT-SCREEN-SAVER → voidwolf-lock (xss-lock)
+# Timeout: 5 minutes blank, then lock. Override with ~/.config/voidwolf/xidle
+if [ -f "${HOME}/.config/voidwolf/xidle" ]; then
+	# shellcheck disable=SC1091
+	. "${HOME}/.config/voidwolf/xidle"
+else
+	# xset s <timeout> <cycle> — blank after 300s
+	xset s 300 300 2>/dev/null || true
+	# DPMS: standby/suspend/off (seconds)
+	xset dpms 600 600 900 2>/dev/null || true
+fi
+if command -v xss-lock >/dev/null 2>&1 && command -v voidwolf-lock >/dev/null 2>&1; then
+	xss-lock --transfer-sleep-lock -- voidwolf-lock &
+fi
 
 # Status bar → xsetroot -name
 command -v voidwolf-status >/dev/null 2>&1 && voidwolf-status &

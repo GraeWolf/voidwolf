@@ -20,6 +20,14 @@ Lean developer defaults. **Not** a full distro-of-dotfiles or LazyVim clone.
 
 `install-dotfiles.sh` appends source lines to `~/.bashrc` and `~/.bash_profile` if missing (does not replace your whole shell rc).
 
+### fastfetch
+
+Interactive bash runs **fastfetch** once per shell session (package: `fastfetch` on the desktop-required list).
+
+```bash
+export VOIDWOLF_NO_FASTFETCH=1   # disable
+```
+
 ### Opt-outs
 
 ```bash
@@ -28,6 +36,9 @@ export VOIDWOLF_PROMPT_OFF=1
 
 # Disable multi-terminal shared history refresh
 export VOIDWOLF_NO_SHARED_HISTORY=1
+
+# Disable fastfetch on shell start
+export VOIDWOLF_NO_FASTFETCH=1
 
 # Use a different nvim config (see below)
 export NVIM_APPNAME=nvim   # stock ~/.config/nvim
@@ -59,6 +70,7 @@ So `nvim`, Super+Shift+N (`st -e nvim`), and aliases `v`/`vi`/`vim` use the lean
 - Options: numbers, 2-space indent, undofile, clipboard, ripgrep `:grep`
 - Leader `Space`: save/quit, buffers, diagnostics float
 - Ctrl-h/j/k/l window nav, yank highlight, trim trailing whitespace on save
+- **Colorscheme** from active voidwolf theme (`voidwolf.colors` + `~/.config/voidwolf/generated/nvim.lua`)
 - **No** plugin manager, LSP servers, or treesitter packs (add your own later)
 
 ### Use your old config again

@@ -55,9 +55,13 @@ Live host notes: [dogfood.md](dogfood.md).
 2. Warn if `XDG_RUNTIME_DIR` missing.
 3. Start **one** session bus; export DISPLAY/XAUTHORITY.
 4. `xrdb` base + generated theme.
-5. `pipewire &` only — **not** wireplumber/pipewire-pulse siblings.
-6. dunst, voidwolf-status, wallpaper.
-7. `while true; do dwm && break; done` — clean quit (exit 0) ends X; crash (non-zero) restarts dwm. Theme rebuild uses in-process restartsig, not this loop.
+5. `xdg-user-dirs-update` when available.
+6. `pipewire &` only — **not** wireplumber/pipewire-pulse siblings.
+7. dunst; **xss-lock → voidwolf-lock** (idle blank + DPMS; default 5 min via `xset s`).
+8. voidwolf-status, displays restore, wallpaper.
+9. `while true; do dwm && break; done` — clean quit (exit 0) ends X; crash (non-zero) restarts dwm. Theme rebuild uses in-process restartsig, not this loop.
+
+Idle lock override: `~/.config/voidwolf/xidle` (sourced before xss-lock; set your own `xset s` / `xset dpms`).
 
 ## Auto-startx (default OFF)
 

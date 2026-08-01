@@ -19,7 +19,8 @@ export PATH="$HOME/.local/bin:$PATH"
 | `voidwolf-about` | menu → About | PipeWire / BT / NM / GPU snapshot (PR13) |
 | `voidwolf-system-menu` | Super+Escape | Lock / suspend / power |
 | `voidwolf-lock` | Super+Ctrl+L | xsecurelock → slock → i3lock |
-| `voidwolf-screenshot` | Print / Super+Ctrl+C | maim + xclip |
+| `voidwolf-screenshot` | Super+Shift+P / Super+Shift+S / Super+Ctrl+C | maim + xclip |
+| `voidwolf-float-term` | (helper) | floating centered st for TUIs |
 | `voidwolf-cheatsheet` | Super+K | Open keybindings.md |
 | `voidwolf-browser` | Super+Shift+B | brave-origin* / brave-origin-nightly |
 | `voidwolf-filemanager` | Super+Shift+F | lf / ranger / thunar |
@@ -63,9 +64,9 @@ PR8/9a will export these from the active theme.
 ## Screenshot
 
 ```bash
-voidwolf-screenshot menu     # dmenu
-voidwolf-screenshot full     # Print
-voidwolf-screenshot region   # Shift+Print
+voidwolf-screenshot menu     # Super+Ctrl+C
+voidwolf-screenshot full     # Super+Shift+P (Print alias)
+voidwolf-screenshot region   # Super+Shift+S (Shift+Print alias)
 voidwolf-screenshot window
 ```
 

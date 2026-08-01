@@ -1,0 +1,33 @@
+#!/bin/sh
+# voidwolf-float-term — launch st as a floating centered TUI window
+# Title always includes "voidwolf-tui" so dwm rules float + center it.
+# Usage: voidwolf-float-term [label] -- command [args...]
+#    or: voidwolf-float-term command [args...]   (label = command basename)
+set -eu
+
+export PATH="${HOME}/.local/bin:${PATH}"
+
+label=""
+if [ "${1:-}" = "--" ]; then
+	shift
+elif [ $# -ge 2 ] && [ "${2:-}" = "--" ]; then
+	label="$1"
+	shift 2
+elif [ $# -ge 1 ]; then
+	label=$(basename "$1")
+fi
+
+if [ $# -lt 1 ]; then
+	echo "usage: voidwolf-float-term [label] -- command [args...]" >&2
+	exit 1
+fi
+
+title="voidwolf-tui${label:+:$label}"
+# ~100 cols × 30 rows; dwm centers floating clients on the focused monitor
+geom="${VOIDWOLF_TUI_GEOM:-100x30}"
+
+if command -v st >/dev/null 2>&1; then
+	exec st -t "$title" -g "$geom" -e "$@"
+fi
+# no st: run in current terminal
+exec "$@"

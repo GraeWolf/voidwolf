@@ -18,7 +18,8 @@ Full catalog: [docs/helpers.md](../docs/helpers.md).
 | `voidwolf-about` | menu → About / session (PR13) |
 | `voidwolf-system-menu` | Super+Escape (lock & suspend default) |
 | `voidwolf-lock` | Super+Ctrl+L |
-| `voidwolf-screenshot` | Print / Super+Ctrl+C |
+| `voidwolf-screenshot` | Super+Shift+P / Super+Shift+S / Super+Ctrl+C |
+| `voidwolf-float-term` | Floating centered st for TUIs |
 | `voidwolf-cheatsheet` | Super+K |
 | `voidwolf-browser` | Super+Shift+B |
 | `voidwolf-filemanager` | Super+Shift+F |

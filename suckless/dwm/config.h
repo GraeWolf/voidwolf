@@ -18,6 +18,12 @@
 /* appearance */
 static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
+/* systray (in-bar tray icons) */
+static const unsigned int systraypinning = 0;   /* 0: follows selected monitor, >0: pin to mon X */
+static const unsigned int systrayonleft  = 0;   /* >0: tray left of status text */
+static const unsigned int systrayspacing = 2;
+static const int systraypinningfailfirst = 1;   /* 1: pin-fail → first monitor */
+static const int showsystray        = 1;        /* 0 means no systray */
 /* vanitygaps (PR13b) */
 static const unsigned int gappih    = 8;        /* horiz inner gap between windows */
 static const unsigned int gappiv    = 8;        /* vert inner gap between windows */
@@ -39,6 +45,10 @@ static const Rule rules[] = {
 	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
 	{ "Firefox",  NULL,       NULL,       0,            0,           -1 },
 	{ "Brave-browser", NULL,  NULL,       0,            0,           -1 },
+	/* voidwolf TUI helpers (title starts with voidwolf-tui) — float + center */
+	{ NULL,       NULL,       "voidwolf-tui", 0,         1,           -1 },
+	/* btop launched via Super+Ctrl+T */
+	{ NULL,       NULL,       "voidwolf-btop", 0,        1,           -1 },
 };
 
 /* layout(s) */
@@ -89,7 +99,7 @@ static const char *cheatcmd[]    = { "voidwolf-cheatsheet", NULL };
 static const char *audiocmd[]    = { "voidwolf-audio-tui", NULL };
 static const char *btcmd[]       = { "voidwolf-bluetooth-tui", NULL };
 static const char *wificmd[]     = { "voidwolf-wifi-tui", NULL };
-static const char *btopcmd[]     = { "st", "-e", "btop", NULL };
+static const char *btopcmd[]     = { "st", "-t", "voidwolf-btop", "-g", "120x40", "-e", "btop", NULL };
 static const char *dunstclose[]  = { "dunstctl", "close", NULL };
 static const char *dunstcloseall[] = { "dunstctl", "close-all", NULL };
 static const char *dunstpause[]  = { "dunstctl", "set-paused", "toggle", NULL };
@@ -138,10 +148,14 @@ static const Key keys[] = {
 	{ MODKEY|ControlMask,           XK_comma,  spawn,          {.v = dunstpause } },
 	{ MODKEY|Mod1Mask,              XK_comma,  spawn,          {.v = dunsthist } },
 
-	/* === PR6b: capture === */
+	/* === capture (no Print key required) === */
+	/* Super+Shift+P full; Super+Shift+S region; Super+Ctrl+C menu */
+	{ MODKEY|ShiftMask,             XK_p,      spawn,          {.v = scrotfull } },
+	{ MODKEY|ShiftMask,             XK_s,      spawn,          {.v = scrotregion } },
+	{ MODKEY|ControlMask,           XK_c,      spawn,          {.v = scrotmenu } },
+	/* keep Print aliases when the key exists */
 	{ 0,                            XK_Print,  spawn,          {.v = scrotfull } },
 	{ ShiftMask,                    XK_Print,  spawn,          {.v = scrotregion } },
-	{ MODKEY|ControlMask,           XK_c,      spawn,          {.v = scrotmenu } },
 	{ MODKEY|ControlMask,           XK_v,      spawn,          {.v = clipmenu } },
 
 	/* === PR11: XF86 media / brightness (no Super modifier) === */

@@ -8,3 +8,4 @@ vim.g.maplocalleader = "\\"
 require("voidwolf.options")
 require("voidwolf.keymaps")
 require("voidwolf.autocmds")
+require("voidwolf.colors").load()

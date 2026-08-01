@@ -78,6 +78,14 @@ install_file() {
 install_file "${REPO_ROOT}/config/X11/.xinitrc" "${TARGET_HOME}/.xinitrc" 0755
 install_file "${REPO_ROOT}/config/X11/.Xresources" "${TARGET_HOME}/.Xresources" 0644
 
+# XDG user dirs (Desktop, Documents, Pictures/Screenshots, …)
+if [[ "${DRY_RUN}" -eq 0 ]] && command -v xdg-user-dirs-update >/dev/null 2>&1; then
+	voidwolf_log "xdg-user-dirs-update"
+	HOME="${TARGET_HOME}" xdg-user-dirs-update || true
+elif [[ "${DRY_RUN}" -eq 1 ]]; then
+	printf '[dry-run] xdg-user-dirs-update\n'
+fi
+
 # --- voidwolf config dirs ---
 voidwolf_log "Create ~/.config/voidwolf structure"
 if [[ "${DRY_RUN}" -eq 0 ]]; then

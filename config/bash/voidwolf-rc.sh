@@ -41,6 +41,15 @@ if [[ -z "${BASH_COMPLETION_VERSINFO:-}" ]]; then
 	fi
 fi
 
+# --- fastfetch on interactive shell start (once per login shell) ---
+# Set VOIDWOLF_NO_FASTFETCH=1 to disable. Uses -l so nested interactive shells skip.
+if [[ -z "${VOIDWOLF_NO_FASTFETCH:-}" && -z "${VOIDWOLF_FASTFETCH_DONE:-}" ]]; then
+	if command -v fastfetch >/dev/null 2>&1; then
+		fastfetch
+		export VOIDWOLF_FASTFETCH_DONE=1
+	fi
+fi
+
 # --- aliases (lean) ---
 alias ll='ls -lah --color=auto'
 alias la='ls -A --color=auto'

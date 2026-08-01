@@ -33,8 +33,11 @@ bluez
 # Desktop helpers
 dunst
 xsecurelock
+xss-lock
 feh
 xwallpaper
+xdg-user-dirs
+fastfetch
 
 # Graphics validation / iGPU
 mesa

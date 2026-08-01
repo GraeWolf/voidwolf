@@ -1,12 +1,15 @@
 #!/bin/sh
-# Super+Ctrl+W — network / Wi-Fi (PR13: nmtui → nmcli)
+# Super+Ctrl+W — network / Wi-Fi (floating centered TUI)
 export PATH="${HOME}/.local/bin:${PATH}"
 
 run_st() {
-	title="$1"
+	label="$1"
 	shift
+	if command -v voidwolf-float-term >/dev/null 2>&1; then
+		exec voidwolf-float-term "$label" -- "$@"
+	fi
 	if command -v st >/dev/null 2>&1; then
-		exec st -t "$title" -e "$@"
+		exec st -t "voidwolf-tui:$label" -g "${VOIDWOLF_TUI_GEOM:-100x30}" -e "$@"
 	fi
 	exec "$@"
 }

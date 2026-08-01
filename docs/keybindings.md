@@ -34,8 +34,8 @@ Omarchy-inspired **Super (Mod4)** map for voidwolf dwm.
 | Super+Shift+N | Neovim | `st -e nvim` |
 | Super+Shift+F | File manager | `voidwolf-filemanager` |
 | Super+K | Keybind cheatsheet | `voidwolf-cheatsheet` |
-| Super+Ctrl+Shift+Space | Theme pick (stub PR8) | `voidwolf-theme pick` |
-| Super+Ctrl+Space | Wallpaper pick (stub PR8) | `voidwolf-wallpaper pick` |
+| Super+Ctrl+Shift+Space | Theme pick | `voidwolf-theme pick` |
+| Super+Ctrl+Space | Wallpaper pick | `voidwolf-wallpaper pick` |
 
 ## Window / client
 
@@ -135,16 +135,20 @@ No Super modifier — hardware XF86 keys:
 
 Laptop packages (`--profile laptop`) install `brightnessctl`. Desktop still gets volume binds; brightness is a no-op without a backlight.
 
-## Capture (PR6b)
+## Capture
+
+Primary binds work without a **Print** key:
 
 | Bind | Action |
 |------|--------|
-| Print | Full screenshot → `~/Pictures/Screenshots` + clipboard |
-| Shift+Print | Region screenshot |
+| **Super+Shift+P** | Full screenshot → `~/Pictures/Screenshots` + clipboard |
+| **Super+Shift+S** | Region screenshot |
 | Super+Ctrl+C | Capture menu (full / region / window) |
 | Super+Ctrl+V | Clipboard helper (`clipmenu` if installed) |
+| Print | Alias: full (if key exists) |
+| Shift+Print | Alias: region (if key exists) |
 
-Requires `maim` and `xclip` (PR3 package lists).
+Requires `maim` and `xclip` (package lists).
 
 ## Notifications
 
@@ -156,6 +160,8 @@ Requires `maim` and `xclip` (PR3 package lists).
 | Super+Alt+, | History pop (`history-pop`) |
 
 ## System TUIs
+
+Open as **floating, centered** `st` windows (`voidwolf-float-term` / title `voidwolf-tui*`).
 
 | Bind | Action |
 |------|--------|
