@@ -34,7 +34,7 @@ color14 = "#8fbcbb"
 color15 = "#eceff4"
 
 [meta]
-gtk_theme = "Adwaita-dark"
+gtk_theme = "Yaru-dark"
 cursor_theme = "Adwaita"
 cursor_size = 24
 wallpaper = "wallpapers/nord.png"

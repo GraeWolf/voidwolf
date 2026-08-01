@@ -55,3 +55,8 @@ dejavu-fonts-ttf
 font-firacode
 noto-fonts-emoji
 fontconfig
+
+# GTK dark theme (Void has no standalone Adwaita theme package under /usr/share/themes)
+# Adwaita icons remain from adwaita-icon-theme; Yaru provides gtk-3/4 dark chrome.
+yaru
+adwaita-icon-theme

@@ -34,7 +34,7 @@ color14 = "#89ddff"
 color15 = "#ffffff"
 
 [meta]
-gtk_theme = "Adwaita-dark"
+gtk_theme = "Yaru-dark"
 icon_theme = "Adwaita"
 cursor_theme = "Adwaita"
 cursor_size = 24

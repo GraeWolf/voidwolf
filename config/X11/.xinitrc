@@ -45,6 +45,15 @@ if [ -f "${HOME}/.config/voidwolf/generated/xcursor.env" ]; then
 	. "${HOME}/.config/voidwolf/generated/xcursor.env"
 fi
 
+# GTK dark theme env (Yaru-dark on Void; helps Brave/file choosers)
+if [ -f "${HOME}/.config/voidwolf/gtk.env" ]; then
+	# shellcheck disable=SC1091
+	. "${HOME}/.config/voidwolf/gtk.env"
+elif [ -f "${HOME}/.config/voidwolf/generated/gtk.env" ]; then
+	# shellcheck disable=SC1091
+	. "${HOME}/.config/voidwolf/generated/gtk.env"
+fi
+
 # Keyboard (optional user override)
 [ -f "${HOME}/.config/voidwolf/xkb" ] && . "${HOME}/.config/voidwolf/xkb"
 

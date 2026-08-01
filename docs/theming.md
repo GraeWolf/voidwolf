@@ -80,10 +80,24 @@ Preset walls (PR14): `gruvbox.png`, `catppuccin-mocha.png`, `nord.png`, `rose-pi
 | dwm | `colors.h` + rebuild + HUP |
 | dmenu | `dmenu.env` → voidwolf-dmenu / launcher |
 | dunst | `dunstrc.colors` include + conf.d drop-in |
-| GTK 3/4 | `settings.ini` (theme/icon/cursor) + best-effort `gtk.css` accents |
+| GTK 3/4 | `settings.ini` + palette `gtk.css` + gsettings prefer-dark + `gtk.env` |
 | cursor | `xcursor.env` sourced from `.xinitrc` |
 
-GTK recolor is **best-effort**; `meta.gtk_theme` (e.g. Adwaita-dark) is the primary switch.
+### GTK on Void
+
+Void does **not** ship a full **Adwaita** theme tree under `/usr/share/themes/`. Setting `Adwaita-dark` often leaves apps light.
+
+voidwolf defaults to **`Yaru-dark`** (`yaru` package) and resolves at apply time if missing:
+
+Yaru-dark → other `Yaru-*-dark` → Adwaita-dark → Adwaita.
+
+Also sets `gsettings color-scheme prefer-dark` and writes `~/.config/voidwolf/gtk.env` (`GTK_THEME`) for Brave/file choosers. Palette CSS is best-effort on top of the real theme.
+
+```bash
+sudo xbps-install -y yaru adwaita-icon-theme
+voidwolf-theme set voidwolf-dark
+# restart Brave / GTK apps
+```
 
 ## Schema (summary)
 

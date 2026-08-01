@@ -257,21 +257,104 @@ def gen_dunstrc_colors(pal: dict) -> str:
 """
 
 
-def _prefer_dark(gtk_theme: str) -> str:
-    t = gtk_theme.lower()
-    if "dark" in t or "mocha" in t or "night" in t:
-        return "1"
-    return "0"
+def _prefer_dark(gtk_theme: str, *, force_dark: bool = True) -> str:
+    """voidwolf presets are dark; always prefer dark unless meta says light."""
+    if not force_dark:
+        t = gtk_theme.lower()
+        if "dark" in t or "mocha" in t or "night" in t or "pine" in t:
+            return "1"
+        return "0"
+    return "1"
+
+
+def _theme_dir_exists(name: str) -> bool:
+    if not name or name in (".", ".."):
+        return False
+    for base in (Path("/usr/share/themes"), Path.home() / ".themes"):
+        if (base / name).is_dir():
+            return True
+    # GTK3/4 often ship Adwaita as a built-in name without a themes/ dir
+    if name in ("Adwaita", "Adwaita-dark", "HighContrast", "HighContrastInverse"):
+        return True
+    return False
+
+
+def _icon_dir_exists(name: str) -> bool:
+    if not name:
+        return False
+    for base in (Path("/usr/share/icons"), Path.home() / ".icons"):
+        if (base / name).is_dir():
+            return True
+    return False
+
+
+def resolve_gtk_theme(preferred: str | None) -> str:
+    """Pick a GTK theme that exists on this host.
+
+    Void does not ship a standalone Adwaita *theme package* under
+    /usr/share/themes (Adwaita is built into GTK). Prefer Yaru-dark (yaru
+    package) when present, then other *dark* themes, then Adwaita fallbacks.
+    """
+    candidates: list[str] = []
+    if preferred:
+        candidates.append(preferred)
+    # Void-friendly dark themes (order matters)
+    candidates.extend(
+        [
+            "Yaru-dark",
+            "Yaru-purple-dark",
+            "Yaru-blue-dark",
+            "Yaru-olive-dark",
+            "Adwaita-dark",
+            "Adwaita",
+            "Breeze-Dark",
+            "Breeze",
+        ]
+    )
+    seen: set[str] = set()
+    for name in candidates:
+        if name in seen:
+            continue
+        seen.add(name)
+        if _theme_dir_exists(name):
+            return name
+    # Last resort: still write a dark-ish name; CSS + prefer-dark carry weight
+    return preferred or "Adwaita-dark"
+
+
+def resolve_icon_theme(preferred: str | None) -> str:
+    candidates = []
+    if preferred:
+        candidates.append(preferred)
+    candidates.extend(["Adwaita", "Yaru", "Yaru-dark", "hicolor", "breeze-dark", "breeze"])
+    seen: set[str] = set()
+    for name in candidates:
+        if name in seen:
+            continue
+        seen.add(name)
+        if _icon_dir_exists(name):
+            return name
+    return preferred or "hicolor"
+
+
+def resolve_cursor_theme(preferred: str | None) -> str:
+    # Cursors often live under icons/
+    return resolve_icon_theme(preferred or "Adwaita")
 
 
 def gen_gtk_settings(meta: dict, pal: dict) -> str:
-    gtk_theme = str(meta.get("gtk_theme") or "Adwaita-dark")
-    icon = str(meta.get("icon_theme") or "Adwaita")
-    cursor = str(meta.get("cursor_theme") or "Adwaita")
+    preferred = str(meta.get("gtk_theme") or "Yaru-dark")
+    gtk_theme = resolve_gtk_theme(preferred)
+    icon = resolve_icon_theme(str(meta.get("icon_theme") or "Adwaita"))
+    cursor = resolve_cursor_theme(str(meta.get("cursor_theme") or "Adwaita"))
     size = int(meta.get("cursor_size") or 24)
-    prefer = _prefer_dark(gtk_theme)
+    prefer = _prefer_dark(gtk_theme, force_dark=True)
+    note = ""
+    if preferred and preferred != gtk_theme:
+        note = f"# note: requested gtk_theme={preferred!r} not found; using {gtk_theme!r}\n"
     return (
         "# voidwolf-generated — do not hand-edit while using voidwolf-theme\n"
+        f"{note}"
         "[Settings]\n"
         f"gtk-theme-name={gtk_theme}\n"
         f"gtk-icon-theme-name={icon}\n"
@@ -279,27 +362,98 @@ def gen_gtk_settings(meta: dict, pal: dict) -> str:
         f"gtk-cursor-theme-size={size}\n"
         f"gtk-application-prefer-dark-theme={prefer}\n"
         "gtk-font-name=Fira Code 11\n"
+        # Helps some portals / libadwaita stacks when gsettings is absent
+        "gtk-decoration-layout=menu:minimize,maximize,close\n"
     )
 
 
 def gen_gtk_css(pal: dict, *, gtk4: bool = False) -> str:
+    """Best-effort palette push for GTK3/4 + libadwaita named colors."""
+    bg, fg = pal["bg"], pal["fg"]
+    accent, urg = pal["accent"], pal["urgent"]
+    sel_fg = pal["bar_selected_fg"]
+    border = pal.get("border_normal") or pal.get("color8") or bg
     if gtk4:
-        return f"""/* voidwolf-generated gtk-4.0 — best-effort accent */
-@define-color accent_bg_color {pal['accent']};
-@define-color accent_fg_color {pal['bar_selected_fg']};
-@define-color window_bg_color {pal['bg']};
-@define-color window_fg_color {pal['fg']};
-@define-color error_color {pal['urgent']};
+        return f"""/* voidwolf-generated gtk-4.0 — palette + libadwaita named colors */
+@define-color accent_bg_color {accent};
+@define-color accent_fg_color {sel_fg};
+@define-color accent_color {accent};
+@define-color window_bg_color {bg};
+@define-color window_fg_color {fg};
+@define-color view_bg_color {bg};
+@define-color view_fg_color {fg};
+@define-color headerbar_bg_color {bg};
+@define-color headerbar_fg_color {fg};
+@define-color headerbar_backdrop_color {bg};
+@define-color headerbar_border_color {border};
+@define-color sidebar_bg_color {bg};
+@define-color sidebar_fg_color {fg};
+@define-color card_bg_color {bg};
+@define-color card_fg_color {fg};
+@define-color dialog_bg_color {bg};
+@define-color dialog_fg_color {fg};
+@define-color popover_bg_color {bg};
+@define-color popover_fg_color {fg};
+@define-color destructive_bg_color {urg};
+@define-color destructive_fg_color {sel_fg};
+@define-color error_color {urg};
+@define-color success_color {pal.get('color2', accent)};
+@define-color warning_color {pal.get('color3', accent)};
+
+/* Nudge common widgets when the base theme is light fallback */
+window, dialog, messagedialog, .background {{
+  background-color: {bg};
+  color: {fg};
+}}
 """
-    return f"""/* voidwolf-generated gtk-3.0 — best-effort accent */
-@define-color accent_bg_color {pal['accent']};
-@define-color accent_fg_color {pal['bar_selected_fg']};
-@define-color theme_bg_color {pal['bg']};
-@define-color theme_fg_color {pal['fg']};
-@define-color theme_selected_bg_color {pal['accent']};
-@define-color theme_selected_fg_color {pal['bar_selected_fg']};
-@define-color error_color {pal['urgent']};
+    return f"""/* voidwolf-generated gtk-3.0 — palette push */
+@define-color accent_bg_color {accent};
+@define-color accent_fg_color {sel_fg};
+@define-color theme_bg_color {bg};
+@define-color theme_fg_color {fg};
+@define-color theme_base_color {bg};
+@define-color theme_text_color {fg};
+@define-color theme_selected_bg_color {accent};
+@define-color theme_selected_fg_color {sel_fg};
+@define-color theme_unfocused_bg_color {bg};
+@define-color theme_unfocused_fg_color {fg};
+@define-color borders {border};
+@define-color error_color {urg};
+
+window, dialog, messagedialog, .background, .titlebar, headerbar {{
+  background-color: {bg};
+  color: {fg};
+}}
 """
+
+
+def apply_gsettings_gtk(meta: dict, settings_ini: str) -> None:
+    """Sync GNOME/libadwaita color-scheme when gsettings is available."""
+    if not shutil.which("gsettings"):
+        return
+    # Parse chosen theme name from generated ini
+    gtk_theme = "Yaru-dark"
+    icon = "Adwaita"
+    for line in settings_ini.splitlines():
+        if line.startswith("gtk-theme-name="):
+            gtk_theme = line.split("=", 1)[1].strip()
+        elif line.startswith("gtk-icon-theme-name="):
+            icon = line.split("=", 1)[1].strip()
+    env = {**os.environ}
+    # Quiet failures if schemas missing (minimal Void install)
+    cmds = [
+        ["gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", gtk_theme],
+        ["gsettings", "set", "org.gnome.desktop.interface", "icon-theme", icon],
+        ["gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "prefer-dark"],
+        ["gsettings", "set", "org.gnome.desktop.interface", "gtk-application-prefer-dark-theme", "true"],
+    ]
+    cursor = str(meta.get("cursor_theme") or "")
+    if cursor:
+        cmds.append(
+            ["gsettings", "set", "org.gnome.desktop.interface", "cursor-theme", resolve_cursor_theme(cursor)]
+        )
+    for cmd in cmds:
+        subprocess.run(cmd, check=False, capture_output=True, env=env)
 
 
 def _skip_user_config() -> bool:
@@ -408,6 +562,22 @@ def apply_adapters(data: dict, *, rebuild_dwm: bool = True) -> None:
     install_user_file(Path.home() / ".config/gtk-3.0/gtk.css", gtk3_css)
     install_user_file(Path.home() / ".config/gtk-4.0/settings.ini", gtk4_ini)
     install_user_file(Path.home() / ".config/gtk-4.0/gtk.css", gtk4_css)
+    # libadwaita / GNOME color-scheme (prefer-dark) when schemas exist
+    if not _skip_user_config():
+        apply_gsettings_gtk(meta, gtk3_ini)
+        # Export for sessions that read this (.xinitrc + voidwolf-browser)
+        theme_line = next(
+            (ln for ln in gtk3_ini.splitlines() if ln.startswith("gtk-theme-name=")),
+            "gtk-theme-name=Yaru-dark",
+        )
+        tname = theme_line.split("=", 1)[1].strip()
+        gtk_env_body = (
+            "# generated by voidwolf-theme — source for GTK/Brave dark chrome\n"
+            f"export GTK_THEME='{tname}'\n"
+            "export GTK_APPLICATION_PREFER_DARK_THEME=1\n"
+        )
+        atomic_write(gen / "gtk.env", gtk_env_body)
+        install_user_file(Path.home() / ".config/voidwolf/gtk.env", gtk_env_body)
 
     # Xcursor env helper for startx sessions
     xcursor = (

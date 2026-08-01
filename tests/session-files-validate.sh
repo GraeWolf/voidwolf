@@ -22,7 +22,7 @@ need "${ROOT}/bin/voidwolf-status"
 need "${ROOT}/docs/session.md"
 
 xinit="${ROOT}/config/X11/.xinitrc"
-for pat in 'refusing to start X session as root' 'pipewire &' 'while true' 'dwm' 'voidwolf-status' 'XDG_RUNTIME_DIR' 'dbus' 'voidwolf-displays restore'; do
+for pat in 'refusing to start X session as root' 'pipewire &' 'while true' 'dwm' 'voidwolf-status' 'XDG_RUNTIME_DIR' 'dbus' 'voidwolf-displays restore' 'gtk.env'; do
 	if grep -qF "$pat" "$xinit"; then
 		echo "OK   .xinitrc contains: $pat"
 	else

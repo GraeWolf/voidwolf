@@ -99,10 +99,30 @@ else
 	fail=1
 fi
 if rg -q 'gtk-theme-name=' "$VOIDWOLF_HOME/generated/gtk-3.0.settings.ini" \
-	&& rg -q 'accent_bg_color' "$VOIDWOLF_HOME/generated/gtk-3.0.css"; then
+	&& rg -q 'accent_bg_color' "$VOIDWOLF_HOME/generated/gtk-3.0.css" \
+	&& rg -q 'gtk-application-prefer-dark-theme=1' "$VOIDWOLF_HOME/generated/gtk-3.0.settings.ini"; then
 	echo "OK   gtk adapter content"
 else
 	echo "FAIL gtk adapter incomplete"
+	fail=1
+fi
+# Void-friendly default: themes request Yaru-dark (not only Adwaita-dark)
+if rg -q 'gtk_theme = "Yaru-dark"' "$ROOT/themes/voidwolf-dark.toml"; then
+	echo "OK   default theme prefers Yaru-dark"
+else
+	echo "FAIL voidwolf-dark should set gtk_theme Yaru-dark for Void"
+	fail=1
+fi
+if rg -q 'resolve_gtk_theme|Yaru-dark' "$ROOT/bin/voidwolf-theme"; then
+	echo "OK   theme engine resolves GTK theme on host"
+else
+	echo "FAIL voidwolf-theme missing GTK theme resolver"
+	fail=1
+fi
+if rg -q '^yaru$' "$ROOT/bootstrap/packages-desktop-required.txt"; then
+	echo "OK   yaru in desktop required packages"
+else
+	echo "FAIL yaru should be in packages-desktop-required.txt"
 	fail=1
 fi
 if [[ -f "$ROOT/config/dunst/dunstrc" ]] && rg -q 'voidwolf-dunst-v1' "$ROOT/config/dunst/dunstrc"; then

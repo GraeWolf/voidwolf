@@ -3,6 +3,20 @@
 # Package names and binary names often differ (e.g. brave-origin-bin → brave-origin-nightly).
 export PATH="${HOME}/.local/bin:${PATH}"
 
+# Dark GTK for Chromium dialogs / file choosers (Void: prefer Yaru-dark, not Adwaita-dark path)
+if [ -f "${HOME}/.config/voidwolf/gtk.env" ]; then
+	# shellcheck disable=SC1091
+	. "${HOME}/.config/voidwolf/gtk.env"
+elif [ -f "${HOME}/.config/voidwolf/generated/gtk.env" ]; then
+	# shellcheck disable=SC1091
+	. "${HOME}/.config/voidwolf/generated/gtk.env"
+else
+	export GTK_APPLICATION_PREFER_DARK_THEME=1
+	if [ -d /usr/share/themes/Yaru-dark ]; then
+		export GTK_THEME="${GTK_THEME:-Yaru-dark}"
+	fi
+fi
+
 # Prefer explicit binaries (command -v), then known install paths.
 for b in \
 	brave-origin \
