@@ -31,7 +31,8 @@ need "$ROOT/docs/packaging.md"
 need "$PKG/xbps.d/98-voidwolf-local.conf.example"
 need_x "$PKG/build-local-repo.sh"
 
-for m in voidwolf-base voidwolf-desktop voidwolf-themes voidwolf-laptop voidwolf-helpers; do
+for m in voidwolf-base voidwolf-desktop voidwolf-themes voidwolf-laptop voidwolf-helpers \
+	voidwolf-dwm voidwolf-st voidwolf-dmenu voidwolf-suckless; do
 	need "$PKG/$m/DESCRIPTION"
 done
 
@@ -61,10 +62,19 @@ if command -v xbps-create >/dev/null 2>&1 && command -v xbps-rindex >/dev/null 2
 	if VOIDWOLF_LOCAL_REPO="$tmp_repo" bash "$PKG/build-local-repo.sh" --clean >/tmp/voidwolf-pkg-build.$$.log 2>&1; then
 		echo "OK   build-local-repo real build"
 		n=$(find "$tmp_repo" -name 'voidwolf-*.xbps' | wc -l)
-		if [[ "$n" -ge 5 ]]; then
+		# PR15 metas (5) + PR16 suckless (4) = 9 when full build
+		if [[ "$n" -ge 9 ]]; then
 			echo "OK   built $n voidwolf xbps packages"
 		else
-			echo "FAIL expected >=5 xbps packages, got $n"
+			echo "FAIL expected >=9 xbps packages (meta+suckless), got $n"
+			fail=1
+		fi
+		if find "$tmp_repo" -name 'voidwolf-dwm-*.xbps' | grep -q . \
+			&& find "$tmp_repo" -name 'voidwolf-st-*.xbps' | grep -q . \
+			&& find "$tmp_repo" -name 'voidwolf-dmenu-*.xbps' | grep -q .; then
+			echo "OK   suckless binary packages present"
+		else
+			echo "FAIL missing voidwolf-dwm/st/dmenu xbps"
 			fail=1
 		fi
 		if [[ -f "$tmp_repo/x86_64-repodata" ]] || [[ -f "$tmp_repo/noarch-repodata" ]] || ls "$tmp_repo"/*-repodata >/dev/null 2>&1; then
@@ -108,10 +118,16 @@ else
 fi
 
 # docs mention local repo
-if rg -q 'build-local-repo|voidwolf-desktop|/usr/share/voidwolf' "$ROOT/docs/packaging.md"; then
+if rg -q 'build-local-repo|voidwolf-desktop|/usr/share/voidwolf|voidwolf-dwm|voidwolf-suckless' "$ROOT/docs/packaging.md"; then
 	echo "OK   packaging.md content"
 else
 	echo "FAIL packaging.md incomplete"
+	fail=1
+fi
+if rg -q 'voidwolf-dwm|build_dwm' "$PKG/build-local-repo.sh"; then
+	echo "OK   build script has suckless packages"
+else
+	echo "FAIL build-local-repo missing suckless builders"
 	fail=1
 fi
 

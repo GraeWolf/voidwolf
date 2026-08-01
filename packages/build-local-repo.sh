@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# voidwolf PR15 — build meta packages into a personal local XBPS repo
-# Requires: xbps-create, xbps-rindex (Void base / xbps)
+# voidwolf PR15/PR16 — build meta + suckless packages into a personal local XBPS repo
+# Requires: xbps-create, xbps-rindex; for suckless: gcc, make, X11/freetype headers
 # Does NOT require xbps-src or root for building into packages/repo/.
 set -euo pipefail
 
@@ -10,7 +10,6 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 source "${REPO_ROOT}/bootstrap/lib.sh"
 
 # shellcheck source=version.conf
-# version.conf is KEY=val, not shell functions
 VOIDWOLF_PKGVER=0.1.0
 VOIDWOLF_PKGREVISION=1
 # shellcheck disable=SC1091
@@ -18,7 +17,10 @@ source "${SCRIPT_DIR}/version.conf"
 
 OUT_REPO="${VOIDWOLF_LOCAL_REPO:-${SCRIPT_DIR}/repo}"
 WORK="${SCRIPT_DIR}/.build"
-ARCH="noarch"
+ARCH_NOARCH="noarch"
+ARCH_NATIVE="$(uname -m)"
+# Void uses x86_64 not amd64
+[[ "${ARCH_NATIVE}" == "amd64" ]] && ARCH_NATIVE="x86_64"
 BUILT_WITH="voidwolf-packages/build-local-repo.sh"
 HOMEPAGE="https://github.com/GraeWolf/voidwolf"
 LICENSE="MIT"
@@ -27,25 +29,29 @@ MAINTAINER="voidwolf <voidwolf@localhost>"
 ONLY=""
 DRY_RUN=0
 CLEAN=0
+SKIP_SUCKLESS=0
 
 usage() {
 	cat <<'EOF'
 Usage: packages/build-local-repo.sh [options]
 
-Build voidwolf meta packages (noarch) into a local XBPS repository directory.
+Build voidwolf packages into a local XBPS repository directory.
+
+Meta (noarch):  voidwolf-base|desktop|themes|laptop|helpers
+Suckless (native arch): voidwolf-dwm|st|dmenu|suckless
 
 Options:
-  --repo DIR       Output repo (default: packages/repo)
-  --only NAME      Build one: voidwolf-base|desktop|themes|laptop|helpers
-  --clean          Remove packages/.build and rebuild
-  --dry-run        Print xbps-create lines only
+  --repo DIR         Output repo (default: packages/repo)
+  --only NAME        Build one package name
+  --skip-suckless    Only meta packages (PR15 set)
+  --clean            Remove packages/.build and rebuild
+  --dry-run          Print xbps-create lines only
   -h, --help
 
 After build:
-  # optional: point XBPS at the repo (absolute path)
   printf 'repository=%s\n' "$PWD/packages/repo" | sudo tee /etc/xbps.d/98-voidwolf-local.conf
   sudo xbps-install -S
-  sudo xbps-install -y voidwolf-desktop voidwolf-themes voidwolf-helpers
+  sudo xbps-install -y voidwolf-desktop voidwolf-helpers voidwolf-suckless
 
 See docs/packaging.md
 EOF
@@ -55,6 +61,7 @@ while [[ $# -gt 0 ]]; do
 	case "$1" in
 		--repo) OUT_REPO="${2:-}"; shift ;;
 		--only) ONLY="${2:-}"; shift ;;
+		--skip-suckless) SKIP_SUCKLESS=1 ;;
 		--clean) CLEAN=1 ;;
 		--dry-run) DRY_RUN=1 ;;
 		-h|--help) usage; exit 0 ;;
@@ -201,27 +208,172 @@ build_helpers() {
 	printf '%s\n' "${PKGVER_FULL}" >"${dest}/usr/share/voidwolf/helpers-version"
 	# soft dep: voidwolf-themes for /usr/share themes; scripts still work from git
 	create_pkg "$name" "$dest" "voidwolf-themes>=${VOIDWOLF_PKGVER}" \
-		"voidwolf helper scripts (/usr/bin/voidwolf-*)"
+		"voidwolf helper scripts (/usr/bin/voidwolf-*)" "$ARCH_NOARCH"
+}
+
+# Runtime deps for X11 suckless tools (Void package names; devel only needed at build host)
+SUCKLESS_RUN_DEPS="libX11 libXft libXinerama fontconfig freetype"
+
+# --- PR16: voidwolf-dwm ---
+build_dwm() {
+	local name="voidwolf-dwm"
+	local dest="${WORK}/${name}"
+	local src="${REPO_ROOT}/suckless/dwm"
+	[[ -d "$src" ]] || voidwolf_die "missing $src"
+	[[ -f "${src}/config.h" ]] || voidwolf_die "missing ${src}/config.h"
+	[[ -f "${src}/colors.h" ]] || voidwolf_die "missing ${src}/colors.h (run voidwolf-theme once)"
+
+	rm -rf "$dest"
+	mkdir -p "$dest"
+	stage_doc "$dest" "$name" "${SCRIPT_DIR}/${name}/DESCRIPTION"
+
+	if [[ "${DRY_RUN}" -eq 1 ]]; then
+		voidwolf_log "[dry-run] make -C suckless/dwm install PREFIX=/usr DESTDIR=..."
+		create_pkg "$name" "$dest" "${SUCKLESS_RUN_DEPS}" \
+			"voidwolf dwm (patched) → /usr/bin/dwm" "$ARCH_NATIVE"
+		return 0
+	fi
+
+	voidwolf_log "Compile dwm (PREFIX=/usr DESTDIR staging)"
+	(
+		cd "$src"
+		make clean >/dev/null 2>&1 || true
+		make -j"$(nproc 2>/dev/null || echo 2)" PREFIX=/usr
+		make install PREFIX=/usr DESTDIR="$dest"
+		make clean >/dev/null 2>&1 || true
+	)
+	# Example configs for user rebuild to ~/.local (theme engine)
+	mkdir -p "${dest}/usr/share/voidwolf/examples/dwm"
+	install -m 0644 "${src}/config.h" "${dest}/usr/share/voidwolf/examples/dwm/config.h"
+	install -m 0644 "${src}/colors.h" "${dest}/usr/share/voidwolf/examples/dwm/colors.h"
+	printf '%s\n' "${PKGVER_FULL}" >"${dest}/usr/share/voidwolf/dwm-version"
+	# PATH note
+	{
+		echo "System binary: /usr/bin/dwm"
+		echo "Themed rebuilds: ./bootstrap/build-suckless.sh → ~/.local/bin/dwm (preferred on PATH)"
+	} >"${dest}/usr/share/doc/${name}/PATH.txt"
+
+	create_pkg "$name" "$dest" "${SUCKLESS_RUN_DEPS}" \
+		"voidwolf dwm (patched Phase 1+3) → /usr/bin/dwm" "$ARCH_NATIVE"
+}
+
+# --- PR16: voidwolf-st ---
+build_st() {
+	local name="voidwolf-st"
+	local dest="${WORK}/${name}"
+	local src="${REPO_ROOT}/suckless/st"
+	[[ -d "$src" ]] || voidwolf_die "missing $src"
+	[[ -f "${src}/config.h" ]] || voidwolf_die "missing ${src}/config.h"
+
+	rm -rf "$dest"
+	mkdir -p "$dest"
+	stage_doc "$dest" "$name" "${SCRIPT_DIR}/${name}/DESCRIPTION"
+
+	if [[ "${DRY_RUN}" -eq 1 ]]; then
+		voidwolf_log "[dry-run] make -C suckless/st + package terminfo"
+		create_pkg "$name" "$dest" "${SUCKLESS_RUN_DEPS}" \
+			"voidwolf st (xresources+scrollback) → /usr/bin/st" "$ARCH_NATIVE"
+		return 0
+	fi
+
+	voidwolf_log "Compile st (PREFIX=/usr DESTDIR staging)"
+	(
+		cd "$src"
+		make clean >/dev/null 2>&1 || true
+		make -j"$(nproc 2>/dev/null || echo 2)" PREFIX=/usr
+		# Manual install: avoid bare `tic` writing outside DESTDIR
+		mkdir -p "${dest}/usr/bin" "${dest}/usr/share/man/man1" "${dest}/usr/share/terminfo"
+		install -m 0755 st "${dest}/usr/bin/st"
+		sed "s/VERSION/$(cat VERSION 2>/dev/null || echo 0.9.2)/g" <st.1 \
+			>"${dest}/usr/share/man/man1/st.1"
+		chmod 644 "${dest}/usr/share/man/man1/st.1"
+		# compile terminfo into package
+		if command -v tic >/dev/null 2>&1; then
+			tic -o "${dest}/usr/share/terminfo" -x st.info 2>/dev/null \
+				|| tic -o "${dest}/usr/share/terminfo" st.info 2>/dev/null \
+				|| voidwolf_warn "tic failed; st terminfo not packaged"
+		fi
+		make clean >/dev/null 2>&1 || true
+	)
+	mkdir -p "${dest}/usr/share/voidwolf/examples/st"
+	install -m 0644 "${src}/config.h" "${dest}/usr/share/voidwolf/examples/st/config.h"
+	printf '%s\n' "${PKGVER_FULL}" >"${dest}/usr/share/voidwolf/st-version"
+
+	create_pkg "$name" "$dest" "${SUCKLESS_RUN_DEPS}" \
+		"voidwolf st (xresources+scrollback) → /usr/bin/st" "$ARCH_NATIVE"
+}
+
+# --- PR16: voidwolf-dmenu ---
+build_dmenu() {
+	local name="voidwolf-dmenu"
+	local dest="${WORK}/${name}"
+	local src="${REPO_ROOT}/suckless/dmenu"
+	[[ -d "$src" ]] || voidwolf_die "missing $src"
+	[[ -f "${src}/config.h" ]] || voidwolf_die "missing ${src}/config.h"
+
+	rm -rf "$dest"
+	mkdir -p "$dest"
+	stage_doc "$dest" "$name" "${SCRIPT_DIR}/${name}/DESCRIPTION"
+
+	if [[ "${DRY_RUN}" -eq 1 ]]; then
+		voidwolf_log "[dry-run] make -C suckless/dmenu install PREFIX=/usr DESTDIR=..."
+		create_pkg "$name" "$dest" "${SUCKLESS_RUN_DEPS}" \
+			"voidwolf dmenu → /usr/bin/dmenu" "$ARCH_NATIVE"
+		return 0
+	fi
+
+	voidwolf_log "Compile dmenu (PREFIX=/usr DESTDIR staging)"
+	(
+		cd "$src"
+		make clean >/dev/null 2>&1 || true
+		make -j"$(nproc 2>/dev/null || echo 2)" PREFIX=/usr
+		make install PREFIX=/usr DESTDIR="$dest"
+		make clean >/dev/null 2>&1 || true
+	)
+	mkdir -p "${dest}/usr/share/voidwolf/examples/dmenu"
+	install -m 0644 "${src}/config.h" "${dest}/usr/share/voidwolf/examples/dmenu/config.h"
+	printf '%s\n' "${PKGVER_FULL}" >"${dest}/usr/share/voidwolf/dmenu-version"
+
+	create_pkg "$name" "$dest" "${SUCKLESS_RUN_DEPS}" \
+		"voidwolf dmenu (+ dmenu_run/path, stest) → /usr/bin" "$ARCH_NATIVE"
+}
+
+# --- PR16: voidwolf-suckless meta ---
+build_suckless_meta() {
+	local name="voidwolf-suckless"
+	local dest="${WORK}/${name}"
+	local deps="voidwolf-dwm>=${VOIDWOLF_PKGVER} voidwolf-st>=${VOIDWOLF_PKGVER} voidwolf-dmenu>=${VOIDWOLF_PKGVER}"
+	rm -rf "$dest"
+	mkdir -p "$dest"
+	stage_doc "$dest" "$name" "${SCRIPT_DIR}/${name}/DESCRIPTION"
+	mkdir -p "${dest}/usr/share/voidwolf"
+	printf '%s\n' "${PKGVER_FULL}" >"${dest}/usr/share/voidwolf/suckless-version"
+	{
+		echo "Pulls voidwolf-dwm, voidwolf-st, voidwolf-dmenu."
+		echo "User-themed rebuilds still install to ~/.local/bin (PATH preference)."
+	} >"${dest}/usr/share/doc/${name}/PATH.txt"
+	create_pkg "$name" "$dest" "$deps" "voidwolf suckless set (dwm+st+dmenu)" "$ARCH_NOARCH"
 }
 
 create_pkg() {
 	local name="$1" dest="$2" deps="$3" summary="$4"
+	local arch="${5:-$ARCH_NOARCH}"
 	local pkgver="${name}-${PKGVER_FULL}"
-	local out_xbps="${OUT_REPO}/${pkgver}.${ARCH}.xbps"
+	local out_xbps="${OUT_REPO}/${pkgver}.${arch}.xbps"
 	local desc
 	desc="$(tr '\n' ' ' <"${SCRIPT_DIR}/${name}/DESCRIPTION" | sed 's/[[:space:]]\+/ /g' | cut -c1-180)"
 
-	voidwolf_log "Package ${pkgver} (${ARCH})"
+	voidwolf_log "Package ${pkgver} (${arch})"
 	if [[ "${DRY_RUN}" -eq 1 ]]; then
-		printf '[dry-run] xbps-create -A %s -n %s -s %q -S %q -D %q -m %q -H %q -l %s %s\n' \
-			"$ARCH" "$pkgver" "$summary" "$desc" "${deps:-}" "$MAINTAINER" "$HOMEPAGE" "$LICENSE" "$dest"
+		printf '[dry-run] xbps-create -A %s -n %s -s %q -S %q -D %q … %s\n' \
+			"$arch" "$pkgver" "$summary" "$desc" "${deps:-}" "$dest"
 		return 0
 	fi
 
 	mkdir -p "$OUT_REPO"
 	local -a cmd=(
 		xbps-create
-		-A "$ARCH"
+		-A "$arch"
 		-n "$pkgver"
 		-s "$summary"
 		-S "$desc"
@@ -242,6 +394,7 @@ create_pkg() {
 	voidwolf_log "Created ${out_xbps}"
 }
 
+# Fix meta packages to pass ARCH_NOARCH explicitly (updated create_pkg signature)
 # --- main ---
 if [[ "${CLEAN}" -eq 1 ]]; then
 	voidwolf_log "Clean ${WORK}"
@@ -249,7 +402,20 @@ if [[ "${CLEAN}" -eq 1 ]]; then
 fi
 mkdir -p "$WORK" "$OUT_REPO"
 
-pkgs=(voidwolf-base voidwolf-themes voidwolf-desktop voidwolf-laptop voidwolf-helpers)
+pkgs=(
+	voidwolf-base
+	voidwolf-themes
+	voidwolf-desktop
+	voidwolf-laptop
+	voidwolf-helpers
+	voidwolf-dwm
+	voidwolf-st
+	voidwolf-dmenu
+	voidwolf-suckless
+)
+if [[ "${SKIP_SUCKLESS}" -eq 1 ]]; then
+	pkgs=(voidwolf-base voidwolf-themes voidwolf-desktop voidwolf-laptop voidwolf-helpers)
+fi
 if [[ -n "$ONLY" ]]; then
 	pkgs=("$ONLY")
 fi
@@ -261,13 +427,16 @@ for p in "${pkgs[@]}"; do
 		voidwolf-desktop) build_desktop ;;
 		voidwolf-laptop) build_laptop ;;
 		voidwolf-helpers) build_helpers ;;
+		voidwolf-dwm) build_dwm ;;
+		voidwolf-st) build_st ;;
+		voidwolf-dmenu) build_dmenu ;;
+		voidwolf-suckless) build_suckless_meta ;;
 		*) voidwolf_die "unknown package: $p" ;;
 	esac
 done
 
 if [[ "${DRY_RUN}" -eq 0 ]]; then
 	voidwolf_log "Indexing repo ${OUT_REPO}"
-	# force re-add
 	xbps-rindex -f -a "${OUT_REPO}"/*.xbps
 	voidwolf_log "Local repo ready: ${OUT_REPO}"
 	voidwolf_log "Packages:"

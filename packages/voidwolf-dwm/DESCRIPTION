@@ -1,0 +1,1 @@
+voidwolf-patched dwm (focusdir, movestack, actualfullscreen, restartsig, vanitygaps, scratchpad, sticky, attachaside). Installs /usr/bin/dwm. Themed rebuilds still use PREFIX=$HOME/.local when on PATH first.

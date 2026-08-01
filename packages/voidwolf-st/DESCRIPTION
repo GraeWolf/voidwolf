@@ -1,0 +1,1 @@
+voidwolf-patched st (xresources + scrollback). Installs /usr/bin/st and terminfo. New windows pick up xrdb colors from voidwolf-theme.

@@ -1,8 +1,8 @@
-# Packaging (Phase 4 / PR15)
+# Packaging (Phase 4 / PR15–PR16)
 
 Personal **local XBPS** packages for voidwolf. No public signing service required.
 
-## Meta packages
+## Meta packages (PR15)
 
 | Package | Role |
 |---------|------|
@@ -12,22 +12,43 @@ Personal **local XBPS** packages for voidwolf. No public signing service require
 | **voidwolf-laptop** | Deps: desktop + `packages-laptop.txt` (brightnessctl, tlp) |
 | **voidwolf-helpers** | `bin/voidwolf-*` → `/usr/bin` (depends on themes) |
 
-**Not** in these metas (by design):
+## Suckless packages (PR16)
+
+| Package | Arch | Installs |
+|---------|------|----------|
+| **voidwolf-dwm** | native | `/usr/bin/dwm` + man + example `config.h`/`colors.h` |
+| **voidwolf-st** | native | `/usr/bin/st` + man + terminfo |
+| **voidwolf-dmenu** | native | `/usr/bin/dmenu{,_run,_path}`, `stest` |
+| **voidwolf-suckless** | noarch meta | depends on the three above |
+
+Runtime deps: `libX11 libXft libXinerama fontconfig freetype`.
+
+### PATH coexistence (locked design)
+
+| Location | Who |
+|----------|-----|
+| `/usr/bin/dwm` (package) | System default from voidwolf-dwm |
+| `~/.local/bin/dwm` (user rebuild) | **Preferred** when `PATH` has `~/.local/bin` first — theme rebuilds never need sudo |
+
+`voidwolf-theme` still rebuilds into `$HOME/.local` from the git tree (or copy examples from `/usr/share/voidwolf/examples/`).
+
+**Not** in these packages (by design):
 
 | Piece | Why |
 |-------|-----|
 | Brave (`brave-origin`) | Third-party vw-repo; install separately |
 | NVIDIA stack | Hardware profile; use bootstrap `--gpu` |
-| dwm/st/dmenu binaries | **PR16** suckless packages; until then use `build-suckless.sh` → `~/.local` |
 
 ## Build local repo
 
 ```bash
 # from repo root (no root required for build)
+# needs gcc/make + X11 devel headers for suckless packages
 ./packages/build-local-repo.sh
 # → packages/repo/*.xbps + repodata
 
-./packages/build-local-repo.sh --only voidwolf-themes
+./packages/build-local-repo.sh --only voidwolf-dwm
+./packages/build-local-repo.sh --skip-suckless   # metas only
 ./packages/build-local-repo.sh --clean
 ./packages/build-local-repo.sh --dry-run
 ```
@@ -42,7 +63,7 @@ repo="$(cd packages/repo && pwd)"
 printf 'repository=%s\n' "$repo" | sudo tee /etc/xbps.d/98-voidwolf-local.conf
 
 sudo xbps-install -S
-sudo xbps-install -y voidwolf-desktop voidwolf-helpers
+sudo xbps-install -y voidwolf-desktop voidwolf-helpers voidwolf-suckless
 
 # laptop extras
 sudo xbps-install -y voidwolf-laptop
@@ -105,4 +126,4 @@ packages/
 
 - [bootstrap.md](bootstrap.md)  
 - [design.md](design.md) — Phase 4  
-- PR16: suckless binary packages (`voidwolf-dwm`, …)
+- PR17: ISO scaffolding (after packaging)
