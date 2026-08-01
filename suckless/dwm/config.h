@@ -1,4 +1,14 @@
-/* voidwolf dwm config — Mod4 Omarchy-inspired binds (Phase 1 core + PR4 patches)
+/* voidwolf dwm config — Mod4 Omarchy-inspired keybinds
+ *
+ * PR6 core map is authoritative here; docs/keybindings.md mirrors it.
+ * Lint: ./tests/keybind-lint.sh
+ *
+ * Policy locks:
+ *   - MODKEY = Super (Mod4)
+ *   - Super+K = cheatsheet only (never focus)
+ *   - Super+L = focusdir right only (never layout)
+ *   - Super+Shift+L = layout toggle
+ *
  * Fonts live here (not themed). Colors come from colors.h (theme-generated).
  */
 
@@ -94,7 +104,8 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_f,      togglefullscr,  {0} },
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
 
-	/* focusdir: 0=left 1=right 2=up 3=down — Super+L is focus right ONLY */
+	/* === PR6 CORE: focusdir (0=left 1=right 2=up 3=down) ===
+	 * Super+L = right ONLY. Super+K is cheatsheet (above), never focus. */
 	{ MODKEY,                       XK_h,      focusdir,       {.i = 0 } },
 	{ MODKEY,                       XK_l,      focusdir,       {.i = 1 } },
 	{ MODKEY,                       XK_j,      focusdir,       {.i = 3 } },
@@ -102,6 +113,10 @@ static const Key keys[] = {
 	{ MODKEY,                       XK_Right,  focusdir,       {.i = 1 } },
 	{ MODKEY,                       XK_Up,     focusdir,       {.i = 2 } },
 	{ MODKEY,                       XK_Down,   focusdir,       {.i = 3 } },
+
+	/* Alt+Tab window cycle (design: retained; uses focusstack) */
+	{ Mod1Mask,                     XK_Tab,    focusstack,     {.i = +1 } },
+	{ Mod1Mask|ShiftMask,           XK_Tab,    focusstack,     {.i = -1 } },
 
 	/* movestack (not Super+Shift+L — that is layout) */
 	{ MODKEY|ShiftMask,             XK_h,      movestack,      {.i = -1 } },

@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# keybind-lint — enforce voidwolf core dwm keybind policy (PR6)
+# Parses suckless/dwm/config.h for required binds and forbidden collisions.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CFG="${ROOT}/suckless/dwm/config.h"
+fail=0
+
+if [[ ! -f "$CFG" ]]; then
+	echo "FAIL missing $CFG"
+	exit 1
+fi
+
+echo "Linting $CFG"
+
+need_re() {
+	local desc="$1" re="$2"
+	if rg -q "$re" "$CFG"; then
+		echo "OK   $desc"
+	else
+		echo "FAIL missing: $desc"
+		echo "     pattern: $re"
+		fail=1
+	fi
+}
+
+forbid_re() {
+	local desc="$1" re="$2"
+	if rg -q "$re" "$CFG"; then
+		echo "FAIL forbidden: $desc"
+		echo "     pattern: $re"
+		fail=1
+	else
+		echo "OK   not present: $desc"
+	fi
+}
+
+# --- policy locks ---
+need_re "MODKEY is Mod4Mask (Super)" \
+	'^#define MODKEY Mod4Mask'
+
+# Super+K must be cheatsheet spawn, never focusdir/focusstack
+need_re "Super+K cheatsheet (spawn cheatcmd)" \
+	'MODKEY,\s+XK_k,\s+spawn,.*cheatcmd|MODKEY,\s+XK_k,\s+spawn,.*voidwolf-cheatsheet|MODKEY,\s+XK_k,\s+spawn,.*\{\.v = cheatcmd'
+# Also accept XK_k with cheatcmd nearby - our config uses cheatcmd
+if ! rg -n 'XK_k' "$CFG" | rg -q 'spawn'; then
+	echo "FAIL Super+K must spawn (cheatsheet), not focus"
+	fail=1
+fi
+# Ensure no focusdir/focusstack on bare MODKEY XK_k
+if rg -n 'MODKEY,\s+XK_k,' "$CFG" | rg -q 'focusdir|focusstack'; then
+	echo "FAIL Super+K must not call focusdir/focusstack"
+	fail=1
+else
+	echo "OK   Super+K is not focusdir/focusstack"
+fi
+
+# Super+L is focusdir right only — must be focusdir, not setlayout
+need_re "Super+L focusdir" \
+	'MODKEY,\s+XK_l,\s+focusdir'
+if rg -n 'MODKEY,\s+XK_l,' "$CFG" | rg -q 'setlayout'; then
+	echo "FAIL Super+L must not be setlayout (layout is Super+Shift+L)"
+	fail=1
+else
+	echo "OK   Super+L is not setlayout"
+fi
+
+# Super+Shift+L is layout
+need_re "Super+Shift+L layout (setlayout)" \
+	'MODKEY\|ShiftMask,\s+XK_l,\s+setlayout'
+
+# Core launch family
+need_re "Super+Return terminal" 'MODKEY,\s+XK_Return,\s+spawn,.*termcmd'
+need_re "Super+Shift+Return browser" 'MODKEY\|ShiftMask,\s+XK_Return,\s+spawn,.*browser'
+need_re "Super+Space launcher" 'MODKEY,\s+XK_space,\s+spawn,.*launcher'
+need_re "Super+Alt+Space menu" 'MODKEY\|Mod1Mask,\s+XK_space,\s+spawn,.*vwmenu'
+need_re "Super+Escape system menu" 'MODKEY,\s+XK_Escape,\s+spawn,.*sysmenu'
+need_re "Super+Ctrl+L lock" 'MODKEY\|ControlMask,\s+XK_l,\s+spawn,.*lockcmd'
+
+# Client
+need_re "Super+W killclient" 'MODKEY,\s+XK_w,\s+killclient'
+need_re "Super+T togglefloating" 'MODKEY,\s+XK_t,\s+togglefloating'
+need_re "Super+F togglefullscr" 'MODKEY,\s+XK_f,\s+togglefullscr'
+
+# focusdir arrows + hjkl (j down, h left, l right; k reserved)
+need_re "Super+H focusdir" 'MODKEY,\s+XK_h,\s+focusdir'
+need_re "Super+J focusdir" 'MODKEY,\s+XK_j,\s+focusdir'
+need_re "Super+Left focusdir" 'MODKEY,\s+XK_Left,\s+focusdir'
+need_re "Super+Right focusdir" 'MODKEY,\s+XK_Right,\s+focusdir'
+need_re "Super+Up focusdir" 'MODKEY,\s+XK_Up,\s+focusdir'
+need_re "Super+Down focusdir" 'MODKEY,\s+XK_Down,\s+focusdir'
+
+# Tags 1-9 via TAGKEYS
+need_re "TAGKEYS 1" 'TAGKEYS\(\s*XK_1,'
+need_re "TAGKEYS 9" 'TAGKEYS\(\s*XK_9,'
+
+# Theme / wallpaper stubs
+need_re "theme pick bind" 'themecmd|voidwolf-theme'
+need_re "wallpaper pick bind" 'wallcmd|voidwolf-wallpaper'
+
+# Commands array must reference helpers
+for cmd in termcmd browser launcher vwmenu sysmenu lockcmd cheatcmd; do
+	need_re "command $cmd defined" "static const char \*${cmd}\["
+done
+
+# No stock Mod1 as MODKEY
+forbid_re "MODKEY must not be Mod1Mask" '^#define MODKEY Mod1Mask'
+
+if [[ "$fail" -ne 0 ]]; then
+	echo "keybind-lint: FAILED"
+	exit 1
+fi
+echo "keybind-lint: all OK (core PR6 policy)"

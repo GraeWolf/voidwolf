@@ -44,7 +44,7 @@ See [docs/design.md](docs/design.md) for the full architecture, keybind map, the
 | Phase | Goal | State |
 |-------|------|--------|
 | 0 | Design | **Done** ([docs/design.md](docs/design.md)) |
-| 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | In progress (PR1–5: through session/startx stack) |
+| 1 | Bootstrap on existing Void (XLibre, dwm, st, session) | In progress (PR1–6: through core keybinds) |
 | 2 | Theming engine | Planned |
 | 3 | Opinionated desktop polish | Planned |
 | 4 | XBPS meta-packages | Planned |

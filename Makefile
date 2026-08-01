@@ -38,3 +38,4 @@ test: ## Run tests/ checks
 	@./tests/repos-pins-validate.sh
 	@./tests/package-lists-validate.sh
 	@./tests/session-files-validate.sh
+	@./tests/keybind-lint.sh
