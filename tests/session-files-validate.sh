@@ -31,6 +31,18 @@ for pat in 'refusing to start X session as root' 'pipewire &' 'while true' 'dwm'
 	fi
 done
 
+# Clean quit must end X (dwm && break), not restart (dwm || break)
+if grep -qE 'dwm[[:space:]]+&&[[:space:]]+break' "$xinit"; then
+	echo "OK   .xinitrc clean-quit loop (dwm && break)"
+else
+	echo "FAIL .xinitrc must use 'dwm && break' so Super+Shift+Q ends the session"
+	fail=1
+fi
+if grep -vE '^[[:space:]]*#' "$xinit" | grep -qE 'dwm[[:space:]]+\|\|[[:space:]]+break'; then
+	echo "FAIL .xinitrc must not use 'dwm || break' (restarts on clean quit)"
+	fail=1
+fi
+
 # Must not start wireplumber/pipewire-pulse as siblings
 if grep -E '^\s*(wireplumber|pipewire-pulse)\s+&' "$xinit"; then
 	echo "FAIL .xinitrc must not start wireplumber/pipewire-pulse as siblings"

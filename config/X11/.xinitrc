@@ -65,10 +65,15 @@ command -v voidwolf-wallpaper >/dev/null 2>&1 && voidwolf-wallpaper restore &
 # Optional compositor (default OFF — design)
 # command -v picom >/dev/null 2>&1 && picom -b
 
-# dwm loop: re-exec (restartsig / theme rebuild) continues; hard failure ends X
+# dwm loop:
+#   exit 0  (Super+Shift+Q / clean logout) → break → end X session
+#   non-zero (crash) → restart dwm, keep X alive
+# Theme rebuild uses restartsig (SIGHUP / Super+Ctrl+Shift+Q) which exec's
+# inside dwm and never returns here. Inverted shell logic (OR-break on dwm)
+# restarts after a clean quit and looks like Super+Shift+Q "does nothing".
 while true; do
 	if command -v dwm >/dev/null 2>&1; then
-		dwm || break
+		dwm && break
 	else
 		echo "voidwolf: dwm not found on PATH (run ./bootstrap/build-suckless.sh)" >&2
 		break

@@ -314,7 +314,7 @@ sequenceDiagram
   Init->>DB: dbus-run-session / session bus ensure
   Init->>Init: pipewire & only (WP + pulse via conf.d)
   Init->>Init: dunst, voidwolf-status, wallpaper
-  Init->>WM: while true; do dwm || break; done
+  Init->>WM: while true; do dwm && break; done
   Note over WM: re-exec dwm after theme rebuild; exit non-zero/break ends X
 ```
 
@@ -413,9 +413,10 @@ voidwolf-status &
 
 voidwolf-wallpaper restore &
 
-# Default session loop: theme apply re-execs dwm without ending X
+# Session loop: clean quit (exit 0) ends X; crash restarts dwm.
+# Theme rebuild uses restartsig in-process exec (not this loop).
 while true; do
-  dwm || break
+  dwm && break
 done
 ```
 
@@ -431,7 +432,7 @@ fi
 #### Session lifecycle rules
 
 1. **Single seat, single X** in Phase 1.
-2. **dwm exit with failure / break** → leave loop → X ends → TTY. Clean `dwm` re-exec (restartsig/selfrestart after theme build) continues the loop.
+2. **dwm exit 0** (Super+Shift+Q / intentional logout) → leave loop → X ends → TTY. **dwm non-zero** (crash) → restart dwm, keep X. Theme rebuild uses restartsig/selfrestart **in-process** (`exec`), not the shell loop.
 3. **Lock** does not stop services; `voidwolf-lock` uses **xsecurelock** (or slock fallback).
 4. **Suspend**: system menu **default path is lock-then-suspend** (`voidwolf-lock` then `loginctl suspend`, or `zzz` if loginctl unavailable). Separate “Suspend without lock” is not offered in Phase 1.
 5. **Theme switch**: generate artifacts → hash short-circuit rebuild of dwm if `colors.h` changed → re-exec dwm; `xrdb` for st (**new terminals only** unless USR1 patch later).

@@ -57,7 +57,7 @@ Live host notes: [dogfood.md](dogfood.md).
 4. `xrdb` base + generated theme.
 5. `pipewire &` only — **not** wireplumber/pipewire-pulse siblings.
 6. dunst, voidwolf-status, wallpaper.
-7. `while true; do dwm || break; done` so theme re-exec keeps X alive.
+7. `while true; do dwm && break; done` — clean quit (exit 0) ends X; crash (non-zero) restarts dwm. Theme rebuild uses in-process restartsig, not this loop.
 
 ## Auto-startx (default OFF)
 
@@ -89,6 +89,7 @@ wpctl status
 | dwm missing | `build-suckless.sh`, `PATH` has `~/.local/bin` |
 | Bar empty | `voidwolf-status` on PATH? `xsetroot` installed? |
 | Root X refused | correct — do not `startx` as root |
+| Super+Shift+Q “does nothing” / windows jump | Old loop was `dwm \|\| break` (restarts on clean quit). Need `dwm && break` in `~/.xinitrc` |
 
 ## Related
 
