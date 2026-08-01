@@ -434,8 +434,15 @@ def apply_adapters(data: dict, *, rebuild_dwm: bool = True) -> None:
 
     if rebuild_dwm and need_build:
         build_script = repo_root() / "bootstrap" / "build-suckless.sh"
+        dwm_dir = repo_root() / "suckless" / "dwm"
         if build_script.is_file():
             print("==> rebuilding dwm (colors.h changed, PREFIX=$HOME/.local, no sudo)")
+            # Force recompile even if an old Makefile missed colors.h deps
+            for stale in ("dwm.o", "dwm"):
+                try:
+                    (dwm_dir / stale).unlink(missing_ok=True)
+                except OSError:
+                    pass
             r = subprocess.run(
                 [str(build_script), "--dwm-only", "--no-clean"],
                 env={**os.environ, "PREFIX": str(Path.home() / ".local")},
@@ -444,9 +451,10 @@ def apply_adapters(data: dict, *, rebuild_dwm: bool = True) -> None:
                 print("voidwolf-theme: dwm rebuild failed", file=sys.stderr)
                 sys.exit(3)
         atomic_write(hash_file, content_hash + "\n")
-        # re-exec dwm if running
+        # re-exec dwm if running (restartsig: SIGHUP → exec new binary)
         if os.environ.get("DISPLAY"):
             subprocess.run(["pkill", "-HUP", "-x", "dwm"], check=False)
+            print("==> dwm re-exec (SIGHUP) for new bar/border colors")
     else:
         if not need_build:
             print("==> colors.h unchanged (skip rebuild)")
@@ -454,13 +462,14 @@ def apply_adapters(data: dict, *, rebuild_dwm: bool = True) -> None:
             print("==> skip dwm rebuild (VOIDWOLF_THEME_SKIP_REBUILD or rebuild_dwm=False)")
         atomic_write(hash_file, content_hash + "\n")
 
-    # xrdb
+    # xrdb (st reads at startup — existing st windows keep old colors)
     if os.environ.get("DISPLAY"):
         xres_path = gen / "theme.Xresources"
         base = Path.home() / ".Xresources"
         if base.is_file():
             subprocess.run(["xrdb", "-merge", str(base)], check=False)
         subprocess.run(["xrdb", "-merge", str(xres_path)], check=False)
+        print("==> xrdb merged (open a new st for terminal colors)")
 
     # wallpaper
     wall_rel = (data.get("meta") or {}).get("wallpaper")

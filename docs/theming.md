@@ -62,6 +62,8 @@ Preset walls (PR14): `gruvbox.png`, `catppuccin-mocha.png`, `nord.png`, `rose-pi
    - `~/.config/gtk-4.0/{settings.ini,gtk.css}`
 9. Reload dunst (`dunstctl reload` / HUP)
 10. Set wallpaper via `voidwolf-wallpaper set` when path resolves
+11. If `colors.h` hash changed: force-recompile `dwm` (depends on `colors.h`) and `SIGHUP` to re-exec
+12. `xrdb -merge` theme Xresources — **new** `st` windows pick up colors; existing st keep the old palette
 
 `VOIDWOLF_HOME` defaults to `~/.config/voidwolf`.
 
