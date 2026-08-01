@@ -183,9 +183,11 @@ install_nvim_tree() {
 	fi
 	mkdir -p "${dest}/lua/voidwolf"
 	install -m 0644 "${src}/init.lua" "${dest}/init.lua"
+	# install every module under lua/voidwolf/ (options, keymaps, autocmds, colors, …)
 	local f
-	for f in options keymaps autocmds; do
-		install -m 0644 "${src}/lua/voidwolf/${f}.lua" "${dest}/lua/voidwolf/${f}.lua"
+	for f in "${src}/lua/voidwolf/"*.lua; do
+		[[ -f "$f" ]] || continue
+		install -m 0644 "$f" "${dest}/lua/voidwolf/$(basename "$f")"
 	done
 }
 
