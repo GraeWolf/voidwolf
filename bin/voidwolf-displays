@@ -7,6 +7,9 @@ cmd="${1:-pick}"
 
 vw_home="${VOIDWOLF_HOME:-${HOME}/.config/voidwolf}"
 user_dir="${vw_home}/displays"
+# Optional session default: symlink or script named default.sh
+default_script="${user_dir}/default.sh"
+last_applied="${vw_home}/displays/.last-applied"
 repo_examples=""
 
 if [ -f "${vw_home}/repo-root" ]; then
@@ -45,6 +48,7 @@ list_examples() {
 
 apply_script() {
 	path="$1"
+	quiet="${2:-}"
 	[ -f "$path" ] || { echo "voidwolf-displays: not found: $path" >&2; return 1; }
 	if ! command -v xrandr >/dev/null 2>&1; then
 		echo "voidwolf-displays: xrandr not found" >&2
@@ -53,13 +57,43 @@ apply_script() {
 	echo "voidwolf-displays: apply $path"
 	# shellcheck disable=SC1090
 	if sh "$path"; then
-		notify "Applied $(basename "$path")"
+		# remember for session restore
+		mkdir -p "$user_dir" 2>/dev/null || true
+		printf '%s\n' "$(readlink -f "$path" 2>/dev/null || echo "$path")" >"$last_applied" 2>/dev/null || true
+		[ "$quiet" = "quiet" ] || notify "Applied $(basename "$path")"
 		# optional wallpaper refresh after mode change
 		command -v voidwolf-wallpaper >/dev/null 2>&1 && voidwolf-wallpaper restore >/dev/null 2>&1 || true
 		return 0
 	fi
-	notify "Failed: $(basename "$path")"
+	[ "$quiet" = "quiet" ] || notify "Failed: $(basename "$path")"
 	return 1
+}
+
+# Session start / manual: apply default.sh, else last-applied, else no-op
+restore_layout() {
+	if [ -n "${VOIDWOLF_DISPLAY_PRESET:-}" ]; then
+		name=$VOIDWOLF_DISPLAY_PRESET
+		if [ -f "${user_dir}/${name}" ]; then
+			apply_script "${user_dir}/${name}" quiet
+			return $?
+		fi
+		if [ -f "${user_dir}/${name}.sh" ]; then
+			apply_script "${user_dir}/${name}.sh" quiet
+			return $?
+		fi
+	fi
+	if [ -e "$default_script" ]; then
+		apply_script "$default_script" quiet
+		return $?
+	fi
+	if [ -f "$last_applied" ]; then
+		path=$(cat "$last_applied" 2>/dev/null)
+		if [ -n "$path" ] && [ -f "$path" ]; then
+			apply_script "$path" quiet
+			return $?
+		fi
+	fi
+	return 0
 }
 
 show_xrandr() {
@@ -76,6 +110,29 @@ case "$cmd" in
 		list_presets
 		echo "# examples ($repo_examples)"
 		list_examples
+		if [ -e "$default_script" ]; then
+			echo "# default → $(readlink -f "$default_script" 2>/dev/null || echo "$default_script")"
+		fi
+		;;
+	restore)
+		restore_layout
+		;;
+	set-default)
+		name="${2:-}"
+		[ -n "$name" ] || { echo "Usage: voidwolf-displays set-default <preset-name>" >&2; exit 2; }
+		src=""
+		if [ -f "${user_dir}/${name}" ]; then
+			src="${user_dir}/${name}"
+		elif [ -f "${user_dir}/${name}.sh" ]; then
+			src="${user_dir}/${name}.sh"
+		else
+			echo "voidwolf-displays: unknown preset: $name" >&2
+			exit 1
+		fi
+		mkdir -p "$user_dir"
+		ln -sfn "$(basename "$src")" "$default_script"
+		echo "default → $default_script -> $(basename "$src")"
+		notify "Default display preset: $(basename "$src")"
 		;;
 	apply)
 		name="${2:-}"
@@ -194,13 +251,16 @@ EOF
 		;;
 	-h|--help|help)
 		cat <<'EOF'
-Usage: voidwolf-displays [pick|list|apply <name>|arandr|query]
+Usage: voidwolf-displays [pick|list|apply <name>|restore|set-default <name>|arandr|query]
 
 Presets: executable shell scripts under ~/.config/voidwolf/displays/*.sh
-Each script should run xrandr (and optionally restore wallpaper).
+Each script should run xrandr (prefer absolute --pos over --left-of).
 
-Examples ship under config/displays/examples/ in the voidwolf repo.
-See docs/displays.md.
+restore       Apply default.sh, or last applied, or VOIDWOLF_DISPLAY_PRESET
+set-default   Symlink displays/default.sh → named preset (used at startx)
+
+Session: .xinitrc runs "voidwolf-displays restore" so layouts survive restart.
+Examples: config/displays/examples/  |  docs/displays.md
 EOF
 		;;
 	*)

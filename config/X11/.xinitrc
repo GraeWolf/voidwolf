@@ -59,7 +59,11 @@ command -v dunst >/dev/null 2>&1 && dunst &
 # Status bar → xsetroot -name
 command -v voidwolf-status >/dev/null 2>&1 && voidwolf-status &
 
-# Wallpaper (no-op stub until themes ship assets)
+# Multi-monitor layout (before wallpaper so feh sizes correctly)
+# Uses ~/.config/voidwolf/displays/default.sh or last applied preset
+command -v voidwolf-displays >/dev/null 2>&1 && voidwolf-displays restore
+
+# Wallpaper (after displays so background covers full virtual screen)
 command -v voidwolf-wallpaper >/dev/null 2>&1 && voidwolf-wallpaper restore &
 
 # Optional compositor (default OFF — design)

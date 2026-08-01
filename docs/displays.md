@@ -7,12 +7,18 @@ Multi-monitor layouts for voidwolf are **scripts + dmenu**, not a full display m
 ```bash
 voidwolf-displays              # picker
 voidwolf-displays list
-voidwolf-displays apply dual-right
-voidwolf-displays query        # xrandr in st
-voidwolf-displays arandr       # if arandr installed
+voidwolf-displays apply dual-left
+voidwolf-displays set-default dual-left   # persist for startx
+voidwolf-displays restore                 # used by .xinitrc at session start
+voidwolf-displays query                   # xrandr in st
+voidwolf-displays arandr                  # if arandr installed
 
 # Menu: Super+Alt+Space → Displays
 ```
+
+**Important:** quitting/restarting **dwm** does **not** re-run display scripts. Layout is applied by `voidwolf-displays restore` at **startx** (or when you run apply manually). NVIDIA often defaults to “primary at 0,0 / second to the right” until a preset runs.
+
+Prefer **absolute `--pos`** in scripts; `--left-of` / `--right-of` can be flaky with the proprietary driver.
 
 ## Preset format
 
@@ -30,18 +36,19 @@ Copy via menu **Install example presets** or manually (see `config/displays/READ
 
 ### Dual head on this project’s dogfood host
 
-```text
-HDMI-0  2560x1440  primary
-HDMI-1  1920x1080  right-of
-```
+Physical desk (common): **HDMI-1 secondary on the left**, **HDMI-0 primary on the right**.
 
-Edit `dual-right.sh.example` or set:
+```text
+HDMI-1  1920x1080  +0+0
+HDMI-0  2560x1440  primary  +1920+0
+```
 
 ```bash
-export VOIDWOLF_DISPLAY_LEFT=HDMI-0
-export VOIDWOLF_DISPLAY_RIGHT=HDMI-1
-voidwolf-displays apply … 
+voidwolf-displays apply dual-left
+voidwolf-displays set-default dual-left
 ```
+
+If primary is on the left instead, use `dual-right`.
 
 ### Laptop + external
 

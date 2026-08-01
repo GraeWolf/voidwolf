@@ -1,22 +1,26 @@
 #!/bin/sh
-# voidwolf example: dual monitors — primary left, second to the right
-# Edit LEFT/RIGHT output names for your machine (xrandr --query).
+# voidwolf example: secondary monitor physically RIGHT of primary
+# Prefer absolute --pos (more reliable than --right-of on NVIDIA).
 set -e
 
-# Defaults match a common discrete NVIDIA dual-HDMI desk (edit me)
-LEFT="${VOIDWOLF_DISPLAY_LEFT:-HDMI-0}"
-RIGHT="${VOIDWOLF_DISPLAY_RIGHT:-HDMI-1}"
+PRIMARY="${VOIDWOLF_DISPLAY_PRIMARY:-HDMI-0}"
+SECONDARY="${VOIDWOLF_DISPLAY_SECONDARY:-HDMI-1}"
+PRIMARY_MODE="${VOIDWOLF_DISPLAY_PRIMARY_MODE:-2560x1440}"
+SECONDARY_MODE="${VOIDWOLF_DISPLAY_SECONDARY_MODE:-1920x1080}"
+SEC_Y="${VOIDWOLF_DISPLAY_SECONDARY_Y:-0}"
 
-if ! xrandr --query | grep -q "^${LEFT} connected"; then
-	echo "left output not connected: $LEFT" >&2
+if ! xrandr --query | grep -q "^${PRIMARY} connected"; then
+	echo "primary not connected: $PRIMARY" >&2
 	exit 1
 fi
-if ! xrandr --query | grep -q "^${RIGHT} connected"; then
-	echo "right output not connected: $RIGHT (falling back to primary-only)" >&2
-	xrandr --output "$LEFT" --auto --primary
+if ! xrandr --query | grep -q "^${SECONDARY} connected"; then
+	echo "secondary not connected: $SECONDARY (primary only)" >&2
+	xrandr --output "$PRIMARY" --mode "$PRIMARY_MODE" --pos 0x0 --primary
 	exit 0
 fi
 
+PRIMARY_W=${PRIMARY_MODE%x*}
+
 xrandr \
-	--output "$LEFT" --auto --primary --pos 0x0 \
-	--output "$RIGHT" --auto --right-of "$LEFT"
+	--output "$PRIMARY"   --mode "$PRIMARY_MODE"   --pos 0x0 --primary \
+	--output "$SECONDARY" --mode "$SECONDARY_MODE" --pos "${PRIMARY_W}x${SEC_Y}"
