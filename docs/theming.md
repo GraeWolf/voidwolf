@@ -6,7 +6,7 @@ voidwolf theming engine: named presets, generate adapters, rebuild dwm user-loca
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
-export VOIDWOLF_ROOT=/path/to/voidwolf-grok   # optional if repo-root recorded
+export VOIDWOLF_ROOT=/path/to/voidwolf   # optional if repo-root recorded
 
 voidwolf-theme list
 voidwolf-theme validate              # all shipped themes

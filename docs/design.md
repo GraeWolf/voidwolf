@@ -8,7 +8,7 @@
 | **Status** | **Approved** (revision 5 — open questions resolved) |
 | **License** | MIT |
 | **Hostname default** | `voidwolf` |
-| **Workspace** | `/home/kmccuddy/.data/Projects/repos/voidwolf-grok` (greenfield) |
+| **Workspace** | `/home/kmccuddy/.data/Projects/repos/voidwolf` |
 
 ---
 
