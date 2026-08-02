@@ -95,6 +95,7 @@ make theme-list
 | [docs/nvidia.md](docs/nvidia.md) | GPU profiles (PR10) |
 | [docs/hardware-profiles.md](docs/hardware-profiles.md) | Laptop / desktop (PR11) |
 | [docs/dogfood.md](docs/dogfood.md) | Live host validation notes |
+| [docs/status-bar.md](docs/status-bar.md) | status2d bar modules (ChadWM-style) |
 | [docs/bash-nvim.md](docs/bash-nvim.md) | Bash + neovim defaults (PR12) |
 | [docs/displays.md](docs/displays.md) | Multi-monitor presets + HiDPI (PR13) |
 | [docs/packaging.md](docs/packaging.md) | Local XBPS meta packages (PR15–16) |

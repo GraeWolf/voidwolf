@@ -52,6 +52,7 @@ Preset walls (PR14): `gruvbox.png`, `catppuccin-mocha.png`, `nord.png`, `rose-pi
    - `colors.h`, `theme.Xresources`, `dmenu.env` (PR8)
    - `dunstrc.colors`, `gtk-3.0.*`, `gtk-4.0.*`, `xcursor.env` (**PR9a**)
    - `nvim.lua` (palette for voidwolf-nvim)
+   - `status.env` (status2d colors for `voidwolf-status`)
 3. Atomic update `$VOIDWOLF_HOME/current/name`
 4. Copy `colors.h` → `suckless/dwm/colors.h`
 5. If palette hash changed: `build-suckless.sh --dwm-only` (**no sudo**, `PREFIX=$HOME/.local`)
@@ -84,6 +85,7 @@ Preset walls (PR14): `gruvbox.png`, `catppuccin-mocha.png`, `nord.png`, `rose-pi
 | GTK 3/4 | `settings.ini` + palette `gtk.css` + gsettings prefer-dark + `gtk.env` |
 | cursor | `xcursor.env` sourced from `.xinitrc` |
 | nvim | `generated/nvim.lua` → `require("voidwolf.colors").load()` on start |
+| status bar | `generated/status.env` → `voidwolf-status` (status2d modules; see [status-bar.md](status-bar.md)) |
 
 **nvim:** new sessions pick up the palette automatically. Live reload in an open editor:
 

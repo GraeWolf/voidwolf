@@ -97,6 +97,15 @@ else
 	fail=1
 fi
 
+# status2d-aware status script
+if rg -q 'status_accent' "${BIN}/voidwolf-status" && rg -q 'pkg_updates' "${BIN}/voidwolf-status" \
+	&& rg -q 'status\.env' "${BIN}/voidwolf-status"; then
+	echo "OK   voidwolf-status has status2d modules"
+else
+	echo "FAIL voidwolf-status should use status2d color codes + modules"
+	fail=1
+fi
+
 # file manager prefers Nemo
 if rg -q 'nemo' "${BIN}/voidwolf-filemanager"; then
 	echo "OK   filemanager prefers nemo"

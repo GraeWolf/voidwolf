@@ -32,7 +32,13 @@ static const unsigned int gappov    = 8;        /* vert outer gap — edge */
 static       int smartgaps          = 0;        /* 1 = no outer gap when single window */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
-static const char *fonts[]          = { "Fira Code:size=11", "DejaVu Sans Mono:size=11" };
+/* Primary UI font + Nerd Font symbols for status2d bar icons (ChadWM-style) */
+static const char *fonts[]          = {
+	"Fira Code:size=11",
+	"Symbols Nerd Font Mono:size=11",
+	"Symbols Nerd Font:size=11",
+	"DejaVu Sans Mono:size=11",
+};
 static const char dmenufont[]       = "Fira Code:size=11";
 
 #include "colors.h"

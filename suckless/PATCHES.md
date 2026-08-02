@@ -22,6 +22,11 @@ directory are kept for audit/reproducibility; rebuild does **not** re-apply them
    API: `.i = 0` left, `1` right, `2` up, `3` down
 4. **restartsig** — `dwm-restartsig-20180523-6.2.diff` (SIGHUP restart / SIGTERM quit)  
    https://dwm.suckless.org/patches/restartsig/
+5. **systray** — `dwm-systray-20230922.diff` (in-bar tray)  
+   https://dwm.suckless.org/patches/systray/
+6. **status2d** — `dwm-status2d-6.3.diff` (integrated with systray width; `stext[1024]`)  
+   https://dwm.suckless.org/patches/status2d/  
+   Status colors: `^c#RRGGBB^` / `^b#RRGGBB^` / `^d^` from `voidwolf-status`
 
 ### focusdir policy (voidwolf)
 

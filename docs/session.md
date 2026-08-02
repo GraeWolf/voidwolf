@@ -47,7 +47,7 @@ Live host notes: [dogfood.md](dogfood.md).
 | `config/X11/.Xresources` → `~/.Xresources` | Fonts, DPI, st colors |
 | `~/.config/pipewire/pipewire.conf.d/` | Handbook conf.d links |
 | `~/.config/voidwolf/` | State, generated themes, logs |
-| `bin/voidwolf-status` | Bar text |
+| `bin/voidwolf-status` | Bar modules (status2d); see [status-bar.md](status-bar.md) |
 
 ## `.xinitrc` rules
 

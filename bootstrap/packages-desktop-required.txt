@@ -60,6 +60,8 @@ ufw
 dejavu-fonts-ttf
 font-firacode
 noto-fonts-emoji
+# status2d bar icons (voidwolf-status / ChadWM-style modules)
+nerd-fonts-symbols-ttf
 fontconfig
 
 # GTK dark theme (Void has no standalone Adwaita theme package under /usr/share/themes)

@@ -114,6 +114,14 @@ need_re "Print screenshot alias" 'XK_Print'
 need_re "Super+Ctrl+C capture menu" 'MODKEY\|ControlMask,\s+XK_c,\s+spawn'
 need_re "systray enabled" 'showsystray'
 need_re "voidwolf-tui float rule" 'voidwolf-tui'
+need_re "nerd font for status icons" 'Nerd Font|Symbols Nerd'
+# status2d lives in dwm.c (not config.h)
+if rg -q 'drawstatusbar' "${ROOT}/suckless/dwm/dwm.c"; then
+	echo "OK   status2d drawstatusbar in dwm.c"
+else
+	echo "FAIL status2d drawstatusbar missing from dwm.c"
+	fail=1
+fi
 need_re "dunst silence Super+Ctrl+comma" 'set-paused|dunstpause'
 need_re "togglebar Super+Shift+space" 'MODKEY\|ShiftMask,\s+XK_space,\s+togglebar'
 need_re "focusmon Super+period" 'MODKEY,\s+XK_period,\s+focusmon'
