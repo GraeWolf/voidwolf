@@ -160,6 +160,12 @@ typedef struct {
 	int monitor;
 } Rule;
 
+typedef struct {
+	const char *cmd;
+	int id;
+} StatusCmd;
+
+
 typedef struct Systray   Systray;
 struct Systray {
 	Window win;
@@ -190,6 +196,7 @@ static Monitor *dirtomon(int dir);
 static void drawbar(Monitor *m);
 static void drawbars(void);
 static int drawstatusbar(Monitor *m, int bh, char* text);
+static int status2dtextwidth(char *stext);
 static void enternotify(XEvent *e);
 static void expose(XEvent *e);
 static void focus(Client *c);
@@ -269,6 +276,9 @@ static void updatetitle(Client *c);
 static void updatewindowtype(Client *c);
 static void updatewmhints(Client *c);
 static void view(const Arg *arg);
+static void viewontagmon(const Arg *arg);
+static void tagontagmon(const Arg *arg);
+static void toggleviewontagmon(const Arg *arg);
 static Client *wintoclient(Window w);
 static Monitor *wintomon(Window w);
 static Client *wintosystrayicon(Window w);
@@ -281,6 +291,9 @@ static void zoom(const Arg *arg);
 static Systray *systray = NULL;
 static const char broken[] = "broken";
 static char stext[1024];
+static int statusw;
+static int statuscmdn;
+static char lastbutton[] = "-";
 static int screen;
 static int sw, sh;           /* X display screen geometry width, height */
 static int bh;               /* bar height */
@@ -492,19 +505,52 @@ buttonpress(XEvent *e)
 		focus(NULL);
 	}
 	if (ev->window == selmon->barwin) {
-		i = x = 0;
-		do
+		/* tags: only those allowed on this monitor (mon_tagmask) */
+		x = 0;
+		click = ClkWinTitle;
+		for (i = 0; i < LENGTH(tags); i++) {
+			if (selmon->num < LENGTH(mon_tagmask)
+			&& !(mon_tagmask[selmon->num] & (1u << i)))
+				continue;
 			x += TEXTW(tags[i]);
-		while (ev->x >= x && ++i < LENGTH(tags));
-		if (i < LENGTH(tags)) {
-			click = ClkTagBar;
-			arg.ui = 1 << i;
-		} else if (ev->x < x + TEXTW(selmon->ltsymbol))
-			click = ClkLtSymbol;
-		else if (ev->x > selmon->ww - (int)TEXTW(stext) - getsystraywidth())
-			click = ClkStatusText;
-		else
-			click = ClkWinTitle;
+			if (ev->x < x) {
+				click = ClkTagBar;
+				arg.ui = 1 << i;
+				break;
+			}
+		}
+		if (click != ClkTagBar) {
+			if (ev->x < x + TEXTW(selmon->ltsymbol))
+				click = ClkLtSymbol;
+			else if (ev->x > selmon->ww - statusw - (int)getsystraywidth()) {
+				/* statuscmd hit-test on right modules (before \x1f center) */
+				char *text, *s, ch, *right, *sep;
+				char tmp[sizeof stext];
+				int stwloc = getsystraywidth();
+
+				memcpy(tmp, stext, sizeof stext);
+				right = tmp;
+				if ((sep = strchr(tmp, '\x1f')))
+					*sep = '\0';
+				*lastbutton = '0' + ev->button;
+				click = ClkStatusText;
+				statuscmdn = 0;
+				x = selmon->ww - statusw - stwloc;
+				for (text = s = right; *s && x <= ev->x; s++) {
+					if ((unsigned char)(*s) < ' ') {
+						ch = *s;
+						*s = '\0';
+						x += status2dtextwidth(text);
+						*s = ch;
+						text = s + 1;
+						if (x >= ev->x)
+							break;
+						statuscmdn = (unsigned char)ch;
+					}
+				}
+			} else
+				click = ClkWinTitle;
+		}
 	} else if ((c = wintoclient(ev->window))) {
 		focus(c);
 		restack(selmon);
@@ -827,7 +873,7 @@ dirtomon(int dir)
 static int
 status2dtextwidth(char *stext)
 {
-	int i, w = 0, len;
+	int i, j, w = 0, len;
 	short isCode = 0;
 	char *text, *p;
 
@@ -836,8 +882,12 @@ status2dtextwidth(char *stext)
 	len = strlen(stext) + 1;
 	if (!(text = (char *)malloc(sizeof(char) * len)))
 		die("malloc");
+	/* drop statuscmd control bytes (< space) from measure string */
+	for (i = j = 0; stext[i]; i++)
+		if ((unsigned char)stext[i] >= ' ')
+			text[j++] = stext[i];
+	text[j] = '\0';
 	p = text;
-	memcpy(text, stext, len);
 
 	i = -1;
 	while (text[++i]) {
@@ -875,8 +925,15 @@ drawstatus2dat(Monitor *m, int bh, char *stext, int x)
 	len = strlen(stext) + 1;
 	if (!(text = (char *)malloc(sizeof(char) * len)))
 		die("malloc");
+	/* drop statuscmd control bytes for drawing */
+	{
+		int i, j;
+		for (i = j = 0; stext[i]; i++)
+			if ((unsigned char)stext[i] >= ' ')
+				text[j++] = stext[i];
+		text[j] = '\0';
+	}
 	p = text;
-	memcpy(text, stext, len);
 
 	w = status2dtextwidth(stext);
 	drw_setscheme(drw, scheme[LENGTH(colors)]);
@@ -982,6 +1039,9 @@ drawbar(Monitor *m)
 			center = sep + 1;
 		}
 		tw = m->ww - drawstatusbar(m, bh, right);
+		statusw = m->ww - tw - stw;
+		if (statusw < 0)
+			statusw = 0;
 	}
 
 	resizebarwin(m);
@@ -992,6 +1052,9 @@ drawbar(Monitor *m)
 	}
 	x = 0;
 	for (i = 0; i < LENGTH(tags); i++) {
+		/* per-monitor tag set (voidwolf: mon0 = 1-6, mon1 = 7-9 by default) */
+		if (m->num < LENGTH(mon_tagmask) && !(mon_tagmask[m->num] & (1u << i)))
+			continue;
 		w = TEXTW(tags[i]);
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
 		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
@@ -2144,6 +2207,19 @@ spawn(const Arg *arg)
 	if (fork() == 0) {
 		if (dpy)
 			close(ConnectionNumber(dpy));
+		if (arg->v == statuscmd) {
+			int i;
+			statuscmd[2] = NULL;
+			for (i = 0; i < LENGTH(statuscmds); i++) {
+				if (statuscmdn == statuscmds[i].id) {
+					statuscmd[2] = (char *)statuscmds[i].cmd;
+					setenv("BUTTON", lastbutton, 1);
+					break;
+				}
+			}
+			if (!statuscmd[2])
+				exit(EXIT_SUCCESS);
+		}
 		setsid();
 
 		sigemptyset(&sa.sa_mask);
@@ -2707,6 +2783,89 @@ view(const Arg *arg)
 		selmon->tagset[selmon->seltags] = arg->ui & TAGMASK;
 	focus(NULL);
 	arrange(selmon);
+}
+
+/* monitor index that owns this tag bit; -1 if none/all */
+static int
+monfor_tagbit(unsigned int tagbit)
+{
+	int i;
+
+	for (i = 0; i < LENGTH(mon_tagmask); i++)
+		if (mon_tagmask[i] & tagbit)
+			return i;
+	return -1;
+}
+
+static Monitor *
+montagmon(unsigned int tagbit)
+{
+	int n = monfor_tagbit(tagbit);
+	Monitor *m;
+
+	if (n < 0)
+		return selmon;
+	for (m = mons; m; m = m->next)
+		if (m->num == n)
+			return m;
+	return selmon;
+}
+
+void
+viewontagmon(const Arg *arg)
+{
+	Monitor *m;
+
+	if (!(arg->ui & TAGMASK))
+		return;
+	m = montagmon(arg->ui);
+	if (m != selmon) {
+		unfocus(selmon->sel, 1);
+		selmon = m;
+		focus(NULL);
+	}
+	view(arg);
+}
+
+void
+tagontagmon(const Arg *arg)
+{
+	Monitor *m;
+	Client *c = selmon->sel;
+
+	if (!c || !(arg->ui & TAGMASK))
+		return;
+	m = montagmon(arg->ui);
+	if (m != selmon)
+		sendmon(c, m);
+	/* pin client to the requested tag and show it on that mon */
+	c->tags = arg->ui & TAGMASK;
+	if ((arg->ui & TAGMASK) != m->tagset[m->seltags]) {
+		m->seltags ^= 1;
+		m->tagset[m->seltags] = arg->ui & TAGMASK;
+	}
+	if (m != selmon) {
+		unfocus(selmon->sel, 1);
+		selmon = m;
+	}
+	focus(NULL);
+	arrange(NULL);
+}
+
+void
+toggleviewontagmon(const Arg *arg)
+{
+	Monitor *m;
+
+	if (!(arg->ui & TAGMASK))
+		return;
+	m = montagmon(arg->ui);
+	if (m != selmon) {
+		unfocus(selmon->sel, 1);
+		selmon = m;
+		focus(NULL);
+	}
+	toggleview(arg);
 }
 
 Client *

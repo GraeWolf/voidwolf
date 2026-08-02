@@ -25,18 +25,42 @@ voidwolf uses the **vanilla dwm bar** (like [ChadWM](https://github.com/siduck/c
 
 **Right** (ChadWM-inspired), colored **text** icons (no chip backgrounds):
 
-1. **Updates** — `xbps-install -Mun` count (cached ~5 min)
+1. **Updates** — `xbps-install -Mun` count (cached ~5 min)  
+   - **Click (Btn1):** floating TUI (`voidwolf-updates-tui`) lists packages; optional `sudo xbps-install -Su`
 2. **Power** — battery % / AC
 3. **CPU** — load average
 4. **RAM** — used memory
 5. **Network** — SSID / eth / Disconnected
-6. **Volume** — wpctl %
+6. **Volume** — wpctl %  
+   - **Scroll wheel** on the module: volume up/down  
+   - **Click:** audio TUI
 
 **Center:**
 
-7. **Clock** — `HH:MM` (accent-colored text)
+7. **Clock** — `Day YYYY-MM-DD HH:MM:SS` (accent-colored text)
 
-Icons need a Nerd Font in dwm’s font list (`Symbols Nerd Font Mono`). Package: `nerd-fonts-symbols-ttf`.
+Click regions use **statuscmd** control bytes (`\001` updates, `\002` volume) in the status string. Handler: `voidwolf-status-click`.
+
+Icons need a Nerd Font (`Symbols Nerd Font Mono`). Package: `nerd-fonts-symbols-ttf`.
+
+## Per-monitor tags (dual desk)
+
+| Xinerama mon index | Tags shown / Super+N |
+|--------------------|----------------------|
+| **0** (usually first / often primary HDMI-0) | **1–6** |
+| **1** (second head, often HDMI-1) | **7–9** |
+
+`Super+7` focuses the monitor that owns tag 7 and views that tag.  
+`Super+Shift+7` moves the focused client there and shows the tag.
+
+Configured in `suckless/dwm/config.h` as `mon_tagmask[]`. **If 1–6 appear on the wrong physical screen, swap the two `mon_tagmask` entries** and rebuild dwm.
+
+```c
+static const unsigned int mon_tagmask[] = {
+	(1u<<0)|(1u<<1)|(1u<<2)|(1u<<3)|(1u<<4)|(1u<<5), /* mon0: 1-6 */
+	(1u<<6)|(1u<<7)|(1u<<8),                           /* mon1: 7-9 */
+};
+```
 
 ## Theme colors
 
@@ -69,7 +93,7 @@ voidwolf does not autostart random applets; add what you want to `~/.xinitrc` or
 ## Tuning
 
 ```bash
-export VOIDWOLF_STATUS_INTERVAL=2          # refresh seconds
+export VOIDWOLF_STATUS_INTERVAL=1          # refresh seconds (1 for live clock)
 export VOIDWOLF_STATUS_UPDATE_EVERY=300    # xbps check period
 ```
 

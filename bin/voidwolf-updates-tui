@@ -1,0 +1,53 @@
+#!/bin/sh
+# Floating TUI: show available XBPS updates; optional full upgrade with sudo.
+export PATH="${HOME}/.local/bin:${PATH}"
+set -eu
+
+echo "=== voidwolf package updates ==="
+echo
+
+if ! command -v xbps-install >/dev/null 2>&1; then
+	echo "xbps-install not found."
+	echo "[enter to close]"; read -r _
+	exit 1
+fi
+
+echo "Checking for updates (xbps-install -Mun)…"
+echo
+list=$(xbps-install -Mun 2>/dev/null || true)
+count=$(printf '%s\n' "$list" | sed '/^$/d' | wc -l | tr -d ' ')
+
+if [ -z "$list" ] || [ "$count" = "0" ]; then
+	echo "System is up to date (0 packages)."
+	echo
+	echo "[enter to close]"; read -r _
+	exit 0
+fi
+
+echo "Packages with updates ($count):"
+echo "----------------------------------------"
+printf '%s\n' "$list"
+echo "----------------------------------------"
+echo
+printf 'Upgrade all now with sudo? [y/N] '
+read -r ans || ans=
+case "$ans" in
+	y|Y|yes|YES)
+		echo
+		echo "Running: sudo xbps-install -Su"
+		echo "(enter sudo password if prompted)"
+		echo
+		if sudo xbps-install -Su; then
+			echo
+			echo "Upgrade finished."
+		else
+			echo
+			echo "Upgrade failed or cancelled (exit $?)."
+		fi
+		;;
+	*)
+		echo "Skipped upgrade."
+		;;
+esac
+echo
+echo "[enter to close]"; read -r _

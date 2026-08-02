@@ -22,6 +22,8 @@ required=(
 	voidwolf-wifi-tui
 	voidwolf-float-term
 	voidwolf-status
+	voidwolf-status-click
+	voidwolf-updates-tui
 	voidwolf-wallpaper
 	voidwolf-theme
 	voidwolf-gpu-check

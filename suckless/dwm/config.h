@@ -46,6 +46,17 @@ static const char dmenufont[]       = "Fira Code:size=11";
 /* tagging */
 static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
+/*
+ * Per-monitor tag sets (Xinerama mon index = m->num).
+ * Default dual-head desk: mon 0 = tags 1–6, mon 1 = tags 7–9.
+ * If your HDMI-0/HDMI-1 order is swapped, reverse the two entries.
+ * Bits: tag N uses bit (N-1).
+ */
+static const unsigned int mon_tagmask[] = {
+	(1u << 0) | (1u << 1) | (1u << 2) | (1u << 3) | (1u << 4) | (1u << 5), /* mon0: 1-6 */
+	(1u << 6) | (1u << 7) | (1u << 8),                                       /* mon1: 7-9 */
+};
+
 static const Rule rules[] = {
 	/* class      instance    title       tags mask     isfloating   monitor */
 	{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
@@ -79,11 +90,12 @@ static const Layout layouts[] = {
 
 /* key definitions */
 #define MODKEY Mod4Mask
+/* view/tag jump to the monitor that owns the tag (mon_tagmask) */
 #define TAGKEYS(KEY,TAG) \
-	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
-	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
-	{ MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
-	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
+	{ MODKEY,                       KEY,      viewontagmon,         {.ui = 1 << TAG} }, \
+	{ MODKEY|ControlMask,           KEY,      toggleviewontagmon,   {.ui = 1 << TAG} }, \
+	{ MODKEY|ShiftMask,             KEY,      tagontagmon,          {.ui = 1 << TAG} }, \
+	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,            {.ui = 1 << TAG} },
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
@@ -124,6 +136,13 @@ static const char *brightdown[]  = { "voidwolf-brightness", "down", NULL };
 /* PR13b scratchpad — floating st toggled with Super+S */
 static const char scratchpadname[] = "scratchpad";
 static const char *scratchpadcmd[] = { "st", "-t", scratchpadname, "-g", "120x34", NULL };
+
+/* status bar clicks: BUTTON env set by statuscmd; id matches \\001, \\002, … in voidwolf-status */
+static const StatusCmd statuscmds[] = {
+	{ "voidwolf-status-click updates", 1 },
+	{ "voidwolf-status-click volume", 2 },
+};
+static char *statuscmd[] = { "/bin/sh", "-c", NULL, NULL };
 
 #include "movestack.c"
 #include "shiftview.c"
@@ -255,7 +274,12 @@ static const Button buttons[] = {
 	{ ClkLtSymbol,          0,              Button1,        setlayout,      {0} },
 	{ ClkLtSymbol,          0,              Button3,        setlayout,      {.v = &layouts[2]} },
 	{ ClkWinTitle,          0,              Button2,        zoom,           {0} },
-	{ ClkStatusText,        0,              Button2,        spawn,          {.v = termcmd } },
+	/* statuscmd: Button1 click, Button4/5 scroll (volume), etc. */
+	{ ClkStatusText,        0,              Button1,        spawn,          {.v = statuscmd } },
+	{ ClkStatusText,        0,              Button2,        spawn,          {.v = statuscmd } },
+	{ ClkStatusText,        0,              Button3,        spawn,          {.v = statuscmd } },
+	{ ClkStatusText,        0,              Button4,        spawn,          {.v = statuscmd } },
+	{ ClkStatusText,        0,              Button5,        spawn,          {.v = statuscmd } },
 	{ ClkClientWin,         MODKEY,         Button1,        movemouse,      {0} },
 	{ ClkClientWin,         MODKEY,         Button2,        togglefloating, {0} },
 	{ ClkClientWin,         MODKEY,         Button3,        resizemouse,    {0} },

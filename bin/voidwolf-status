@@ -1,14 +1,13 @@
 #!/bin/sh
-# voidwolf-status — dwm bar feed via xsetroot -name (status2d color codes)
-# Inspired by ChadWM bar modules: updates · power · CPU · RAM · net · clock
-# Colors from ~/.config/voidwolf/generated/status.env (voidwolf-theme).
+# voidwolf-status — dwm bar feed via xsetroot -name (status2d + statuscmd)
+# Format:  [ctrl-id][modules...] \x1f [center-clock]
+# statuscmd ids: \001 = updates, \002 = volume (see config.h statuscmds)
 #
-# status2d: ^c#RRGGBB^ fg  ^b#RRGGBB^ bg  ^d^ reset  ^fN^ advance N px
+# status2d: ^c#RRGGBB^ fg  ^b#RRGGBB^ bg  ^d^ reset
 
-INTERVAL="${VOIDWOLF_STATUS_INTERVAL:-2}"
-UPDATE_EVERY="${VOIDWOLF_STATUS_UPDATE_EVERY:-300}"  # seconds between xbps update checks
+INTERVAL="${VOIDWOLF_STATUS_INTERVAL:-1}"
+UPDATE_EVERY="${VOIDWOLF_STATUS_UPDATE_EVERY:-300}"
 
-# defaults (overridden by status.env)
 status_bg="#1e1e2e"
 status_fg="#cdd6f4"
 status_muted="#6c7086"
@@ -25,28 +24,16 @@ load_colors() {
 	[ -f "$envf" ] && . "$envf"
 }
 
-# chip: colored label bg + value bg (ChadWM-like)
-chip() {
-	# chip <icon_or_label_color> <label> <value>
-	lc="$1"; lab="$2"; val="$3"
-	printf '^c%s^^b%s^ %s ^c%s^^b%s^ %s ^d^' \
-		"$status_chip_fg" "$lc" "$lab" \
-		"$status_fg" "$status_module_bg" "$val"
-}
-
 icon_val() {
-	# icon_val <fg> <icon> <value>
 	printf '^c%s^ %s %s ^d^' "$1" "$2" "$3"
 }
 
 cpu() {
 	load=$(awk '{print $1}' /proc/loadavg 2>/dev/null) || load="?"
-	# colored text icon+value (no chip background)
 	icon_val "$status_ok" "󰻠" "$load"
 }
 
 mem() {
-	# used human (free -h style without i)
 	used=$(awk '/MemTotal:/{t=$2} /MemAvailable:/{a=$2} END{
 		u=(t-a)*1024;
 		if (u>=1073741824) printf "%.1fG", u/1073741824;
@@ -57,12 +44,10 @@ mem() {
 }
 
 battery() {
-	# AC first
 	for a in /sys/class/power_supply/A{C,DP}*; do
 		[ -f "$a/online" ] || continue
 		on=$(cat "$a/online" 2>/dev/null) || continue
 		if [ "$on" = "1" ]; then
-			# on AC — show plug if no battery, else fall through with charging
 			has_bat=0
 			for d in /sys/class/power_supply/BAT*; do
 				[ -d "$d" ] && has_bat=1 && break
@@ -110,7 +95,6 @@ network() {
 		icon_val "$status_muted" "󰤭" "Disconnected"
 		return
 	fi
-	# sysfs fallback
 	for n in /sys/class/net/wl*; do
 		[ -f "$n/operstate" ] || continue
 		case "$(cat "$n/operstate" 2>/dev/null)" in
@@ -136,13 +120,12 @@ volume() {
 	esac
 }
 
+# Center clock: date + time with seconds
 clock() {
-	t=$(date '+%H:%M')
-	# colored text; drawn in bar *center* by dwm (see \x1f split)
+	t=$(date '+%a %Y-%m-%d %H:%M:%S')
 	icon_val "$status_accent" "󰥔" "$t"
 }
 
-# package updates (cached; slow on Void)
 _updates_cache=""
 _updates_ts=0
 pkg_updates() {
@@ -153,7 +136,6 @@ pkg_updates() {
 	fi
 	n=""
 	if command -v xbps-install >/dev/null 2>&1; then
-		# -Mun: manual updates available (no install)
 		n=$(timeout 25 xbps-install -Mun 2>/dev/null | wc -l | tr -d ' ')
 	fi
 	[ -n "$n" ] || n="0"
@@ -168,11 +150,11 @@ pkg_updates() {
 
 while true; do
 	load_colors
-	# Right modules | ASCII unit separator | center clock
-	# dwm drawbar: no window title; clock centered; modules right-aligned
-	right="$(pkg_updates)$(battery)$(cpu)$(mem)$(network)$(volume)"
-	center="$(clock)"
-	# shell: \037 = unit separator (dwm splits on 0x1f)
+	# Control bytes \001 updates, \002 volume for statuscmd click/scroll regions
+	u=$(pkg_updates)
+	v=$(volume)
+	right=$(printf '\001%s%s%s%s\002%s' "$u" "$(battery)" "$(cpu)" "$(mem)$(network)" "$v")
+	center=$(clock)
 	line=$(printf '%s\037%s' "$right" "$center")
 	xsetroot -name "$line" 2>/dev/null || true
 	sleep "$INTERVAL"

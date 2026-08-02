@@ -1,0 +1,40 @@
+#!/bin/sh
+# Handler for dwm statuscmd clicks (status2d sections).
+# Env: BUTTON = 1..5 (mouse button). Arg: section name.
+# Sections: updates (id 1), volume (id 2)
+export PATH="${HOME}/.local/bin:${PATH}"
+
+section="${1:-}"
+btn="${BUTTON:-1}"
+
+case "$section" in
+	updates)
+		case "$btn" in
+			1|2|3)
+				# floating TUI: list updates + optional system upgrade
+				if command -v voidwolf-float-term >/dev/null 2>&1; then
+					exec voidwolf-float-term updates -- voidwolf-updates-tui
+				fi
+				exec st -t "voidwolf-tui:updates" -g 100x30 -e voidwolf-updates-tui
+				;;
+		esac
+		;;
+	volume)
+		case "$btn" in
+			4) # scroll up
+				voidwolf-volume up 2>/dev/null || wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
+				;;
+			5) # scroll down
+				voidwolf-volume down 2>/dev/null || wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+				;;
+			1|2|3)
+				if command -v voidwolf-audio-tui >/dev/null 2>&1; then
+					exec voidwolf-audio-tui
+				fi
+				;;
+		esac
+		;;
+	*)
+		exit 0
+		;;
+esac

@@ -98,11 +98,13 @@ Omarchy-inspired **Super (Mod4)** map for voidwolf dwm.
 
 ## Tags
 
+On dual-head, tags are **split by monitor** (see [status-bar.md](status-bar.md)): mon0 → 1–6, mon1 → 7–9. Super+N focuses that monitor and views the tag.
+
 | Bind | Action |
 |------|--------|
-| Super+1 … Super+9 | View tag |
-| Super+Shift+1 … 9 | Move client to tag |
-| Super+Ctrl+1 … 9 | Toggle view tag |
+| Super+1 … Super+9 | View tag (and jump to owning monitor) |
+| Super+Shift+1 … 9 | Move client to tag (+ owning monitor) |
+| Super+Ctrl+1 … 9 | Toggle view tag on owning monitor |
 | Super+Ctrl+Shift+1 … 9 | Toggle client tag |
 | Super+0 | View all |
 | Super+Shift+0 | Tag all |
