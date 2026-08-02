@@ -50,22 +50,11 @@ if [[ -z "${VOIDWOLF_NO_FASTFETCH:-}" && -z "${VOIDWOLF_FASTFETCH_DONE:-}" ]]; t
 	fi
 fi
 
-# --- aliases (lean) ---
-alias ll='ls -lah --color=auto'
-alias la='ls -A --color=auto'
-alias l='ls -CF --color=auto'
-alias grep='grep --color=auto'
-alias egrep='egrep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias ..='cd ..'
-alias ...='cd ../..'
-alias g='git'
-alias v='nvim'
-alias vi='nvim'
-alias vim='nvim'
-alias vw-theme='voidwolf-theme'
-alias vw-gpu='voidwolf-gpu-check'
-alias vw-dogfood='voidwolf-dogfood-check'
+# --- aliases (separate file; easy to extend/override) ---
+if [[ -f "${HOME}/.config/voidwolf/voidwolf-aliases.sh" ]]; then
+	# shellcheck disable=SC1091
+	. "${HOME}/.config/voidwolf/voidwolf-aliases.sh"
+fi
 
 # --- prompt (simple; no starship dependency) ---
 # Prefer a readable two-tone prompt; keep short for st.
