@@ -823,21 +823,22 @@ dirtomon(int dir)
 	return m;
 }
 
-int
-drawstatusbar(Monitor *m, int bh, char* stext) {
-	int ret, i, w, x, len;
+/* status2d: width of text ignoring ^c/^b/^d/^f/^r codes */
+static int
+status2dtextwidth(char *stext)
+{
+	int i, w = 0, len;
 	short isCode = 0;
-	char *text;
-	char *p;
+	char *text, *p;
 
+	if (!stext || !*stext)
+		return 0;
 	len = strlen(stext) + 1;
-	if (!(text = (char*) malloc(sizeof(char) * len)))
+	if (!(text = (char *)malloc(sizeof(char) * len)))
 		die("malloc");
 	p = text;
 	memcpy(text, stext, len);
 
-	/* compute width of the status text (ignore ^codes) */
-	w = 0;
 	i = -1;
 	while (text[++i]) {
 		if (text[i] == '^') {
@@ -857,43 +858,51 @@ drawstatusbar(Monitor *m, int bh, char* stext) {
 	}
 	if (!isCode)
 		w += TEXTW(text) - lrpad;
-	else
-		isCode = 0;
-	text = p;
+	free(p);
+	return w + 2;
+}
 
-	w += 2; /* 1px padding on both sides */
-	/* leave room for systray on the right */
-	ret = x = m->ww - w - (int)getsystraywidth();
+/* draw status2d string at horizontal pixel x */
+static void
+drawstatus2dat(Monitor *m, int bh, char *stext, int x)
+{
+	int i, w, len;
+	short isCode = 0;
+	char *text, *p;
 
+	if (!stext || !*stext)
+		return;
+	len = strlen(stext) + 1;
+	if (!(text = (char *)malloc(sizeof(char) * len)))
+		die("malloc");
+	p = text;
+	memcpy(text, stext, len);
+
+	w = status2dtextwidth(stext);
 	drw_setscheme(drw, scheme[LENGTH(colors)]);
 	drw->scheme[ColFg] = scheme[SchemeNorm][ColFg];
 	drw->scheme[ColBg] = scheme[SchemeNorm][ColBg];
 	drw_rect(drw, x, 0, w, bh, 1, 1);
 	x++;
 
-	/* process status text */
 	i = -1;
 	while (text[++i]) {
 		if (text[i] == '^' && !isCode) {
 			isCode = 1;
-
 			text[i] = '\0';
 			w = TEXTW(text) - lrpad;
 			drw_text(drw, x, 0, w, bh, 0, text, 0);
-
 			x += w;
-
-			/* process code */
 			while (text[++i] != '^') {
 				if (text[i] == 'c') {
 					char buf[8];
-					memcpy(buf, (char*)text+i+1, 7);
+					memcpy(buf, (char *)text + i + 1, 7);
 					buf[7] = '\0';
 					drw_clr_create(drw, &drw->scheme[ColFg], buf);
 					i += 7;
 				} else if (text[i] == 'b') {
 					char buf[8];
-					memcpy(buf, (char*)text+i+1, 7);
+					memcpy(buf, (char *)text + i + 1, 7);
 					buf[7] = '\0';
 					drw_clr_create(drw, &drw->scheme[ColBg], buf);
 					i += 7;
@@ -908,48 +917,71 @@ drawstatusbar(Monitor *m, int bh, char* stext) {
 					int rw = atoi(text + ++i);
 					while (text[++i] != ',');
 					int rh = atoi(text + ++i);
-
 					drw_rect(drw, rx + x, ry, rw, rh, 1, 0);
 				} else if (text[i] == 'f') {
 					x += atoi(text + ++i);
 				}
 			}
-
 			text = text + i + 1;
 			i = -1;
 			isCode = 0;
 		}
 	}
-
 	if (!isCode) {
 		w = TEXTW(text) - lrpad;
 		drw_text(drw, x, 0, w, bh, 0, text, 0);
 	}
-
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	free(p);
+	(void)m;
+}
 
-	return ret;
+/* right-aligned status; returns left x of the status block */
+int
+drawstatusbar(Monitor *m, int bh, char *stext)
+{
+	int w, x;
+
+	if (!stext || !*stext)
+		return m->ww - (int)getsystraywidth();
+	w = status2dtextwidth(stext);
+	x = m->ww - w - (int)getsystraywidth();
+	drawstatus2dat(m, bh, stext, x);
+	return x;
 }
 
 void
 drawbar(Monitor *m)
 {
-	int x, w, tw = 0, stw = 0;
+	int x, w, tw = 0, stw = 0, cw, cx;
 	int boxs = drw->fonts->h / 9;
 	int boxw = drw->fonts->h / 6 + 2;
 	unsigned int i, occ = 0, urg = 0;
 	Client *c;
+	char *right, *center, *sep;
+	char stextcopy[sizeof stext];
 
 	if (!m->showbar)
 		return;
 
-	if(showsystray && m == systraytomon(m) && !systrayonleft)
+	if (showsystray && m == systraytomon(m) && !systrayonleft)
 		stw = getsystraywidth();
 
-	/* draw status first so it can be overdrawn by tags later (status2d) */
-	if (m == selmon) { /* status is only drawn on selected monitor */
-		tw = m->ww - drawstatusbar(m, bh, stext);
+	/*
+	 * voidwolf-status format:
+	 *   right-modules \x1f center-clock
+	 * No window title; middle is SchemeNorm so bar color is uniform.
+	 */
+	right = stext;
+	center = NULL;
+	if (m == selmon) {
+		memcpy(stextcopy, stext, sizeof stext);
+		right = stextcopy;
+		if ((sep = strchr(stextcopy, '\x1f'))) {
+			*sep = '\0';
+			center = sep + 1;
+		}
+		tw = m->ww - drawstatusbar(m, bh, right);
 	}
 
 	resizebarwin(m);
@@ -973,17 +1005,21 @@ drawbar(Monitor *m)
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
-	if ((w = m->ww - tw - stw - x) > bh) {
-		if (m->sel) {
-			drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
-			drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
-			if (m->sel->isfloating)
-				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
-		} else {
-			drw_setscheme(drw, scheme[SchemeNorm]);
-			drw_rect(drw, x, 0, w, bh, 1, 1);
-		}
+	/* fill remainder with bar background (no client title) */
+	if ((w = m->ww - tw - stw - x) > 0) {
+		drw_setscheme(drw, scheme[SchemeNorm]);
+		drw_rect(drw, x, 0, w, bh, 1, 1);
 	}
+
+	/* centered clock segment */
+	if (m == selmon && center && *center) {
+		cw = status2dtextwidth(center);
+		cx = (m->ww - stw - cw) / 2;
+		if (cx < x)
+			cx = x;
+		drawstatus2dat(m, bh, center, cx);
+	}
+
 	drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
 }
 

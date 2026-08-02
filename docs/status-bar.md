@@ -9,17 +9,32 @@ voidwolf uses the **vanilla dwm bar** (like [ChadWM](https://github.com/siduck/c
 | **voidwolf-status** | Module loop → `xsetroot -name` |
 | **voidwolf-theme** | Writes `~/.config/voidwolf/generated/status.env` + bar colors in `colors.h` |
 
-## Modules (right side)
+## Layout
 
-Order (ChadWM-inspired):
+| Region | Content |
+|--------|---------|
+| **Left** | Tags + layout symbol |
+| **Center** | Clock (status2d colored text) |
+| **Middle fill** | Empty — same `SchemeNorm` bar bg (**no window title**) |
+| **Right** | Modules + systray |
+
+`voidwolf-status` sets `xsetroot -name` as:  
+`right-modules` + `\x1f` + `center-clock` so dwm can place the clock independently.
+
+## Modules
+
+**Right** (ChadWM-inspired), colored **text** icons (no chip backgrounds):
 
 1. **Updates** — `xbps-install -Mun` count (cached ~5 min)
 2. **Power** — battery % / AC
-3. **CPU** — load average chip
+3. **CPU** — load average
 4. **RAM** — used memory
 5. **Network** — SSID / eth / Disconnected
 6. **Volume** — wpctl %
-7. **Clock** — `HH:MM` chip
+
+**Center:**
+
+7. **Clock** — `HH:MM` (accent-colored text)
 
 Icons need a Nerd Font in dwm’s font list (`Symbols Nerd Font Mono`). Package: `nerd-fonts-symbols-ttf`.
 

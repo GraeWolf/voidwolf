@@ -41,7 +41,8 @@ icon_val() {
 
 cpu() {
 	load=$(awk '{print $1}' /proc/loadavg 2>/dev/null) || load="?"
-	chip "$status_ok" "CPU" "$load"
+	# colored text icon+value (no chip background)
+	icon_val "$status_ok" "󰻠" "$load"
 }
 
 mem() {
@@ -137,7 +138,8 @@ volume() {
 
 clock() {
 	t=$(date '+%H:%M')
-	chip "$status_accent" "󰥔" "$t"
+	# colored text; drawn in bar *center* by dwm (see \x1f split)
+	icon_val "$status_accent" "󰥔" "$t"
 }
 
 # package updates (cached; slow on Void)
@@ -166,8 +168,12 @@ pkg_updates() {
 
 while true; do
 	load_colors
-	# Order mirrors ChadWM / screenshot: updates · power · cpu · mem · net · (vol) · clock
-	line="$(pkg_updates)$(battery)$(cpu)$(mem)$(network)$(volume)$(clock)"
+	# Right modules | ASCII unit separator | center clock
+	# dwm drawbar: no window title; clock centered; modules right-aligned
+	right="$(pkg_updates)$(battery)$(cpu)$(mem)$(network)$(volume)"
+	center="$(clock)"
+	# shell: \037 = unit separator (dwm splits on 0x1f)
+	line=$(printf '%s\037%s' "$right" "$center")
 	xsetroot -name "$line" 2>/dev/null || true
 	sleep "$INTERVAL"
 done
