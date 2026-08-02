@@ -1,12 +1,28 @@
 #!/bin/sh
-# voidwolf-status — dwm bar feed via xsetroot -name (status2d + statuscmd)
-# Format:  [ctrl-id][modules...] \x1f [center-clock]
-# statuscmd ids: \001 = updates, \002 = volume (see config.h statuscmds)
+# voidwolf-status — dwm bar feed (status2d + statuscmd)
+# Format:  \001 updates … \002 volume \x1f center-clock
+# Single instance via lock directory (prevents clock flicker).
+# Package check is background-only (never blocks the clock loop).
 #
-# status2d: ^c#RRGGBB^ fg  ^b#RRGGBB^ bg  ^d^ reset
+# status2d: ^c#RRGGBB^ fg  ^d^ reset
+# statuscmd ids: \001 = updates, \002 = volume
+
+export PATH="${HOME}/.local/bin:${PATH}"
 
 INTERVAL="${VOIDWOLF_STATUS_INTERVAL:-1}"
 UPDATE_EVERY="${VOIDWOLF_STATUS_UPDATE_EVERY:-300}"
+RT="${XDG_RUNTIME_DIR:-/tmp}"
+LOCKDIR="${RT}/voidwolf-status.lockdir"
+UPD_CACHE="${RT}/voidwolf-status.updates"
+UPD_TS="${RT}/voidwolf-status.updates.ts"
+UPD_BUSY="${RT}/voidwolf-status.updates.busy"
+WAKE="${RT}/voidwolf-status.wake"
+
+# --- single instance ---
+if ! mkdir "$LOCKDIR" 2>/dev/null; then
+	exit 0
+fi
+trap 'rmdir "$LOCKDIR" 2>/dev/null' EXIT INT TERM HUP
 
 status_bg="#1e1e2e"
 status_fg="#cdd6f4"
@@ -15,8 +31,6 @@ status_accent="#89b4fa"
 status_urgent="#f38ba8"
 status_ok="#a6e3a1"
 status_warn="#f9e2af"
-status_module_bg="#313244"
-status_chip_fg="#11111b"
 
 load_colors() {
 	envf="${HOME}/.config/voidwolf/generated/status.env"
@@ -92,70 +106,94 @@ network() {
 			icon_val "$status_accent" "󰈀" "eth"
 			return
 		fi
-		icon_val "$status_muted" "󰤭" "Disconnected"
-		return
 	fi
-	for n in /sys/class/net/wl*; do
-		[ -f "$n/operstate" ] || continue
-		case "$(cat "$n/operstate" 2>/dev/null)" in
-			up) icon_val "$status_accent" "󰤨" "wifi"; return ;;
-		esac
-	done
-	for n in /sys/class/net/e*; do
-		[ -f "$n/operstate" ] || continue
-		case "$(cat "$n/operstate" 2>/dev/null)" in
-			up) icon_val "$status_accent" "󰈀" "eth"; return ;;
-		esac
-	done
 	icon_val "$status_muted" "󰤭" "Disconnected"
 }
 
 volume() {
 	command -v wpctl >/dev/null 2>&1 || return 0
 	out=$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null) || return 0
-	vol=$(printf '%s' "$out" | awk '{print int($2*100)}')
+	vol=$(printf '%s\n' "$out" | awk '{
+		for (i=1;i<=NF;i++)
+			if ($i ~ /^[0-9]+(\.[0-9]+)?$/) {
+				printf "%d", ($i+0)*100+0.5; exit
+			}
+	}')
+	[ -n "$vol" ] || vol="?"
 	case "$out" in
 		*MUTED*) icon_val "$status_muted" "󰝟" "mute" ;;
 		*) icon_val "$status_fg" "󰕾" "${vol}%" ;;
 	esac
 }
 
-# Center clock: date + time with seconds
 clock() {
+	# always full date + time with seconds (center)
 	t=$(date '+%a %Y-%m-%d %H:%M:%S')
 	icon_val "$status_accent" "󰥔" "$t"
 }
 
-_updates_cache=""
-_updates_ts=0
+refresh_updates_bg() {
+	# only one background check at a time
+	if ! mkdir "$UPD_BUSY" 2>/dev/null; then
+		return 0
+	fi
+	(
+		n=0
+		if command -v xbps-install >/dev/null 2>&1; then
+			n=$(timeout 40 xbps-install -Mun 2>/dev/null | wc -l | tr -d ' ')
+			[ -n "$n" ] || n=0
+		fi
+		printf '%s\n' "$n" >"${UPD_CACHE}.tmp"
+		mv -f "${UPD_CACHE}.tmp" "$UPD_CACHE"
+		date +%s >"$UPD_TS"
+		rmdir "$UPD_BUSY" 2>/dev/null || true
+	) >/dev/null 2>&1 &
+}
+
 pkg_updates() {
 	now=$(date +%s)
-	if [ -n "$_updates_cache" ] && [ $((now - _updates_ts)) -lt "$UPDATE_EVERY" ]; then
-		printf '%s' "$_updates_cache"
-		return
+	n=0
+	[ -f "$UPD_CACHE" ] && n=$(cat "$UPD_CACHE" 2>/dev/null) || n=0
+	[ -n "$n" ] || n=0
+	ts=0
+	[ -f "$UPD_TS" ] && ts=$(cat "$UPD_TS" 2>/dev/null) || ts=0
+	if [ $((now - ts)) -ge "$UPDATE_EVERY" ] || [ ! -f "$UPD_CACHE" ]; then
+		refresh_updates_bg
 	fi
-	n=""
-	if command -v xbps-install >/dev/null 2>&1; then
-		n=$(timeout 25 xbps-install -Mun 2>/dev/null | wc -l | tr -d ' ')
-	fi
-	[ -n "$n" ] || n="0"
 	if [ "$n" = "0" ]; then
-		_updates_cache=$(icon_val "$status_ok" "󰚰" "0")
+		icon_val "$status_ok" "󰚰" "0"
 	else
-		_updates_cache=$(icon_val "$status_warn" "󰚰" "$n")
+		icon_val "$status_warn" "󰚰" "$n"
 	fi
-	_updates_ts=$now
-	printf '%s' "$_updates_cache"
+}
+
+# ~INTERVAL seconds of 0.2s slices; wake early on volume scroll
+wait_interval() {
+	ticks=$((INTERVAL * 5))
+	[ "$ticks" -lt 1 ] && ticks=5
+	i=0
+	while [ "$i" -lt "$ticks" ]; do
+		if [ -f "$WAKE" ]; then
+			rm -f "$WAKE"
+			return 0
+		fi
+		sleep 0.2
+		i=$((i + 1))
+	done
 }
 
 while true; do
 	load_colors
-	# Control bytes \001 updates, \002 volume for statuscmd click/scroll regions
 	u=$(pkg_updates)
+	b=$(battery)
+	c=$(cpu)
+	m=$(mem)
+	n=$(network)
 	v=$(volume)
-	right=$(printf '\001%s%s%s%s\002%s' "$u" "$(battery)" "$(cpu)" "$(mem)$(network)" "$v")
+	# section markers for statuscmd (must be first byte of each section)
+	right=$(printf '\001%s%s%s%s%s\002%s' "$u" "$b" "$c" "$m" "$n" "$v")
 	center=$(clock)
 	line=$(printf '%s\037%s' "$right" "$center")
 	xsetroot -name "$line" 2>/dev/null || true
-	sleep "$INTERVAL"
+	wait_interval
 done

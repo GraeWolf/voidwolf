@@ -197,6 +197,7 @@ static void drawbar(Monitor *m);
 static void drawbars(void);
 static int drawstatusbar(Monitor *m, int bh, char* text);
 static int status2dtextwidth(char *stext);
+static int status2dtextwidthpad(char *stext, int pad);
 static void enternotify(XEvent *e);
 static void expose(XEvent *e);
 static void focus(Client *c);
@@ -522,8 +523,9 @@ buttonpress(XEvent *e)
 		if (click != ClkTagBar) {
 			if (ev->x < x + TEXTW(selmon->ltsymbol))
 				click = ClkLtSymbol;
-			else if (ev->x > selmon->ww - statusw - (int)getsystraywidth()) {
-				/* statuscmd hit-test on right modules (before \x1f center) */
+			else if (statusw > 0
+			&& ev->x >= selmon->ww - statusw - (int)getsystraywidth()) {
+				/* statuscmd: sections start with control bytes \001, \002, … */
 				char *text, *s, ch, *right, *sep;
 				char tmp[sizeof stext];
 				int stwloc = getsystraywidth();
@@ -535,17 +537,19 @@ buttonpress(XEvent *e)
 				*lastbutton = '0' + ev->button;
 				click = ClkStatusText;
 				statuscmdn = 0;
+				/* left edge of right status block */
 				x = selmon->ww - statusw - stwloc;
-				for (text = s = right; *s && x <= ev->x; s++) {
+				for (text = s = right; *s; s++) {
 					if ((unsigned char)(*s) < ' ') {
 						ch = *s;
 						*s = '\0';
-						x += status2dtextwidth(text);
+						x += status2dtextwidthpad(text, 0);
 						*s = ch;
-						text = s + 1;
-						if (x >= ev->x)
+						/* click landed in the previous section */
+						if (x > ev->x)
 							break;
 						statuscmdn = (unsigned char)ch;
+						text = s + 1;
 					}
 				}
 			} else
@@ -870,8 +874,9 @@ dirtomon(int dir)
 }
 
 /* status2d: width of text ignoring ^c/^b/^d/^f/^r codes */
+/* width of status2d text (strips statuscmd control bytes); pad=1 adds 2px */
 static int
-status2dtextwidth(char *stext)
+status2dtextwidthpad(char *stext, int pad)
 {
 	int i, j, w = 0, len;
 	short isCode = 0;
@@ -882,7 +887,6 @@ status2dtextwidth(char *stext)
 	len = strlen(stext) + 1;
 	if (!(text = (char *)malloc(sizeof(char) * len)))
 		die("malloc");
-	/* drop statuscmd control bytes (< space) from measure string */
 	for (i = j = 0; stext[i]; i++)
 		if ((unsigned char)stext[i] >= ' ')
 			text[j++] = stext[i];
@@ -909,8 +913,15 @@ status2dtextwidth(char *stext)
 	if (!isCode)
 		w += TEXTW(text) - lrpad;
 	free(p);
-	return w + 2;
+	return w + (pad ? 2 : 0);
 }
+
+static int
+status2dtextwidth(char *stext)
+{
+	return status2dtextwidthpad(stext, 1);
+}
+
 
 /* draw status2d string at horizontal pixel x */
 static void
@@ -1010,7 +1021,7 @@ drawstatusbar(Monitor *m, int bh, char *stext)
 void
 drawbar(Monitor *m)
 {
-	int x, w, tw = 0, stw = 0, cw, cx;
+	int x, w, stw = 0, cw, cx, sx = 0;
 	int boxs = drw->fonts->h / 9;
 	int boxw = drw->fonts->h / 6 + 2;
 	unsigned int i, occ = 0, urg = 0;
@@ -1038,8 +1049,9 @@ drawbar(Monitor *m)
 			*sep = '\0';
 			center = sep + 1;
 		}
-		tw = m->ww - drawstatusbar(m, bh, right);
-		statusw = m->ww - tw - stw;
+		/* sx = left pixel of right status; statusw = its width only */
+		sx = drawstatusbar(m, bh, right);
+		statusw = m->ww - stw - sx;
 		if (statusw < 0)
 			statusw = 0;
 	}
@@ -1069,7 +1081,11 @@ drawbar(Monitor *m)
 	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
 	/* fill remainder with bar background (no client title) */
-	if ((w = m->ww - tw - stw - x) > 0) {
+	if (m == selmon && sx > x)
+		w = sx - x;
+	else
+		w = m->ww - stw - x;
+	if (w > 0) {
 		drw_setscheme(drw, scheme[SchemeNorm]);
 		drw_rect(drw, x, 0, w, bh, 1, 1);
 	}
